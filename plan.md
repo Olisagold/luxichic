@@ -23,26 +23,43 @@ From the current prototype to a production launch on Next.js + Supabase.
 | File storage | Supabase Storage (product, service and media-library images) |
 | Payments | Manual only: bank transfer (admin verifies) and pay on delivery. No payment gateway |
 | Transactional email | Resend |
-| Team alerts | Telegram bot (new orders, new appointments) |
+| Team alerts | Telegram bot (new orders, new appointments), configured in a new `/admin/telegram` page |
+| WhatsApp | `/admin/whatsapp` settings page stays in the admin but is **not functional** for now; customer `wa.me` chat links stay |
+| Newsletter | Homepage sign-up kept at launch; subscribers stored in our own database |
+| Guest checkout | Kept: guests can order, and orders link to an account created later with the same email |
 | Hosting | Vercel |
 | Error monitoring | Sentry |
 | Analytics | Vercel Analytics (plus the built-in admin analytics from our own data) |
 
-## Open questions
+## Payment flow (bank transfer)
 
-These need an answer before the step that depends on them. Please don't build anything for them on a guess.
+Agreed rules. Phase 5 builds them; Phase 8 adds the admin side.
 
-1. **WhatsApp admin page (`/admin/whatsapp`).** Telegram now handles team alerts. Should this page be replaced by
-   Telegram settings, removed, or kept for a future WhatsApp integration? The customer "Chat on WhatsApp" buttons
-   are plain `wa.me` links, need no API, and stay either way. *(Needed by Phase 8.)*
-2. **Newsletter sign-up (homepage).** Should sign-ups go to a Resend audience, to a table in our database only,
-   or should the section be removed for launch? *(Needed by Phase 9.)*
-3. **Bank transfer proof.** Should customers be able to upload a payment receipt or screenshot at checkout, or does
-   the admin match transfers against the bank statement only? *(Needed by Phase 5.)*
-4. **Guest checkout.** Keep it as the prototype has it (guests can order and later link the order to an account),
-   or require sign-in? *(Needed by Phase 5.)*
-5. **Shared packages.** `packages/ui`, `packages/types` and `packages/validation` are empty. Keep them, for when a
-   second app needs them, or remove them and keep everything in `apps/web`? *(Phase 0 cleanup.)*
+1. **Two separate identifiers on every order:**
+   - **Transaction reference:** a unique, randomized **8-digit** number. It is shown to the customer and used as
+     the bank-transfer narration.
+   - **Order number:** an internal ID (e.g. `LXC-123456`), always distinct from the transaction reference.
+
+   The database enforces uniqueness on both. The prototype already generates both
+   (`lib/utils/references.ts`); only uniqueness checks move to the server.
+2. **At checkout:** the customer selects Bank Transfer, and the order is created with payment status
+   `pending_verification`.
+3. **The customer sees** (on the confirmation page and in the order email):
+   - Bank name
+   - Account name
+   - Account number
+   - Amount
+   - 8-digit transaction reference
+   - Transfer instructions
+4. The customer makes the transfer.
+5. **Proof of payment is optional.** The customer can send a receipt through a WhatsApp button (a `wa.me` link
+   with the order details prefilled). Sending it, or clicking the button, **never changes the payment status**.
+6. **The admin checks** the bank account or statement, then clicks **Confirm Payment** on the order.
+7. The order becomes `payment_confirmed`.
+   - This is recorded in `audit_logs` with the admin's name.
+   - The customer receives the payment-confirmed email.
+8. Pay on delivery orders skip verification. Their payment status is `pay_on_delivery` until the admin marks
+   them paid on delivery.
 
 ## How we work
 
@@ -62,7 +79,8 @@ These need an answer before the step that depends on them. Please don't build an
    Every pull request gets a preview URL.
 5. Add Sentry (`@sentry/nextjs`) for client, server and edge; upload source maps from Vercel builds.
 6. Add Vercel Analytics (`@vercel/analytics`) to the root layout.
-7. Resolve open question 5 (shared packages).
+7. ~~Remove the empty shared packages~~. Done: `packages/ui`, `types` and `validation` are removed;
+   `packages/config` stays.
 
 ## Phase 1: Database schema (Drizzle)
 
@@ -72,8 +90,13 @@ Translate the prototype types (`types/*.ts`, `lib/mock-db/db.ts`) into tables. F
 2. **Catalog:** `categories` (division: hairs / tools), `products`, `product_variants`, `product_images`, `inventory`
    (stock, low-stock threshold, out-of-stock behaviour).
 3. **Commerce:** `carts` / `cart_items` (signed-in users), `discounts` (promo codes), `orders`, `order_items`,
-   `payments` (method, status, verification by an admin), `delivery_rates` (fee per state, enabled, free).
-4. **Engagement:** `reviews`, `wishlists`, `addresses`.
+   `payments`, `delivery_rates` (fee per state, enabled, free).
+   - `orders` has a unique `order_number` (internal) and a unique 8-digit `transaction_reference`
+     (customer-facing, enforced with a check constraint).
+   - `payments` holds the method and status (`pending_verification`, `payment_confirmed`, `pay_on_delivery`,
+     `paid`) and who confirmed it and when.
+4. **Engagement:** `reviews`, `wishlists`, `addresses`, `newsletter_subscribers` (email, source, subscribed/unsubscribed
+   dates).
 5. **Salon:** `services`, `specialists`, `specialist_services`, `availability` (weekly hours), `blocks`
    (closed days), `appointments`.
 6. **Content:** `site_content` (hero, intro, about, sections), `faqs`, `policies`, `announcements`, `testimonials`,
@@ -122,7 +145,7 @@ Translate the prototype types (`types/*.ts`, `lib/mock-db/db.ts`) into tables. F
 
 ## Phase 5: Checkout and orders
 
-*Depends on open questions 3 and 4.*
+Follows the **Payment flow** section above. Guest checkout stays.
 
 1. A `placeOrder` server action that:
    - Validates input with Zod.
@@ -130,12 +153,18 @@ Translate the prototype types (`types/*.ts`, `lib/mock-db/db.ts`) into tables. F
    - Applies the promo code.
    - Checks the delivery state is enabled and adds its fee.
    - Decrements stock in a transaction.
-   - Generates a unique order number.
-2. Payment methods: bank transfer (status `pending_verification`, with the bank details from settings) and
-   pay on delivery (if enabled in settings).
-3. Order confirmation page and order tracking read from the database. Guest tracking uses order number + email.
-4. Link guest orders to an account when someone signs up with the same email.
-5. Account orders list and order detail from the database.
+   - Generates a unique internal order number and a unique 8-digit transaction reference, retrying on a
+     collision.
+2. Payment methods:
+   - Bank transfer: status `pending_verification`. The customer sees the bank details from settings, the amount
+     and the transaction reference to use as the narration.
+   - Pay on delivery: only if enabled in settings.
+3. Optional "Send receipt on WhatsApp" button on the confirmation page and in the order account view.
+   It opens a `wa.me` link with the order number, amount and transaction reference prefilled.
+   It never changes the payment status.
+4. Order confirmation page and order tracking read from the database. Guest tracking uses order number + email.
+5. Link guest orders to an account when someone signs up with the same email.
+6. Account orders list and order detail from the database.
 
 ## Phase 6: Salon booking
 
@@ -156,7 +185,11 @@ Translate the prototype types (`types/*.ts`, `lib/mock-db/db.ts`) into tables. F
 Connect each admin section to the database through server actions. Each action checks a permission and writes to
 `audit_logs`.
 
-1. Orders: list, filters, detail, status changes, payment verification, cancellations.
+1. Orders: list, filters, detail, status changes, cancellations.
+   - **Confirm Payment** action (permission-checked) moves `pending_verification` to `payment_confirmed`.
+   - It writes to the audit log and sends the payment-confirmed email.
+   - Filter for orders awaiting verification. The transaction reference is searchable, so it can be matched
+     against the bank statement.
 2. Products: list, product editor (images upload to Supabase Storage), inventory, low-stock flags.
 3. Catalog: categories, discounts, review moderation.
 4. Customers: list, detail, block and unblock, customer activity.
@@ -165,7 +198,16 @@ Connect each admin section to the database through server actions. Each action c
    the storefront cache.
 7. Operations: delivery rates, payment settings (bank details), email settings
    (Resend sender, replacing the SMTP form), notifications.
-   - Resolve open question 1 (`/admin/whatsapp`).
+   - New **Telegram settings** page (`/admin/telegram`, added to the sidebar under Operations):
+     - Bot connection status
+     - Alert chat ID
+     - Toggles for new-order and new-appointment alerts
+     - Message templates
+     - A "send test message" button
+
+     The bot token stays in env vars and is never stored in the database or shown.
+   - **WhatsApp settings** (`/admin/whatsapp`) stays visible but **non-functional**. Inputs are disabled and a
+     "Coming soon" note is shown; nothing is saved or sent.
 8. Administration: admin users (invite through Supabase Auth), roles and permissions, activity log.
 9. Settings: general, business, social, security (password change and login history).
 10. Dashboard and analytics read real aggregates (SQL views or queries) instead of `lib/utils/adminAnalytics.ts`
@@ -186,9 +228,14 @@ Connect each admin section to the database through server actions. Each action c
 2. **Telegram bot:**
    - Fill `lib/telegram/*`.
    - Register the bot webhook (`app/api/webhooks/telegram`) with a secret token.
-   - Send new-order and new-appointment alerts to the team chat, if enabled in settings.
+   - Send new-order and new-appointment alerts to the team chat, using the toggles and templates from
+     `/admin/telegram`.
 3. In-app admin notifications (the `notifications` table) and the topbar badge counts.
-4. Contact form and newsletter (depends on open question 2).
+4. Contact form: messages are stored in the database and emailed to the business address through Resend.
+5. Newsletter: sign-ups are saved to `newsletter_subscribers`.
+   - Duplicates are ignored and the email is validated.
+   - The admin can view and export subscribers as CSV.
+   - No email marketing tool at launch.
 
 ## Phase 10: Quality
 
