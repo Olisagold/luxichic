@@ -107,6 +107,14 @@ Differences have been reported on the live site, including responsiveness.
 
   Changing them is a design decision, tracked below.
 
+- ✅ **Design decisions applied:**
+  - Account icon added to the mobile header.
+  - Desktop keeps the full menu (no hamburger).
+  - Storefront width widened from 1280px to 1440px (`max-w-site`).
+- ✅ **Small-phone fixes:** breakpoint-only grids now use `grid-cols-1`; the listing toolbar and product
+  action row fit at 320px. All 28 storefront routes fit at 320, 390, 768 and 1280px.
+- ⏳ **Remaining:** any other differences you spot. Report them with the page, screen size and a screenshot.
+
 1. **Collect the differences.** For each one, record the page/URL, the screen size (mobile, tablet or desktop),
    what the prototype does, and what the Next.js app does. Screenshots of both side by side are best.
    Run the prototype locally for comparison:
