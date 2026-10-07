@@ -43,7 +43,7 @@ export function NewsletterSection() {
             role="status">
             
               <CheckCircle2Icon className="h-5 w-5 text-emerald-600" aria-hidden />
-              You're on the list. Welcome to LUXICHIC!
+              You&apos;re on the list. Welcome to LUXICHIC!
             </motion.div> :
 
           <motion.form key="form" onSubmit={submit} noValidate className="mx-auto mt-10 max-w-lg" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>

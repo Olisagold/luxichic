@@ -101,7 +101,7 @@ export function ProductFilters({ division, products, filters, onChange }: Produc
                   active ? 'border-ink bg-ink text-white' : 'border-line bg-white hover:border-ink'
                 )}>
                 
-                  {l}"
+                  {`${l}"`}
                 </button>);
 
           })}

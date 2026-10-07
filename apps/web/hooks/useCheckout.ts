@@ -51,6 +51,8 @@ export function useCheckout() {
       setAddressId(d.id);
       setAddress({ ...d });
     }
+  // Only prefill when a different customer signs in, not on every profile edit.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   useEffect(() => {

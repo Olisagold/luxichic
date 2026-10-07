@@ -26,6 +26,8 @@ export function useAppointmentBooking(initialService?: string) {
 
   useEffect(() => {
     if (user) setContact((c) => ({ fullName: c.fullName || user.fullName, phone: c.phone || user.phone, email: c.email || user.email }));
+  // Only prefill when a different customer signs in, not on every profile edit.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const service = findService(serviceSlug);
