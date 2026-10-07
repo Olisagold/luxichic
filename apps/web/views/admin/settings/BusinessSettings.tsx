@@ -1,0 +1,69 @@
+'use client';
+
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { useActor } from '@/hooks/useActor';
+import { getDb } from '@/lib/mock-db/db';
+import { updateSettings } from '@/lib/mock-db/settings';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { Panel } from '@/components/admin/ui/Panel';
+import { AdminInput, AdminTextarea } from '@/components/admin/ui/AdminField';
+import { SaveBar } from '@/components/admin/content/SaveBar';
+import { isValidEmail } from '@/lib/utils/validation';
+
+type Mode = 'general' | 'business';
+
+/** General (store identity) and Business information share the same settings record. */
+export function BusinessSettings({ mode = 'business' }: {mode?: Mode;}) {
+  const actor = useActor();
+  const [b, setB] = useState(getDb().settings.business);
+  const [baseline, setBaseline] = useState(JSON.stringify(b));
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const dirty = JSON.stringify(b) !== baseline;
+
+  const save = () => {
+    const errs: Record<string, string> = {};
+    if (!b.name.trim()) errs.name = 'Enter the business name.';
+    if (!isValidEmail(b.email)) errs.email = 'Enter a valid email.';
+    setErrors(errs);
+    if (Object.keys(errs).length) return toast.error('Please fix the highlighted fields.');
+    updateSettings(actor, 'business', b, 'Settings', mode === 'general' ? 'Updated general settings' : 'Updated business information');
+    setBaseline(JSON.stringify(b));
+    toast.success('Settings saved', { description: 'Shown across the storefront, footer and emails.' });
+  };
+
+  return (
+    <div className="pb-20">
+      {mode === 'general' ?
+      <>
+          <PageHeader title="General" description="Your store’s name and regional settings." />
+          <div className="grid max-w-3xl gap-5">
+            <Panel title="Store">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AdminInput id="g-name" label="Business name" value={b.name} error={errors.name} onChange={(e) => setB({ ...b, name: e.target.value })} wrapperClassName="sm:col-span-2" />
+                <AdminInput id="g-cur" label="Currency" value="Nigerian naira (₦)" readOnly />
+                <AdminInput id="g-tz" label="Time zone" value="West Africa Time (Lagos)" readOnly />
+              </div>
+            </Panel>
+          </div>
+        </> :
+
+      <>
+          <PageHeader title="Business information" description="Contact details shown on the Contact page, footer, emails and WhatsApp buttons." />
+          <div className="grid max-w-3xl gap-5">
+            <Panel title="Contact details">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AdminInput id="b-email" type="email" label="Email" value={b.email} error={errors.email} onChange={(e) => setB({ ...b, email: e.target.value })} />
+                <AdminInput id="b-phone" label="Phone" value={b.phone} onChange={(e) => setB({ ...b, phone: e.target.value })} />
+                <AdminInput id="b-wa" label="WhatsApp (international format)" value={b.whatsapp} onChange={(e) => setB({ ...b, whatsapp: e.target.value.replace(/[^\d]/g, '') })} hint="e.g. 2348012345678" />
+                <AdminInput id="b-hours" label="Opening hours" value={b.hours} onChange={(e) => setB({ ...b, hours: e.target.value })} />
+                <AdminTextarea id="b-addr" label="Address" value={b.address} onChange={(e) => setB({ ...b, address: e.target.value })} wrapperClassName="sm:col-span-2" className="min-h-[64px]" />
+              </div>
+            </Panel>
+          </div>
+        </>
+      }
+      <SaveBar dirty={dirty} onSave={save} onReset={() => setB(JSON.parse(baseline))} />
+    </div>);
+
+}
