@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, type Target, type TargetAndTransition } from 'framer-motion';
 import { XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
@@ -20,7 +20,7 @@ interface ModalProps {
 
 const ease = [0.23, 1, 0.32, 1] as const;
 
-const panelMotion: Record<Side, {initial: object;animate: object;}> = {
+const panelMotion: Record<Side, {initial: Target;animate: TargetAndTransition;}> = {
   center: { initial: { opacity: 0, scale: 0.96, y: 8 }, animate: { opacity: 1, scale: 1, y: 0 } },
   right: { initial: { x: '100%' }, animate: { x: 0 } },
   left: { initial: { x: '-100%' }, animate: { x: 0 } },

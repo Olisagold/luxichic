@@ -25,7 +25,7 @@ const shortLabels: Record<string, [string, string]> = {
 export function MainHeader() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const closeTimer = useRef<number>();
+  const closeTimer = useRef<number | undefined>(undefined);
   const pathname = usePathname();
   const { count } = useCart();
   const { ids } = useWishlist();
