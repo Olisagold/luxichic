@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { AdminUser, Permission } from '@/types/admin';
 import type { Result } from '@/types/user';
 import { findAdmin, getDb, logActivity, updateDb, useDb } from '@/lib/mock-db/db';
@@ -15,6 +15,8 @@ import { wait } from '@/lib/utils/validation';
  */
 interface AdminAuthValue {
   admin: AdminUser | null;
+  /** False until the stored session has been read on the client. */
+  ready: boolean;
   login: (email: string, password: string, remember: boolean) => Promise<Result>;
   logout: () => void;
   can: (p: Permission) => boolean;
@@ -37,7 +39,13 @@ function describeDevice() {
 }
 
 export function AdminAuthProvider({ children }: {children: React.ReactNode;}) {
-  const [sessionId, setSessionId] = useState<string | null>(() => readSession());
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setSessionId(readSession());
+    setReady(true);
+  }, []);
   const admins = useDb((s) => s.admins);
   const admin = admins.find((a) => a.id === sessionId && a.status === 'active') ?? null;
 
@@ -86,7 +94,7 @@ export function AdminAuthProvider({ children }: {children: React.ReactNode;}) {
     return { ok: true };
   };
 
-  return <AdminAuthContext.Provider value={{ admin, login, logout, can, changePassword }}>{children}</AdminAuthContext.Provider>;
+  return <AdminAuthContext.Provider value={{ admin, ready, login, logout, can, changePassword }}>{children}</AdminAuthContext.Provider>;
 }
 
 export function useAdminAuth() {

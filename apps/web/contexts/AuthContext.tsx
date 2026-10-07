@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Address } from '@/types/order';
 import type { Result, User } from '@/types/user';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -16,6 +16,8 @@ import { pushNotification, updateDb } from '@/lib/mock-db/db';
  */
 interface AuthContextValue {
   user: User | null;
+  /** False until the stored session has been read on the client. */
+  ready: boolean;
   /** All customer accounts — exposed for the admin prototype only. */
   users: User[];
   login: (email: string, password: string, remember: boolean) => Promise<Result>;
@@ -46,9 +48,16 @@ function readSession(): string | null {
 }
 
 export function AuthProvider({ children }: {children: React.ReactNode;}) {
-  const [users, setUsers] = useLocalStorage<User[]>('lx_users_v2', () => [...seedUsers, ...seedCustomers]);
+  const [users, setUsers, usersLoaded] = useLocalStorage<User[]>('lx_users_v2', () => [...seedUsers, ...seedCustomers]);
   const [resetTokens, setResetTokens] = useLocalStorage<Record<string, {email: string;expiresAt: string;}>>('lx_reset_tokens', {});
-  const [sessionEmail, setSessionEmailState] = useState<string | null>(() => readSession());
+  const [sessionEmail, setSessionEmailState] = useState<string | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const ready = usersLoaded && sessionLoaded;
+
+  useEffect(() => {
+    setSessionEmailState(readSession());
+    setSessionLoaded(true);
+  }, []);
 
   const setSessionEmail = (email: string | null, remember = true) => {
     window.localStorage.removeItem('lx_session');
@@ -197,6 +206,7 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
   return (
     <AuthContext.Provider
       value={{
+        ready,
         user, users, login, logout, register, emailExists, isBlockedEmail, updateProfile, changePassword,
         saveAddress, deleteAddress, setDefaultAddress, requestPasswordReset, isValidResetToken, resetPassword,
         adminCreateCustomer, adminUpdateCustomer, adminDeleteCustomer
