@@ -35,6 +35,9 @@ jobs:
           restore-keys: |
             nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
+      - name: Format
+        run: pnpm format:check
+
       - name: Lint
         run: pnpm lint
 
