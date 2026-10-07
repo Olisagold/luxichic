@@ -25,7 +25,7 @@ export function readImageFile(file: File, maxSize = 900): Promise<string> {
   });
 }
 
-export function imageDimensions(url: string): Promise<{width: number;height: number;}> {
+export function imageDimensions(url: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });

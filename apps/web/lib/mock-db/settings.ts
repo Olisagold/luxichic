@@ -8,15 +8,25 @@ import { generateId } from '@/lib/utils/references';
  */
 
 export function updateSettings<K extends keyof StoreSettings>(
-actor: AdminUser, key: K, value: StoreSettings[K], section: ActivitySection, action: string, target?: string)
-{
+  actor: AdminUser,
+  key: K,
+  value: StoreSettings[K],
+  section: ActivitySection,
+  action: string,
+  target?: string,
+) {
   updateDb((d) => {
     d.settings[key] = value;
     logActivity(d, actor, section, action, target);
   });
 }
 
-export function updateContent<K extends keyof SiteContent>(actor: AdminUser, key: K, value: SiteContent[K], action: string) {
+export function updateContent<K extends keyof SiteContent>(
+  actor: AdminUser,
+  key: K,
+  value: SiteContent[K],
+  action: string,
+) {
   updateDb((d) => {
     d.content[key] = value;
     logActivity(d, actor, 'Content', action, String(key));
@@ -25,7 +35,7 @@ export function updateContent<K extends keyof SiteContent>(actor: AdminUser, key
 
 export function saveEmailTemplate(actor: AdminUser, t: EmailTemplate) {
   updateDb((d) => {
-    d.emailTemplates = d.emailTemplates.map((x) => x.id === t.id ? t : x);
+    d.emailTemplates = d.emailTemplates.map((x) => (x.id === t.id ? t : x));
     logActivity(d, actor, 'Email', 'Edited email template', t.name);
   });
 }

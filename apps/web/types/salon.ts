@@ -44,6 +44,6 @@ export interface Appointment {
   accountEmail?: string;
   /** Reason given when rejected or rescheduled. */
   reason?: string;
-  original?: {date: string;time: string;personnelName?: string;};
+  original?: { date: string; time: string; personnelName?: string };
   history?: AppointmentEvent[];
 }

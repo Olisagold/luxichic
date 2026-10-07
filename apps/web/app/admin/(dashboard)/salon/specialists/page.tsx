@@ -8,6 +8,6 @@ export default function AdminSpecialistsPage() {
   return (
     <RequirePermission permission="salon.specialists">
       <Specialists />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

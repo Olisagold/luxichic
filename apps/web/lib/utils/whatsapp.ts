@@ -13,14 +13,14 @@ export function serviceEnquiryMessage(serviceName: string): string {
 
 export function receiptMessage(order: Order): string {
   return [
-  'Hello LUXICHIC, I have made a bank transfer for my order. My payment receipt is attached.',
-  '',
-  `Name: ${order.customer.fullName}`,
-  `Order number: ${order.orderNumber}`,
-  `Transaction reference: ${order.reference}`,
-  `Amount transferred: ${formatNaira(order.total)}`,
-  'Payment method: Bank Transfer'].
-  join('\n');
+    'Hello LUXICHIC, I have made a bank transfer for my order. My payment receipt is attached.',
+    '',
+    `Name: ${order.customer.fullName}`,
+    `Order number: ${order.orderNumber}`,
+    `Transaction reference: ${order.reference}`,
+    `Amount transferred: ${formatNaira(order.total)}`,
+    'Payment method: Bank Transfer',
+  ].join('\n');
 }
 
 export function appointmentMessage(a: Appointment): string {

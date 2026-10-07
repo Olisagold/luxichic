@@ -10,7 +10,11 @@ import { isValidEmail, isValidPhone, validatePassword } from '@/lib/utils/valida
 
 export function AccountProfile() {
   const { user, updateProfile, changePassword } = useAuth();
-  const [profile, setProfile] = useState({ fullName: user?.fullName ?? '', email: user?.email ?? '', phone: user?.phone ?? '' });
+  const [profile, setProfile] = useState({
+    fullName: user?.fullName ?? '',
+    email: user?.email ?? '',
+    phone: user?.phone ?? '',
+  });
   const [pErrors, setPErrors] = useState<Record<string, string>>({});
   const [pSaving, setPSaving] = useState(false);
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' });
@@ -32,7 +36,10 @@ export function AccountProfile() {
     const res = await updateProfile(profile);
     setPSaving(false);
     if (!res.ok) return setPErrors({ form: res.error ?? 'Could not save.' });
-    toast.success('Profile updated', emailChanged ? { description: 'Prototype: in production, your new email must be verified first.' } : undefined);
+    toast.success(
+      'Profile updated',
+      emailChanged ? { description: 'Prototype: in production, your new email must be verified first.' } : undefined,
+    );
   };
 
   const savePassword = async (e: React.FormEvent) => {
@@ -57,24 +64,74 @@ export function AccountProfile() {
       <h1 className="font-display text-5xl text-ink">Profile settings</h1>
       <form onSubmit={saveProfile} noValidate className="space-y-5 rounded-[24px] bg-white p-6 md:p-8">
         <h2 className="font-display text-2xl text-ink">Personal details</h2>
-        <TextField id="pf-name" label="Full name" value={profile.fullName} error={pErrors.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} />
+        <TextField
+          id="pf-name"
+          label="Full name"
+          value={profile.fullName}
+          error={pErrors.fullName}
+          onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+        />
         <div className="grid gap-5 sm:grid-cols-2">
-          <TextField id="pf-email" type="email" label="Email address" value={profile.email} error={pErrors.email} hint={emailChanged ? 'You’ll need to verify a new email address.' : undefined} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
-          <TextField id="pf-phone" type="tel" label="Phone number" value={profile.phone} error={pErrors.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+          <TextField
+            id="pf-email"
+            type="email"
+            label="Email address"
+            value={profile.email}
+            error={pErrors.email}
+            hint={emailChanged ? 'You’ll need to verify a new email address.' : undefined}
+            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+          />
+          <TextField
+            id="pf-phone"
+            type="tel"
+            label="Phone number"
+            value={profile.phone}
+            error={pErrors.phone}
+            onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+          />
         </div>
-        {pErrors.form && <p className="text-sm text-red-700" role="alert">{pErrors.form}</p>}
-        <Button type="submit" loading={pSaving}>Save changes</Button>
+        {pErrors.form && (
+          <p className="text-sm text-red-700" role="alert">
+            {pErrors.form}
+          </p>
+        )}
+        <Button type="submit" loading={pSaving}>
+          Save changes
+        </Button>
       </form>
 
       <form onSubmit={savePassword} noValidate className="space-y-5 rounded-[24px] bg-white p-6 md:p-8">
         <h2 className="font-display text-2xl text-ink">Change password</h2>
-        <PasswordField id="pw-current" label="Current password" value={pw.current} onChange={(v) => setPw({ ...pw, current: v })} error={wErrors.current} />
+        <PasswordField
+          id="pw-current"
+          label="Current password"
+          value={pw.current}
+          onChange={(v) => setPw({ ...pw, current: v })}
+          error={wErrors.current}
+        />
         <div className="grid gap-5 sm:grid-cols-2">
-          <PasswordField id="pw-next" label="New password" autoComplete="new-password" value={pw.next} onChange={(v) => setPw({ ...pw, next: v })} error={wErrors.next} showStrength />
-          <PasswordField id="pw-confirm" label="Confirm new password" autoComplete="new-password" value={pw.confirm} onChange={(v) => setPw({ ...pw, confirm: v })} error={wErrors.confirm} />
+          <PasswordField
+            id="pw-next"
+            label="New password"
+            autoComplete="new-password"
+            value={pw.next}
+            onChange={(v) => setPw({ ...pw, next: v })}
+            error={wErrors.next}
+            showStrength
+          />
+          <PasswordField
+            id="pw-confirm"
+            label="Confirm new password"
+            autoComplete="new-password"
+            value={pw.confirm}
+            onChange={(v) => setPw({ ...pw, confirm: v })}
+            error={wErrors.confirm}
+          />
         </div>
-        <Button type="submit" variant="outline" loading={wSaving}>Update password</Button>
+        <Button type="submit" variant="outline" loading={wSaving}>
+          Update password
+        </Button>
       </form>
-    </div>);
-
+    </div>
+  );
 }

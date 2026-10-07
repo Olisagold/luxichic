@@ -16,6 +16,6 @@ export function EmptyState({ icon, title, text, actions, className }: EmptyState
       <p className="mt-5 font-display text-3xl text-ink">{title}</p>
       {text && <p className="mt-2 max-w-md text-sm leading-relaxed text-subtle">{text}</p>}
       {actions && <div className="mt-7 flex flex-wrap justify-center gap-3">{actions}</div>}
-    </div>);
-
+    </div>
+  );
 }

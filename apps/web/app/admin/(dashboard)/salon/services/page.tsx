@@ -8,6 +8,6 @@ export default function AdminSalonServicesPage() {
   return (
     <RequirePermission permission="salon.services">
       <SalonServices />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

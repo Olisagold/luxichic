@@ -11,14 +11,16 @@ import { images } from '@/data/images';
 const showcaseIds = ['t1', 't9', 't2', 't14', 't13', 't16', 't20', 't4'];
 
 const quickCats = [
-{ label: 'Styling Tools', to: '/tools/shop/styling-tools' },
-{ label: 'Wig-Making', to: '/tools/shop/wig-making' },
-{ label: 'Haircare', to: '/tools/shop/haircare' },
-{ label: 'Braiding Hair', to: '/tools/shop/braiding' }];
-
+  { label: 'Styling Tools', to: '/tools/shop/styling-tools' },
+  { label: 'Wig-Making', to: '/tools/shop/wig-making' },
+  { label: 'Haircare', to: '/tools/shop/haircare' },
+  { label: 'Braiding Hair', to: '/tools/shop/braiding' },
+];
 
 export function ToolsShowcase() {
-  const products = showcaseIds.map((id) => toolProducts.find((p) => p.id === id)).filter((p): p is NonNullable<typeof p> => !!p);
+  const products = showcaseIds
+    .map((id) => toolProducts.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => !!p);
 
   return (
     <section className="bg-blush/60 py-20 md:py-28">
@@ -29,16 +31,21 @@ export function ToolsShowcase() {
             <Logo variant="tools" className="-ml-1 h-12" />
             <h2 className="mt-4 font-display text-4xl leading-tight">Tools the professionals trust.</h2>
             <p className="mt-3 text-sm leading-relaxed text-white/70">
-              Hair tools, salon essentials, haircare and affordable braiding extensions — for stylists, wig makers and you.
+              Hair tools, salon essentials, haircare and affordable braiding extensions — for stylists, wig makers and
+              you.
             </p>
             <ul className="mt-6 grid grid-cols-2 gap-2">
-              {quickCats.map((c) =>
-              <li key={c.to}>
-                  <Link href={c.to} className="flex items-center justify-between gap-1 rounded-xl border border-white/15 px-3 py-2.5 text-xs font-medium text-white/85 transition-colors duration-150 hover:border-pink hover:text-white">
-                    <span className="whitespace-nowrap">{c.label}</span> <ArrowRightIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              {quickCats.map((c) => (
+                <li key={c.to}>
+                  <Link
+                    href={c.to}
+                    className="flex items-center justify-between gap-1 rounded-xl border border-white/15 px-3 py-2.5 text-xs font-medium text-white/85 transition-colors duration-150 hover:border-pink hover:text-white"
+                  >
+                    <span className="whitespace-nowrap">{c.label}</span>{' '}
+                    <ArrowRightIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   </Link>
                 </li>
-              )}
+              ))}
             </ul>
             <Button to="/tools" variant="pink" className="mt-8" fullWidth>
               Shop Hair Tools
@@ -49,6 +56,6 @@ export function ToolsShowcase() {
           <ProductCarousel products={products} label="Hair tools and essentials" perView={3} />
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }

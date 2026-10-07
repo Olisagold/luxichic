@@ -5,26 +5,40 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 
 /** Sticky bar that appears when a content form has unsaved edits. */
-export function SaveBar({ dirty, onSave, onReset, label = 'Unsaved changes' }: {dirty: boolean;onSave: () => void;onReset: () => void;label?: string;}) {
+export function SaveBar({
+  dirty,
+  onSave,
+  onReset,
+  label = 'Unsaved changes',
+}: {
+  dirty: boolean;
+  onSave: () => void;
+  onReset: () => void;
+  label?: string;
+}) {
   return (
     <AnimatePresence>
-      {dirty &&
-      <motion.div
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 backdrop-blur lg:left-auto lg:w-[calc(100%-15rem)]">
-        
+      {dirty && (
+        <motion.div
+          initial={{ y: 80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 80, opacity: 0 }}
+          transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 backdrop-blur lg:left-auto lg:w-[calc(100%-15rem)]"
+        >
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <p className="text-[13px] text-charcoal">{label}</p>
             <div className="flex gap-2">
-              <AdminButton variant="ghost" onClick={onReset}>Discard</AdminButton>
-              <AdminButton variant="primary" onClick={onSave}>Save &amp; publish</AdminButton>
+              <AdminButton variant="ghost" onClick={onReset}>
+                Discard
+              </AdminButton>
+              <AdminButton variant="primary" onClick={onSave}>
+                Save &amp; publish
+              </AdminButton>
             </div>
           </div>
         </motion.div>
-      }
-    </AnimatePresence>);
-
+      )}
+    </AnimatePresence>
+  );
 }

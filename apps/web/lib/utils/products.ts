@@ -50,22 +50,41 @@ export function productInCategory(p: Product, c: Category): boolean {
 
 export function emptyFilters(): ProductFilterState {
   return {
-    construction: [], texture: [], origin: [], laceType: [], lengths: [], category: [], brand: [], features: [],
-    minPrice: null, maxPrice: null, minRating: 0, inStockOnly: false, discountedOnly: false
+    construction: [],
+    texture: [],
+    origin: [],
+    laceType: [],
+    lengths: [],
+    category: [],
+    brand: [],
+    features: [],
+    minPrice: null,
+    maxPrice: null,
+    minRating: 0,
+    inStockOnly: false,
+    discountedOnly: false,
   };
 }
 
 export function countActiveFilters(f: ProductFilterState): number {
   return (
-    f.construction.length + f.texture.length + f.origin.length + f.laceType.length + f.lengths.length +
-    f.category.length + f.brand.length + f.features.length + (
-    f.minPrice !== null || f.maxPrice !== null ? 1 : 0) + (f.minRating > 0 ? 1 : 0) + (
-    f.inStockOnly ? 1 : 0) + (f.discountedOnly ? 1 : 0));
-
+    f.construction.length +
+    f.texture.length +
+    f.origin.length +
+    f.laceType.length +
+    f.lengths.length +
+    f.category.length +
+    f.brand.length +
+    f.features.length +
+    (f.minPrice !== null || f.maxPrice !== null ? 1 : 0) +
+    (f.minRating > 0 ? 1 : 0) +
+    (f.inStockOnly ? 1 : 0) +
+    (f.discountedOnly ? 1 : 0)
+  );
 }
 
 function matchAny(selected: string[], value?: string): boolean {
-  return selected.length === 0 || !!value && selected.includes(value);
+  return selected.length === 0 || (!!value && selected.includes(value));
 }
 
 export function filterProducts(list: Product[], f: ProductFilterState): Product[] {
@@ -111,13 +130,26 @@ export function searchProducts(list: Product[], query: string): Product[] {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!terms.length) return list;
   return list.filter((p) => {
-    const cats = categoriesFor(p.division).filter((c) => p.categories.includes(c.slug)).map((c) => c.name);
+    const cats = categoriesFor(p.division)
+      .filter((c) => p.categories.includes(c.slug))
+      .map((c) => c.name);
     const haystack = [
-    p.name, p.shortDescription, p.description, ...cats, ...p.categories,
-    p.attributes.texture, p.attributes.construction, p.attributes.origin, p.attributes.laceType, p.attributes.brand,
-    ...(p.attributes.lengths ?? []).map((l) => `${l} inches ${l}" ${l}inch`),
-    ...p.specs.map((s) => `${s.label} ${s.value}`)].
-    filter(Boolean).join(' ').toLowerCase();
+      p.name,
+      p.shortDescription,
+      p.description,
+      ...cats,
+      ...p.categories,
+      p.attributes.texture,
+      p.attributes.construction,
+      p.attributes.origin,
+      p.attributes.laceType,
+      p.attributes.brand,
+      ...(p.attributes.lengths ?? []).map((l) => `${l} inches ${l}" ${l}inch`),
+      ...p.specs.map((s) => `${s.label} ${s.value}`),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
     return terms.every((t) => haystack.includes(t.replace(/s$/, '')));
   });
 }
@@ -150,20 +182,25 @@ export function priceForSelection(p: Product, selection: Record<string, string>)
 }
 
 export function relatedProducts(p: Product, limit = 8): Product[] {
-  return productsFor(p.division).
-  filter((x) => x.id !== p.id).
-  map((x) => ({ x, score: x.categories.filter((c) => p.categories.includes(c)).length })).
-  sort((a, b) => b.score - a.score || a.x.featuredRank - b.x.featuredRank).
-  slice(0, limit).
-  map(({ x }) => x);
+  return productsFor(p.division)
+    .filter((x) => x.id !== p.id)
+    .map((x) => ({ x, score: x.categories.filter((c) => p.categories.includes(c)).length }))
+    .sort((a, b) => b.score - a.score || a.x.featuredRank - b.x.featuredRank)
+    .slice(0, limit)
+    .map(({ x }) => x);
 }
 
-export function uniqueValues(list: Product[], pick: (p: Product) => string | string[] | undefined): {value: string;count: number;}[] {
+export function uniqueValues(
+  list: Product[],
+  pick: (p: Product) => string | string[] | undefined,
+): { value: string; count: number }[] {
   const counts = new Map<string, number>();
   list.forEach((p) => {
     const v = pick(p);
     const arr = Array.isArray(v) ? v : v ? [v] : [];
     arr.forEach((x) => counts.set(x, (counts.get(x) ?? 0) + 1));
   });
-  return [...counts.entries()].map(([value, count]) => ({ value, count })).sort((a, b) => a.value.localeCompare(b.value));
+  return [...counts.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => a.value.localeCompare(b.value));
 }

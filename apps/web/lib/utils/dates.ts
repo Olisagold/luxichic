@@ -5,7 +5,7 @@ export function formatDate(iso: string): string {
 }
 
 export function formatDateTime(iso: string): string {
-  return format(parseISO(iso), "d MMM yyyy, h:mm a");
+  return format(parseISO(iso), 'd MMM yyyy, h:mm a');
 }
 
 export function formatLongDate(isoDate: string): string {

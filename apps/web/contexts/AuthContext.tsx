@@ -22,10 +22,10 @@ interface AuthContextValue {
   users: User[];
   login: (email: string, password: string, remember: boolean) => Promise<Result>;
   logout: () => void;
-  register: (data: {fullName: string;email: string;phone: string;password: string;}) => Promise<Result>;
+  register: (data: { fullName: string; email: string; phone: string; password: string }) => Promise<Result>;
   emailExists: (email: string) => boolean;
   isBlockedEmail: (email: string) => boolean;
-  updateProfile: (data: {fullName: string;email: string;phone: string;}) => Promise<Result>;
+  updateProfile: (data: { fullName: string; email: string; phone: string }) => Promise<Result>;
   changePassword: (current: string, next: string) => Promise<Result>;
   saveAddress: (address: Address) => void;
   deleteAddress: (id: string) => void;
@@ -34,8 +34,17 @@ interface AuthContextValue {
   isValidResetToken: (token: string) => boolean;
   resetPassword: (token: string, password: string) => Promise<Result>;
   /* admin operations */
-  adminCreateCustomer: (data: {fullName: string;email: string;phone: string;address?: Address;status: 'active' | 'blocked';}) => Result;
-  adminUpdateCustomer: (id: string, patch: Partial<Pick<User, 'fullName' | 'email' | 'phone' | 'status' | 'addresses'>>) => void;
+  adminCreateCustomer: (data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    address?: Address;
+    status: 'active' | 'blocked';
+  }) => Result;
+  adminUpdateCustomer: (
+    id: string,
+    patch: Partial<Pick<User, 'fullName' | 'email' | 'phone' | 'status' | 'addresses'>>,
+  ) => void;
   adminDeleteCustomer: (id: string) => void;
 }
 
@@ -47,9 +56,12 @@ function readSession(): string | null {
   return window.localStorage.getItem('lx_session') ?? window.sessionStorage.getItem('lx_session');
 }
 
-export function AuthProvider({ children }: {children: React.ReactNode;}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers, usersLoaded] = useLocalStorage<User[]>('lx_users_v2', () => [...seedUsers, ...seedCustomers]);
-  const [resetTokens, setResetTokens] = useLocalStorage<Record<string, {email: string;expiresAt: string;}>>('lx_reset_tokens', {});
+  const [resetTokens, setResetTokens] = useLocalStorage<Record<string, { email: string; expiresAt: string }>>(
+    'lx_reset_tokens',
+    {},
+  );
   const [sessionEmail, setSessionEmailState] = useState<string | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const ready = usersLoaded && sessionLoaded;
@@ -66,7 +78,7 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
     setSessionEmailState(email);
   };
 
-  const sessionUser = sessionEmail ? users.find((u) => same(u.email, sessionEmail)) ?? null : null;
+  const sessionUser = sessionEmail ? (users.find((u) => same(u.email, sessionEmail)) ?? null) : null;
   // Blocked customers are treated as signed out everywhere.
   const user = sessionUser && sessionUser.status !== 'blocked' ? sessionUser : null;
   const emailExists = (email: string) => users.some((u) => same(u.email, email));
@@ -75,10 +87,12 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
   const login: AuthContextValue['login'] = async (email, password, remember) => {
     await wait(800);
     const match = users.find((u) => same(u.email, email));
-    if (!match || match.password !== password) return { ok: false, error: 'The email or password you entered is incorrect.' };
-    if (match.status === 'blocked') return { ok: false, error: 'This account has been suspended. Please contact LUXICHIC for help.' };
+    if (!match || match.password !== password)
+      return { ok: false, error: 'The email or password you entered is incorrect.' };
+    if (match.status === 'blocked')
+      return { ok: false, error: 'This account has been suspended. Please contact LUXICHIC for help.' };
     setSessionEmail(match.email, remember);
-    setUsers((prev) => prev.map((u) => u.id === match.id ? { ...u, lastActiveAt: new Date().toISOString() } : u));
+    setUsers((prev) => prev.map((u) => (u.id === match.id ? { ...u, lastActiveAt: new Date().toISOString() } : u)));
     return { ok: true };
   };
 
@@ -87,8 +101,10 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
   const register: AuthContextValue['register'] = async (data) => {
     await wait(800);
     const existing = users.find((u) => same(u.email, data.email));
-    if (existing && !existing.pendingSetup) return { ok: false, error: 'An account with this email already exists. Please sign in instead.' };
-    if (existing?.status === 'blocked') return { ok: false, error: 'This account has been suspended. Please contact LUXICHIC for help.' };
+    if (existing && !existing.pendingSetup)
+      return { ok: false, error: 'An account with this email already exists. Please sign in instead.' };
+    if (existing?.status === 'blocked')
+      return { ok: false, error: 'This account has been suspended. Please contact LUXICHIC for help.' };
     const now = new Date().toISOString();
     const newUser: User = {
       id: existing?.id ?? generateId('u'),
@@ -99,17 +115,24 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
       addresses: existing?.addresses ?? [],
       createdAt: existing?.createdAt ?? now,
       lastActiveAt: now,
-      status: 'active'
+      status: 'active',
     };
-    setUsers((prev) => existing ? prev.map((u) => u.id === existing.id ? newUser : u) : [...prev, newUser]);
+    setUsers((prev) => (existing ? prev.map((u) => (u.id === existing.id ? newUser : u)) : [...prev, newUser]));
     setSessionEmail(newUser.email);
-    updateDb((d) => pushNotification(d, { kind: 'customer', title: 'New customer', body: `${newUser.fullName} created an account.`, link: '/admin/customers' }));
+    updateDb((d) =>
+      pushNotification(d, {
+        kind: 'customer',
+        title: 'New customer',
+        body: `${newUser.fullName} created an account.`,
+        link: '/admin/customers',
+      }),
+    );
     return { ok: true };
   };
 
   const patchUser = (fn: (u: User) => User) => {
     if (!user) return;
-    setUsers((prev) => prev.map((u) => u.id === user.id ? fn(u) : u));
+    setUsers((prev) => prev.map((u) => (u.id === user.id ? fn(u) : u)));
   };
 
   const updateProfile: AuthContextValue['updateProfile'] = async (data) => {
@@ -132,22 +155,22 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
   };
 
   const saveAddress = (address: Address) =>
-  patchUser((u) => {
-    const exists = u.addresses.some((a) => a.id === address.id);
-    let list = exists ? u.addresses.map((a) => a.id === address.id ? address : a) : [...u.addresses, address];
-    if (address.isDefault || list.length === 1) list = list.map((a) => ({ ...a, isDefault: a.id === address.id }));
-    return { ...u, addresses: list };
-  });
+    patchUser((u) => {
+      const exists = u.addresses.some((a) => a.id === address.id);
+      let list = exists ? u.addresses.map((a) => (a.id === address.id ? address : a)) : [...u.addresses, address];
+      if (address.isDefault || list.length === 1) list = list.map((a) => ({ ...a, isDefault: a.id === address.id }));
+      return { ...u, addresses: list };
+    });
 
   const deleteAddress = (id: string) =>
-  patchUser((u) => {
-    let list = u.addresses.filter((a) => a.id !== id);
-    if (list.length && !list.some((a) => a.isDefault)) list = list.map((a, i) => ({ ...a, isDefault: i === 0 }));
-    return { ...u, addresses: list };
-  });
+    patchUser((u) => {
+      let list = u.addresses.filter((a) => a.id !== id);
+      if (list.length && !list.some((a) => a.isDefault)) list = list.map((a, i) => ({ ...a, isDefault: i === 0 }));
+      return { ...u, addresses: list };
+    });
 
   const setDefaultAddress = (id: string) =>
-  patchUser((u) => ({ ...u, addresses: u.addresses.map((a) => ({ ...a, isDefault: a.id === id })) }));
+    patchUser((u) => ({ ...u, addresses: u.addresses.map((a) => ({ ...a, isDefault: a.id === id })) }));
 
   const requestPasswordReset = async (email: string) => {
     await wait(800);
@@ -155,7 +178,7 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
     const token = generateToken();
     setResetTokens((prev) => ({
       ...prev,
-      [token]: { email: email.trim(), expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() }
+      [token]: { email: email.trim(), expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() },
     }));
     return token;
   };
@@ -171,7 +194,7 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
     if (!entry || new Date(entry.expiresAt).getTime() < Date.now()) {
       return { ok: false, error: 'This reset link is invalid or has expired. Please request a new one.' };
     }
-    setUsers((prev) => prev.map((u) => same(u.email, entry.email) ? { ...u, password, pendingSetup: false } : u));
+    setUsers((prev) => prev.map((u) => (same(u.email, entry.email) ? { ...u, password, pendingSetup: false } : u)));
     setResetTokens((prev) => {
       const next = { ...prev };
       delete next[token];
@@ -186,20 +209,25 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
     if (emailExists(data.email)) return { ok: false, error: 'A customer with this email already exists.' };
     const now = new Date().toISOString();
     setUsers((prev) => [
-    ...prev,
-    {
-      id: generateId('u'), fullName: data.fullName.trim(), email: data.email.trim(), phone: data.phone.trim(),
-      // No password is set by admins — the customer receives a secure setup link.
-      password: generateToken(),
-      addresses: data.address ? [{ ...data.address, isDefault: true }] : [],
-      createdAt: now, status: data.status, pendingSetup: true
-    }]
-    );
+      ...prev,
+      {
+        id: generateId('u'),
+        fullName: data.fullName.trim(),
+        email: data.email.trim(),
+        phone: data.phone.trim(),
+        // No password is set by admins — the customer receives a secure setup link.
+        password: generateToken(),
+        addresses: data.address ? [{ ...data.address, isDefault: true }] : [],
+        createdAt: now,
+        status: data.status,
+        pendingSetup: true,
+      },
+    ]);
     return { ok: true };
   };
 
   const adminUpdateCustomer: AuthContextValue['adminUpdateCustomer'] = (id, patch) =>
-  setUsers((prev) => prev.map((u) => u.id === id ? { ...u, ...patch } : u));
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
 
   const adminDeleteCustomer = (id: string) => setUsers((prev) => prev.filter((u) => u.id !== id));
 
@@ -207,14 +235,29 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
     <AuthContext.Provider
       value={{
         ready,
-        user, users, login, logout, register, emailExists, isBlockedEmail, updateProfile, changePassword,
-        saveAddress, deleteAddress, setDefaultAddress, requestPasswordReset, isValidResetToken, resetPassword,
-        adminCreateCustomer, adminUpdateCustomer, adminDeleteCustomer
-      }}>
-      
+        user,
+        users,
+        login,
+        logout,
+        register,
+        emailExists,
+        isBlockedEmail,
+        updateProfile,
+        changePassword,
+        saveAddress,
+        deleteAddress,
+        setDefaultAddress,
+        requestPasswordReset,
+        isValidResetToken,
+        resetPassword,
+        adminCreateCustomer,
+        adminUpdateCustomer,
+        adminDeleteCustomer,
+      }}
+    >
       {children}
-    </AuthContext.Provider>);
-
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

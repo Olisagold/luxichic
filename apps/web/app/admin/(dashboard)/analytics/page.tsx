@@ -8,6 +8,6 @@ export default function AdminAnalyticsPage() {
   return (
     <RequirePermission permission="analytics.view">
       <Analytics />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

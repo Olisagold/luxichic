@@ -1,10 +1,10 @@
 export function slugify(s: string): string {
-  return s.
-  toLowerCase().
-  trim().
-  replace(/[^a-z0-9\s-]/g, '').
-  replace(/\s+/g, '-').
-  replace(/-+/g, '-');
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 }
 
 /** Replaces {{variable}} tokens in a template with sample or real values. */
@@ -13,12 +13,12 @@ export function fillTemplate(template: string, values: Record<string, string>): 
 }
 
 export function initials(name: string): string {
-  return name.
-  split(/\s+/).
-  filter(Boolean).
-  slice(0, 2).
-  map((p) => p[0]?.toUpperCase()).
-  join('');
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('');
 }
 
 export function downloadCsv(filename: string, rows: (string | number)[][]) {

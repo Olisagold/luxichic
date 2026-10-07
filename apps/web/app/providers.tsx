@@ -11,7 +11,7 @@ import { ReviewsProvider } from '@/contexts/ReviewsContext';
 import { UIProvider } from '@/contexts/UIContext';
 import { hydrateDb } from '@/lib/mock-db/db';
 
-export function Providers({ children }: {children: React.ReactNode;}) {
+export function Providers({ children }: { children: React.ReactNode }) {
   // The prototype store renders from seed data first; once the browser's saved copy
   // is loaded, remount the page so components reading the store directly pick it up.
   const [dbKey, setDbKey] = useState(0);
@@ -36,6 +36,6 @@ export function Providers({ children }: {children: React.ReactNode;}) {
           </ReviewsProvider>
         </OrdersProvider>
       </AuthProvider>
-    </SettingsProvider>);
-
+    </SettingsProvider>
+  );
 }

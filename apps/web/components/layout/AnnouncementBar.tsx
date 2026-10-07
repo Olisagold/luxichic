@@ -26,12 +26,12 @@ export function AnnouncementBar() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: -10 }}
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-            aria-live="polite">
-            
+            aria-live="polite"
+          >
             {announcements[i % announcements.length]}
           </motion.p>
         </AnimatePresence>
       </div>
-    </div>);
-
+    </div>
+  );
 }

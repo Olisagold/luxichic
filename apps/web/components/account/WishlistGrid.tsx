@@ -23,29 +23,42 @@ export function WishlistGrid() {
         title="Your wishlist is empty"
         text="Tap the heart on any product to save it here — from either store."
         actions={
-        <>
+          <>
             <Button to="/hairs">Shop LUXICHIC Hairs</Button>
-            <Button to="/tools" variant="outline">Shop Hair Tools</Button>
+            <Button to="/tools" variant="outline">
+              Shop Hair Tools
+            </Button>
           </>
-        } />);
-
-
+        }
+      />
+    );
   }
 
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 xl:grid-cols-4">
-      {products.map((p) =>
-      <li key={p.id} className="flex flex-col">
+      {products.map((p) => (
+        <li key={p.id} className="flex flex-col">
           <div className="relative overflow-hidden rounded-2xl bg-champagne/40">
             <Link href={`/${p.division}/product/${p.slug}`}>
               <img src={p.images[0]} alt={p.name} className="aspect-[4/5] w-full object-cover" />
             </Link>
-            <button onClick={() => remove(p.id)} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-soft" aria-label={`Remove ${p.name} from wishlist`}>
+            <button
+              onClick={() => remove(p.id)}
+              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-soft"
+              aria-label={`Remove ${p.name} from wishlist`}
+            >
               <XIcon className="h-4 w-4" />
             </button>
           </div>
-          <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-subtle">{divisionLabel(p.division)}</p>
-          <Link href={`/${p.division}/product/${p.slug}`} className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-sm font-medium text-ink hover:text-pink-deep">{p.name}</Link>
+          <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-subtle">
+            {divisionLabel(p.division)}
+          </p>
+          <Link
+            href={`/${p.division}/product/${p.slug}`}
+            className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-sm font-medium text-ink hover:text-pink-deep"
+          >
+            {p.name}
+          </Link>
           <PriceTag price={p.price} original={p.originalPrice} className="mt-1" />
           <div className="mt-auto pt-3">
             <Button size="sm" fullWidth disabled={p.stock <= 0} onClick={() => addToCart(p)}>
@@ -53,7 +66,7 @@ export function WishlistGrid() {
             </Button>
           </div>
         </li>
-      )}
-    </ul>);
-
+      ))}
+    </ul>
+  );
 }

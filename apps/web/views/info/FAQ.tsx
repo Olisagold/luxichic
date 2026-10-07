@@ -16,22 +16,40 @@ export function FAQ() {
           <h1 className="font-display text-5xl text-ink">FAQs</h1>
           <nav aria-label="FAQ categories" className="mt-6 hidden lg:block">
             <ul className="space-y-2 text-sm">
-              {faqs.map((c) => <li key={c.category}><a href={`#faq-${c.category}`} className="text-subtle hover:text-ink">{c.category}</a></li>)}
+              {faqs.map((c) => (
+                <li key={c.category}>
+                  <a href={`#faq-${c.category}`} className="text-subtle hover:text-ink">
+                    {c.category}
+                  </a>
+                </li>
+              ))}
             </ul>
           </nav>
           <p className="mt-8 text-sm text-subtle">Still have questions?</p>
-          <WhatsAppButton number={businessConfig.whatsapp.general} message="Hello LUXICHIC, I have a question." size="sm" className="mt-3" />
+          <WhatsAppButton
+            number={businessConfig.whatsapp.general}
+            message="Hello LUXICHIC, I have a question."
+            size="sm"
+            className="mt-3"
+          />
         </aside>
         <div className="space-y-14">
-          {faqs.map((c) =>
-          <section key={c.category} id={`faq-${c.category}`} className="scroll-mt-28" aria-labelledby={`faq-h-${c.category}`}>
-              <h2 id={`faq-h-${c.category}`} className="mb-4 font-display text-3xl text-ink">{c.category}</h2>
+          {faqs.map((c) => (
+            <section
+              key={c.category}
+              id={`faq-${c.category}`}
+              className="scroll-mt-28"
+              aria-labelledby={`faq-h-${c.category}`}
+            >
+              <h2 id={`faq-h-${c.category}`} className="mb-4 font-display text-3xl text-ink">
+                {c.category}
+              </h2>
               <Accordion items={c.items} />
             </section>
-          )}
+          ))}
           <p className="text-xs text-subtle">Answers marked [Placeholder] will be finalised by LUXICHIC.</p>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

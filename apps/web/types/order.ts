@@ -23,13 +23,7 @@ export type OrderStatus = 'Pending' | 'Confirmed' | 'Processing' | 'Shipped' | '
 export type PaymentStatus = 'Pending Verification' | 'Payment Confirmed' | 'Pay on Delivery' | 'Paid';
 
 export type TimelineStep =
-'Order Placed' |
-'Awaiting Payment' |
-'Payment Confirmed' |
-'Processing' |
-'Shipped' |
-'Delivered' |
-'Cancelled';
+  'Order Placed' | 'Awaiting Payment' | 'Payment Confirmed' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
 
 export interface TimelineEntry {
   step: TimelineStep;

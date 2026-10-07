@@ -18,18 +18,20 @@ export function OrderTotals({ subtotal, deliveryFee, discount, promoCode }: Orde
       </div>
       <div className="flex justify-between">
         <dt className="text-subtle">Delivery fee</dt>
-        <dd className="tabular-nums text-ink">{deliveryFee === null ? 'Calculated at checkout' : formatNaira(deliveryFee)}</dd>
+        <dd className="tabular-nums text-ink">
+          {deliveryFee === null ? 'Calculated at checkout' : formatNaira(deliveryFee)}
+        </dd>
       </div>
-      {discount > 0 &&
-      <div className="flex justify-between text-emerald-700">
+      {discount > 0 && (
+        <div className="flex justify-between text-emerald-700">
           <dt>Discount{promoCode ? ` (${promoCode})` : ''}</dt>
           <dd className="tabular-nums">−{formatNaira(discount)}</dd>
         </div>
-      }
+      )}
       <div className="flex items-baseline justify-between border-t border-line pt-4">
         <dt className="font-semibold text-ink">Total payable</dt>
         <dd className="text-xl font-semibold tabular-nums text-ink">{formatNaira(total)}</dd>
       </div>
-    </dl>);
-
+    </dl>
+  );
 }

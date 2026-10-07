@@ -24,7 +24,9 @@ export function ProductCarousel({ products, label, perView = 4, dark }: ProductC
 
   const arrow = cn(
     'flex h-11 w-11 items-center justify-center rounded-full border transition-colors duration-150',
-    dark ? 'border-white/25 text-white hover:bg-white hover:text-ink' : 'border-line bg-white text-ink hover:border-ink'
+    dark
+      ? 'border-white/25 text-white hover:bg-white hover:text-ink'
+      : 'border-line bg-white text-ink hover:border-ink',
   );
 
   return (
@@ -37,16 +39,22 @@ export function ProductCarousel({ products, label, perView = 4, dark }: ProductC
           <ArrowRightIcon className="h-4 w-4" />
         </button>
       </div>
-      <ul ref={ref} className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-5 pb-2 lg:mx-0 lg:px-0">
-        {products.map((p) =>
-        <li
-          key={p.id}
-          className={cn('w-[70%] shrink-0 snap-start sm:w-[44%]', perView === 4 ? 'lg:w-[calc(25%-15px)]' : 'lg:w-[calc(33.333%-14px)]')}>
-          
+      <ul
+        ref={ref}
+        className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-5 pb-2 lg:mx-0 lg:px-0"
+      >
+        {products.map((p) => (
+          <li
+            key={p.id}
+            className={cn(
+              'w-[70%] shrink-0 snap-start sm:w-[44%]',
+              perView === 4 ? 'lg:w-[calc(25%-15px)]' : 'lg:w-[calc(33.333%-14px)]',
+            )}
+          >
             <ProductCard product={p} dark={dark} />
           </li>
-        )}
+        ))}
       </ul>
-    </div>);
-
+    </div>
+  );
 }

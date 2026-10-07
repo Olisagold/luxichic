@@ -8,6 +8,6 @@ export default function AdminDashboardPage() {
   return (
     <RequirePermission permission="dashboard.view">
       <Dashboard />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

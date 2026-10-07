@@ -11,7 +11,7 @@ interface Settings {
 const SettingsContext = createContext<Settings>({ payOnDeliveryEnabled: businessConfig.payOnDeliveryEnabled });
 
 /** `value` comes from App props (Controls panel) and acts as a master switch over the admin setting. */
-export function SettingsProvider({ value, children }: {value: Settings;children: React.ReactNode;}) {
+export function SettingsProvider({ value, children }: { value: Settings; children: React.ReactNode }) {
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
 

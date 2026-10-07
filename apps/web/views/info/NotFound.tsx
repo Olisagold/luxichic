@@ -13,12 +13,14 @@ export function NotFound() {
         title="We couldn’t find that page"
         text="The link may be broken or the page may have moved. Let’s get you back to something beautiful."
         actions={
-        <>
+          <>
             <Button to="/">Back to Home</Button>
-            <Button to="/hairs" variant="outline">Shop Hair</Button>
+            <Button to="/hairs" variant="outline">
+              Shop Hair
+            </Button>
           </>
-        } />
-      
-    </div>);
-
+        }
+      />
+    </div>
+  );
 }

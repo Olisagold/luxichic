@@ -8,6 +8,6 @@ export default function AdminCustomersPage() {
   return (
     <RequirePermission permission="customers.view">
       <Customers />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

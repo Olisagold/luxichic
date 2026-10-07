@@ -8,7 +8,7 @@ import { AdminEmpty } from '@/components/admin/ui/AdminEmpty';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 
 /** Hides a page the current admin can't access. UI-only — the server must enforce this too. */
-export function RequirePermission({ permission, children }: {permission?: Permission;children: React.ReactNode;}) {
+export function RequirePermission({ permission, children }: { permission?: Permission; children: React.ReactNode }) {
   const { can } = useAdminAuth();
   if (permission && !can(permission)) {
     return (
@@ -17,10 +17,14 @@ export function RequirePermission({ permission, children }: {permission?: Permis
           icon={<LockIcon className="h-5 w-5" />}
           title="You don’t have access to this section"
           text="Ask the main administrator to update your permissions."
-          action={<AdminButton to="/admin/dashboard" variant="primary">Back to dashboard</AdminButton>} />
-        
-      </div>);
-
+          action={
+            <AdminButton to="/admin/dashboard" variant="primary">
+              Back to dashboard
+            </AdminButton>
+          }
+        />
+      </div>
+    );
   }
   return <>{children}</>;
 }

@@ -1,7 +1,7 @@
 const formatter = new Intl.NumberFormat('en-NG', {
   style: 'currency',
   currency: 'NGN',
-  maximumFractionDigits: 0
+  maximumFractionDigits: 0,
 });
 
 export function formatNaira(amount: number): string {
@@ -10,5 +10,5 @@ export function formatNaira(amount: number): string {
 
 export function discountPercent(price: number, original?: number): number | null {
   if (!original || original <= price) return null;
-  return Math.round((original - price) / original * 100);
+  return Math.round(((original - price) / original) * 100);
 }

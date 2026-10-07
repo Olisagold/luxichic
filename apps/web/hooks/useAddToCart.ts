@@ -20,7 +20,7 @@ export function toCartItem(product: Product, selection: Record<string, string>, 
     image: product.images[0],
     unitPrice: priceForSelection(product, selection).price,
     quantity,
-    variants
+    variants,
   };
 }
 
@@ -39,7 +39,7 @@ export function useAddToCart() {
     const variantText = Object.values(item.variants).join(' · ');
     toast.success(`${product.name} added to your cart`, {
       description: variantText || undefined,
-      action: { label: 'View cart', onClick: openCart }
+      action: { label: 'View cart', onClick: openCart },
     });
   };
 }

@@ -8,6 +8,6 @@ export default function AdminHomepageContentPage() {
   return (
     <RequirePermission permission="content.homepage">
       <HomepageContent />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

@@ -22,8 +22,9 @@ export function NavLink({ href, end, className, children, ...rest }: NavLinkProp
       href={href}
       aria-current={isActive ? 'page' : undefined}
       className={typeof className === 'function' ? className({ isActive }) : className}
-      {...rest}>
+      {...rest}
+    >
       {typeof children === 'function' ? children({ isActive }) : children}
-    </Link>);
-
+    </Link>
+  );
 }

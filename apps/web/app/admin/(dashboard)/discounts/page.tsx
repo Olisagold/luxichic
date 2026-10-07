@@ -8,6 +8,6 @@ export default function AdminDiscountsPage() {
   return (
     <RequirePermission permission="discounts.manage">
       <Discounts />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

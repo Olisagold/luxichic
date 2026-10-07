@@ -34,7 +34,7 @@ export function buildCustomerRows(users: User[], orders: Order[], appointments: 
     spent: 0,
     appointments: 0,
     lastActivity: u.lastActiveAt ?? null,
-    user: u
+    user: u,
   }));
   const byEmail = new Map(rows.map((r) => [r.email.toLowerCase(), r]));
 
@@ -42,7 +42,19 @@ export function buildCustomerRows(users: User[], orders: Order[], appointments: 
     const key = email.toLowerCase();
     let row = byEmail.get(key);
     if (!row) {
-      row = { id: `guest-${key}`, fullName: name, email, phone, registered: false, status: 'guest', joinedAt: at, orders: 0, spent: 0, appointments: 0, lastActivity: null };
+      row = {
+        id: `guest-${key}`,
+        fullName: name,
+        email,
+        phone,
+        registered: false,
+        status: 'guest',
+        joinedAt: at,
+        orders: 0,
+        spent: 0,
+        appointments: 0,
+        lastActivity: null,
+      };
       byEmail.set(key, row);
       rows.push(row);
     }
@@ -64,9 +76,13 @@ export function buildCustomerRows(users: User[], orders: Order[], appointments: 
 }
 
 export function customerOrders(email: string, orders: Order[]) {
-  return orders.filter((o) => same(o.customer.email, email) || same(o.accountEmail, email)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return orders
+    .filter((o) => same(o.customer.email, email) || same(o.accountEmail, email))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export function customerAppointments(email: string, appointments: Appointment[]) {
-  return appointments.filter((a) => same(a.customer.email, email) || same(a.accountEmail, email)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return appointments
+    .filter((a) => same(a.customer.email, email) || same(a.accountEmail, email))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

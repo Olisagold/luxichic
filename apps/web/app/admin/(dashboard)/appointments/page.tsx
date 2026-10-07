@@ -8,6 +8,6 @@ export default function AdminAppointmentsPage() {
   return (
     <RequirePermission permission="appointments.view">
       <Appointments />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

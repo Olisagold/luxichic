@@ -7,8 +7,15 @@ import { generateId } from '@/lib/utils/references';
 export function saveService(actor: AdminUser, s: AdminService) {
   updateDb((d) => {
     const exists = d.services.some((x) => x.slug === s.slug);
-    d.services = exists ? d.services.map((x) => x.slug === s.slug ? s : x) : [...d.services, s];
-    logActivity(d, actor, 'Salon', exists ? 'Edited service' : 'Created service', s.name, `/admin/salon/services/${s.slug}`);
+    d.services = exists ? d.services.map((x) => (x.slug === s.slug ? s : x)) : [...d.services, s];
+    logActivity(
+      d,
+      actor,
+      'Salon',
+      exists ? 'Edited service' : 'Created service',
+      s.name,
+      `/admin/salon/services/${s.slug}`,
+    );
   });
 }
 
@@ -17,7 +24,13 @@ export function setServiceStatus(actor: AdminUser, slug: string, status: AdminSe
     const s = d.services.find((x) => x.slug === slug);
     if (!s) return;
     s.status = status;
-    logActivity(d, actor, 'Salon', status === 'published' ? 'Published service' : status === 'archived' ? 'Archived service' : 'Unpublished service', s.name);
+    logActivity(
+      d,
+      actor,
+      'Salon',
+      status === 'published' ? 'Published service' : status === 'archived' ? 'Archived service' : 'Unpublished service',
+      s.name,
+    );
   });
 }
 
@@ -35,7 +48,7 @@ export function deleteService(actor: AdminUser, slug: string) {
 export function saveSpecialist(actor: AdminUser, sp: Specialist) {
   updateDb((d) => {
     const exists = d.specialists.some((x) => x.id === sp.id);
-    d.specialists = exists ? d.specialists.map((x) => x.id === sp.id ? sp : x) : [...d.specialists, sp];
+    d.specialists = exists ? d.specialists.map((x) => (x.id === sp.id ? sp : x)) : [...d.specialists, sp];
     logActivity(d, actor, 'Salon', exists ? 'Edited specialist' : 'Added specialist', sp.name);
   });
 }
@@ -53,15 +66,26 @@ export function assignSpecialist(actor: AdminUser, specialistId: string, service
   updateDb((d) => {
     const sp = d.specialists.find((x) => x.id === specialistId);
     if (!sp) return;
-    sp.serviceSlugs = assigned ? Array.from(new Set([...sp.serviceSlugs, serviceSlug])) : sp.serviceSlugs.filter((x) => x !== serviceSlug);
+    sp.serviceSlugs = assigned
+      ? Array.from(new Set([...sp.serviceSlugs, serviceSlug]))
+      : sp.serviceSlugs.filter((x) => x !== serviceSlug);
     const service = d.services.find((s) => s.slug === serviceSlug);
-    logActivity(d, actor, 'Salon', assigned ? 'Assigned specialist' : 'Unassigned specialist', `${sp.name} · ${service?.name ?? serviceSlug}`);
+    logActivity(
+      d,
+      actor,
+      'Salon',
+      assigned ? 'Assigned specialist' : 'Unassigned specialist',
+      `${sp.name} · ${service?.name ?? serviceSlug}`,
+    );
   });
 }
 
 export function addBlock(actor: AdminUser, block: Omit<AvailabilityBlock, 'id' | 'createdAt' | 'createdBy'>) {
   updateDb((d) => {
-    d.blocks = [{ ...block, id: generateId('blk'), createdAt: new Date().toISOString(), createdBy: actor.fullName }, ...d.blocks];
+    d.blocks = [
+      { ...block, id: generateId('blk'), createdAt: new Date().toISOString(), createdBy: actor.fullName },
+      ...d.blocks,
+    ];
     const what = block.start ? `${block.start}${block.end ? `–${block.end}` : ''}` : 'Entire day';
     logActivity(d, actor, 'Salon', 'Blocked availability', `${block.date} · ${what}`, '/admin/salon/availability');
   });

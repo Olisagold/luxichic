@@ -8,6 +8,6 @@ export default function AdminServiceEditorPage() {
   return (
     <RequirePermission permission="salon.services">
       <ServiceEditor />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

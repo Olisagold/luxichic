@@ -7,7 +7,7 @@ export type DateStatus = 'unavailable' | 'closed' | 'full' | 'available';
 
 function hash(s: string): number {
   let h = 7;
-  for (let i = 0; i < s.length; i++) h = h * 31 + s.charCodeAt(i) >>> 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
   return h;
 }
 
@@ -18,8 +18,12 @@ const toMins = (t: string) => {
 
 /** True when an admin block covers this date/time for the given service (and optional specialist). */
 export function isBlocked(
-blocks: AvailabilityBlock[], dateKey: string, time: string | null, serviceSlug?: string | null, specialistId?: string | null)
-: AvailabilityBlock | undefined {
+  blocks: AvailabilityBlock[],
+  dateKey: string,
+  time: string | null,
+  serviceSlug?: string | null,
+  specialistId?: string | null,
+): AvailabilityBlock | undefined {
   return blocks.find((b) => {
     if (b.date !== dateKey) return false;
     if (b.serviceSlug && serviceSlug && b.serviceSlug !== serviceSlug) return false;
@@ -38,7 +42,8 @@ blocks: AvailabilityBlock[], dateKey: string, time: string | null, serviceSlug?:
 /** PROTOTYPE availability: business rules + admin blocks + a simulated booking load. */
 export function getDateStatus(date: Date, serviceSlug?: string | null): DateStatus {
   const today = startOfDay(new Date());
-  if (isBefore(date, today) || isAfter(date, addDays(today, businessConfig.salon.bookingWindowDays))) return 'unavailable';
+  if (isBefore(date, today) || isAfter(date, addDays(today, businessConfig.salon.bookingWindowDays)))
+    return 'unavailable';
   if (businessConfig.salon.closedWeekdays.includes(date.getDay())) return 'closed';
   const key = toISODate(date);
   if (isBlocked(businessConfig.salon.blocks, key, null, serviceSlug ?? null, null)) return 'full';

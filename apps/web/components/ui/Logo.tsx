@@ -13,17 +13,17 @@ const crops: Record<LogoVariant, [number, number, number, number]> = {
   main: [0.05, 0.86, 0.24, 0.66],
   hairs: [0.05, 0.89, 0.24, 0.69],
   salon: [0.095, 0.935, 0.255, 0.645],
-  tools: [0.05, 0.866, 0.253, 0.65]
+  tools: [0.05, 0.866, 0.253, 0.65],
 };
 
 const names: Record<LogoVariant, string> = {
   main: 'LUXICHIC',
   hairs: 'LUXICHIC Hairs',
   salon: 'LUXICHIC Beauty Salon & Spa',
-  tools: 'LUXICHIC Wig Tools'
+  tools: 'LUXICHIC Wig Tools',
 };
 
-export function Logo({ variant = 'main', className }: {variant?: LogoVariant;className?: string;}) {
+export function Logo({ variant = 'main', className }: { variant?: LogoVariant; className?: string }) {
   const [l, r, t, b] = crops[variant];
   const w = r - l;
   const h = b - t;
@@ -33,8 +33,8 @@ export function Logo({ variant = 'main', className }: {variant?: LogoVariant;cla
         src={logos[variant]}
         alt={names[variant]}
         className="absolute mix-blend-lighten"
-        style={{ width: `${100 / w}%`, maxWidth: 'none', left: `${-l / w * 100}%`, top: `${-t / h * 100}%` }} />
-      
-    </span>);
-
+        style={{ width: `${100 / w}%`, maxWidth: 'none', left: `${(-l / w) * 100}%`, top: `${(-t / h) * 100}%` }}
+      />
+    </span>
+  );
 }

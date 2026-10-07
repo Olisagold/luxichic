@@ -8,6 +8,6 @@ export default function AdminOrderDetailPage() {
   return (
     <RequirePermission permission="orders.view">
       <OrderDetail />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

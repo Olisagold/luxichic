@@ -8,7 +8,7 @@ interface ProductRailProps {
   title: React.ReactNode;
   text?: string;
   products: Product[];
-  action?: {label: string;to: string;};
+  action?: { label: string; to: string };
   tone?: 'white' | 'ivory' | 'blush';
 }
 
@@ -22,6 +22,6 @@ export function ProductRail({ title, text, products, action, tone = 'white' }: P
         <SectionHeading title={title} text={text} action={action} reserveArrows />
         <ProductCarousel products={products} label={typeof title === 'string' ? title : 'Products'} />
       </div>
-    </section>);
-
+    </section>
+  );
 }

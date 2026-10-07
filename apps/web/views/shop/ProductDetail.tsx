@@ -22,7 +22,7 @@ import { discountPercent } from '@/lib/utils/currency';
 import { businessConfig } from '@/data/config';
 import { NotFound } from '@/views/info/NotFound';
 
-export function ProductDetail({ division }: {division: Division;}) {
+export function ProductDetail({ division }: { division: Division }) {
   const { slug } = useParams<{ slug: string }>();
   const product = findProduct(slug);
   const [selection, setSelection] = useState<Record<string, string>>({});
@@ -48,14 +48,14 @@ export function ProductDetail({ division }: {division: Division;}) {
   const share = async () => {
     const url = window.location.href;
     try {
-      if (navigator.share) await navigator.share({ title: product.name, url });else
-      {
+      if (navigator.share) await navigator.share({ title: product.name, url });
+      else {
         await navigator.clipboard.writeText(url);
         toast.success('Product link copied to your clipboard');
       }
     } catch {
-
-      /* dismissed */}
+      /* dismissed */
+    }
   };
 
   const buyNow = () => {
@@ -69,12 +69,13 @@ export function ProductDetail({ division }: {division: Division;}) {
       <div className="mx-auto max-w-7xl px-5 pb-20 pt-8 lg:px-8">
         <Breadcrumbs
           items={[
-          { label: 'Home', to: '/' },
-          { label: divisionLabel(division), to: storeHome },
-          { label: 'Shop', to: `${storeHome}/shop/all` },
-          { label: product.name }]
-          } />
-        
+            { label: 'Home', to: '/' },
+            { label: divisionLabel(division), to: storeHome },
+            { label: 'Shop', to: `${storeHome}/shop/all` },
+            { label: product.name },
+          ]}
+        />
+
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
           <ProductGallery images={product.images} name={product.name} />
 
@@ -90,21 +91,39 @@ export function ProductDetail({ division }: {division: Division;}) {
               <PriceTag price={priced.price} original={priced.original} size="lg" />
               {off && <span className="rounded-full bg-pink px-2.5 py-1 text-xs font-bold text-ink">Save {off}%</span>}
             </div>
-            {businessConfig.pricesAreSamples && <p className="mt-1 text-xs text-subtle">Sample price — final pricing to be confirmed.</p>}
+            {businessConfig.pricesAreSamples && (
+              <p className="mt-1 text-xs text-subtle">Sample price — final pricing to be confirmed.</p>
+            )}
 
             <p className="mt-6 text-[15px] leading-relaxed text-charcoal">{product.shortDescription}</p>
 
             <div className="mt-8">
-              <VariantSelector product={product} selection={selection} onChange={(k, v) => setSelection((s) => ({ ...s, [k]: v }))} />
+              <VariantSelector
+                product={product}
+                selection={selection}
+                onChange={(k, v) => setSelection((s) => ({ ...s, [k]: v }))}
+              />
             </div>
 
-            <p className={`mt-6 text-sm font-medium ${priced.stock <= 0 ? 'text-red-700' : lowStock ? 'text-[#8a6d3b]' : 'text-emerald-700'}`} aria-live="polite">
-              {priced.stock <= 0 ? 'Out of stock in this option' : lowStock ? `Low stock — only ${priced.stock} left in this option` : 'In stock and ready to ship'}
+            <p
+              className={`mt-6 text-sm font-medium ${priced.stock <= 0 ? 'text-red-700' : lowStock ? 'text-[#8a6d3b]' : 'text-emerald-700'}`}
+              aria-live="polite"
+            >
+              {priced.stock <= 0
+                ? 'Out of stock in this option'
+                : lowStock
+                  ? `Low stock — only ${priced.stock} left in this option`
+                  : 'In stock and ready to ship'}
             </p>
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <QuantitySelector value={qty} onChange={setQty} max={Math.max(1, priced.stock)} size="lg" />
-              <Button size="lg" className="flex-1" disabled={priced.stock <= 0} onClick={() => addToCart(product, selection, qty)}>
+              <Button
+                size="lg"
+                className="flex-1"
+                disabled={priced.stock <= 0}
+                onClick={() => addToCart(product, selection, qty)}
+              >
                 Add to Cart
               </Button>
             </div>
@@ -113,14 +132,24 @@ export function ProductDetail({ division }: {division: Division;}) {
                 <ZapIcon className="h-4 w-4" aria-hidden /> Buy Now
               </Button>
               <WishlistButton productId={product.id} productName={product.name} withLabel />
-              <button onClick={share} className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line transition-colors duration-150 hover:border-ink" aria-label="Share product">
+              <button
+                onClick={share}
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line transition-colors duration-150 hover:border-ink"
+                aria-label="Share product"
+              >
                 <Share2Icon className="h-4 w-4" />
               </button>
             </div>
 
             <ul className="mt-8 space-y-3 border-t border-line pt-6 text-sm text-charcoal">
-              <li className="flex gap-3"><TruckIcon className="h-5 w-5 shrink-0 text-gold" aria-hidden />Nationwide delivery — fee calculated at checkout by state.</li>
-              <li className="flex gap-3"><ShieldCheckIcon className="h-5 w-5 shrink-0 text-gold" aria-hidden />Guest checkout available. Pay by bank transfer or on delivery.</li>
+              <li className="flex gap-3">
+                <TruckIcon className="h-5 w-5 shrink-0 text-gold" aria-hidden />
+                Nationwide delivery — fee calculated at checkout by state.
+              </li>
+              <li className="flex gap-3">
+                <ShieldCheckIcon className="h-5 w-5 shrink-0 text-gold" aria-hidden />
+                Guest checkout available. Pay by bank transfer or on delivery.
+              </li>
             </ul>
           </div>
         </div>
@@ -130,7 +159,11 @@ export function ProductDetail({ division }: {division: Division;}) {
         </div>
       </div>
 
-      <ProductRail title="You may also like" products={relatedProducts(product, 8)} action={{ label: 'Shop all', to: `${storeHome}/shop/all` }} />
-    </div>);
-
+      <ProductRail
+        title="You may also like"
+        products={relatedProducts(product, 8)}
+        action={{ label: 'Shop all', to: `${storeHome}/shop/all` }}
+      />
+    </div>
+  );
 }

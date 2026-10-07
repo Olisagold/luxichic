@@ -14,22 +14,22 @@ From the current prototype to a production launch on Next.js + Supabase.
 
 ## Decisions
 
-| Area | Choice |
-| --- | --- |
-| Framework | Next.js 15 (App Router), React 19, Tailwind 3 |
-| Database | Supabase Postgres |
-| Data access | Drizzle ORM (schema in `apps/web/db/schema`, migrations in `supabase/migrations`) |
-| Auth | Supabase Auth: email + password, and Google sign-in |
-| File storage | Supabase Storage (product, service and media-library images) |
-| Payments | Manual only: bank transfer (admin verifies) and pay on delivery. No payment gateway |
-| Transactional email | Resend |
-| Team alerts | Telegram bot (new orders, new appointments), configured in a new `/admin/telegram` page |
-| WhatsApp | `/admin/whatsapp` settings page stays in the admin but is **not functional** for now; customer `wa.me` chat links stay |
-| Newsletter | Homepage sign-up kept at launch; subscribers stored in our own database |
-| Guest checkout | Kept: guests can order, and orders link to an account created later with the same email |
-| Hosting | Vercel |
-| Error monitoring | Sentry |
-| Analytics | Vercel Analytics (plus the built-in admin analytics from our own data) |
+| Area                | Choice                                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Framework           | Next.js 15 (App Router), React 19, Tailwind 3                                                                          |
+| Database            | Supabase Postgres                                                                                                      |
+| Data access         | Drizzle ORM (schema in `apps/web/db/schema`, migrations in `supabase/migrations`)                                      |
+| Auth                | Supabase Auth: email + password, and Google sign-in                                                                    |
+| File storage        | Supabase Storage (product, service and media-library images)                                                           |
+| Payments            | Manual only: bank transfer (admin verifies) and pay on delivery. No payment gateway                                    |
+| Transactional email | Resend                                                                                                                 |
+| Team alerts         | Telegram bot (new orders, new appointments), configured in a new `/admin/telegram` page                                |
+| WhatsApp            | `/admin/whatsapp` settings page stays in the admin but is **not functional** for now; customer `wa.me` chat links stay |
+| Newsletter          | Homepage sign-up kept at launch; subscribers stored in our own database                                                |
+| Guest checkout      | Kept: guests can order, and orders link to an account created later with the same email                                |
+| Hosting             | Vercel                                                                                                                 |
+| Error monitoring    | Sentry                                                                                                                 |
+| Analytics           | Vercel Analytics (plus the built-in admin analytics from our own data)                                                 |
 
 ## Payment flow (bank transfer)
 
@@ -42,6 +42,7 @@ Agreed rules. Phase 5 builds them; Phase 8 adds the admin side.
 
    The database enforces uniqueness on both. The prototype already generates both
    (`lib/utils/references.ts`); only uniqueness checks move to the server.
+
 2. **At checkout:** the customer selects Bank Transfer, and the order is created with payment status
    `pending_verification`.
 3. **The customer sees** (on the confirmation page and in the order email):
@@ -171,13 +172,13 @@ Follows the **Payment flow** section above. Guest checkout stays.
 1. Compute availability on the server from specialist hours, blocks, service duration and existing appointments.
 2. A `bookAppointment` server action, with a database constraint that prevents double-booking a specialist slot.
 3. Appointment confirmation page and the account appointments list read from the database.
-4. Customers can cancel or reschedule within the allowed window *(business rule to confirm, written down in
-   `docs/business-rules/`)*.
+4. Customers can cancel or reschedule within the allowed window _(business rule to confirm, written down in
+   `docs/business-rules/`)_.
 
 ## Phase 7: Reviews
 
 1. Signed-in customers can review products. Optionally restrict this to verified purchasers
-   *(business rule to confirm)*.
+   _(business rule to confirm)_.
 2. Admin moderation (approve, hide, delete) updates product ratings.
 
 ## Phase 8: Admin back office
@@ -206,6 +207,7 @@ Connect each admin section to the database through server actions. Each action c
      - A "send test message" button
 
      The bot token stays in env vars and is never stored in the database or shown.
+
    - **WhatsApp settings** (`/admin/whatsapp`) stays visible but **non-functional**. Inputs are disabled and a
      "Coming soon" note is shown; nothing is saved or sent.
 8. Administration: admin users (invite through Supabase Auth), roles and permissions, activity log.
@@ -225,6 +227,7 @@ Connect each admin section to the database through server actions. Each action c
    - Admin invite
 
    Sends happen from server actions. The admin email templates screen edits the subject and body.
+
 2. **Telegram bot:**
    - Fill `lib/telegram/*`.
    - Register the bot webhook (`app/api/webhooks/telegram`) with a secret token.

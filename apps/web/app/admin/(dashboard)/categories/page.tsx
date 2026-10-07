@@ -8,6 +8,6 @@ export default function AdminCategoriesPage() {
   return (
     <RequirePermission permission="categories.manage">
       <Categories />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

@@ -8,6 +8,6 @@ export default function AdminSocialSettingsPage() {
   return (
     <RequirePermission permission="settings.general">
       <SocialSettings />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

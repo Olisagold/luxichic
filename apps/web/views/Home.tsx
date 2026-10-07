@@ -19,35 +19,42 @@ import { useDb } from '@/lib/mock-db/db';
 /** Homepage sections are ordered and toggled from Admin → Website → Homepage. */
 export function Home() {
   const featuredIds = useDb((s) => s.content.featuredProductIds);
-  const featured = featuredIds.map((id) => hairProducts.find((p) => p.id === id)).filter((p): p is NonNullable<typeof p> => !!p);
-  const bestsellers = featured.length ?
-  featured :
-  hairProducts.filter((p) => p.isBestseller).sort((a, b) => a.featuredRank - b.featuredRank);
+  const featured = featuredIds
+    .map((id) => hairProducts.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => !!p);
+  const bestsellers = featured.length
+    ? featured
+    : hairProducts.filter((p) => p.isBestseller).sort((a, b) => a.featuredRank - b.featuredRank);
 
   const blocks: Record<string, React.ReactNode> = {
     hero: <HeroSection />,
     intro: <IntroSection />,
     divisions: <DivisionCards />,
     collections: <FeaturedCollections />,
-    hairs:
-    <ProductRail
-      title={<>Bestselling <span className="italic text-pink-deep">Hair</span></>}
-      text="The units our customers reorder again and again. Sample prices shown until final pricing is confirmed."
-      products={bestsellers}
-      action={{ label: 'View all hair products', to: '/hairs/shop/all' }} />,
-
+    hairs: (
+      <ProductRail
+        title={
+          <>
+            Bestselling <span className="italic text-pink-deep">Hair</span>
+          </>
+        }
+        text="The units our customers reorder again and again. Sample prices shown until final pricing is confirmed."
+        products={bestsellers}
+        action={{ label: 'View all hair products', to: '/hairs/shop/all' }}
+      />
+    ),
 
     tools: <ToolsShowcase />,
     salon: <SalonServicesSection />,
     why: <WhyChoose />,
     testimonials: <TestimonialCarousel />,
     instagram: <InstagramGallery />,
-    newsletter: <NewsletterSection />
+    newsletter: <NewsletterSection />,
   };
 
   return (
     <>
-      {siteContent.sections.map((id) => blocks[id] ? <React.Fragment key={id}>{blocks[id]}</React.Fragment> : null)}
-    </>);
-
+      {siteContent.sections.map((id) => (blocks[id] ? <React.Fragment key={id}>{blocks[id]}</React.Fragment> : null))}
+    </>
+  );
 }

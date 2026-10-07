@@ -5,6 +5,6 @@ export default function NotFoundPage() {
   return (
     <SiteLayout>
       <NotFound />
-    </SiteLayout>);
-
+    </SiteLayout>
+  );
 }

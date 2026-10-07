@@ -32,17 +32,38 @@ export function CreateAccount() {
   if (!order || expired) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-24">
-        <EmptyState icon={<LinkIcon className="h-7 w-7" />} title="This link is invalid or has expired" text="Account links are tied to a confirmed order and expire for your security. You can still create an account or sign in." actions={<><Button to="/register">Create an account</Button><Button to="/login" variant="outline">Sign in</Button></>} />
-      </div>);
-
+        <EmptyState
+          icon={<LinkIcon className="h-7 w-7" />}
+          title="This link is invalid or has expired"
+          text="Account links are tied to a confirmed order and expire for your security. You can still create an account or sign in."
+          actions={
+            <>
+              <Button to="/register">Create an account</Button>
+              <Button to="/login" variant="outline">
+                Sign in
+              </Button>
+            </>
+          }
+        />
+      </div>
+    );
   }
 
   if (emailExists(order.customer.email)) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-24">
-        <EmptyState icon={<UserCheckIcon className="h-7 w-7" />} title="You already have an account" text={`An account already exists for ${order.customer.email}. Sign in to view your orders.`} actions={<Button to={`/login?email=${encodeURIComponent(order.customer.email)}&redirect=/account/orders`}>Sign in</Button>} />
-      </div>);
-
+        <EmptyState
+          icon={<UserCheckIcon className="h-7 w-7" />}
+          title="You already have an account"
+          text={`An account already exists for ${order.customer.email}. Sign in to view your orders.`}
+          actions={
+            <Button to={`/login?email=${encodeURIComponent(order.customer.email)}&redirect=/account/orders`}>
+              Sign in
+            </Button>
+          }
+        />
+      </div>
+    );
   }
 
   const submit = async (e: React.FormEvent) => {
@@ -54,7 +75,12 @@ export function CreateAccount() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
-    const res = await register({ fullName: order.customer.fullName, email: order.customer.email, phone: order.customer.phone, password });
+    const res = await register({
+      fullName: order.customer.fullName,
+      email: order.customer.email,
+      phone: order.customer.phone,
+      password,
+    });
     if (!res.ok) {
       setLoading(false);
       return setErrors({ form: res.error ?? 'We could not create your account.' });
@@ -66,23 +92,58 @@ export function CreateAccount() {
 
   return (
     <AuthLayout
-      title={<>Your order has been <span className="italic text-pink-deep">confirmed!</span></>}
-      text="Create your LUXICHIC account to track your orders, save your details and enjoy a more convenient shopping experience.">
-      
+      title={
+        <>
+          Your order has been <span className="italic text-pink-deep">confirmed!</span>
+        </>
+      }
+      text="Create your LUXICHIC account to track your orders, save your details and enjoy a more convenient shopping experience."
+    >
       <div className="mb-6 flex items-center gap-4 rounded-2xl bg-white p-4">
         <PackageCheckIcon className="h-6 w-6 shrink-0 text-gold" aria-hidden />
         <div className="text-sm">
           <p className="font-semibold text-ink">Order {order.orderNumber}</p>
-          <p className="text-subtle">{order.items.length} item{order.items.length > 1 ? 's' : ''} · {formatNaira(order.total)} · will be added to your account</p>
+          <p className="text-subtle">
+            {order.items.length} item{order.items.length > 1 ? 's' : ''} · {formatNaira(order.total)} · will be added to
+            your account
+          </p>
         </div>
       </div>
       <form onSubmit={submit} noValidate className="space-y-5">
-        <TextField id="ca-email" label="Email address" value={order.customer.email} disabled readOnly hint="Linked to your confirmed order." />
-        <PasswordField id="ca-password" label="Password" autoComplete="new-password" value={password} onChange={setPassword} error={errors.password} showStrength />
-        <PasswordField id="ca-confirm" label="Confirm password" autoComplete="new-password" value={confirm} onChange={setConfirm} error={errors.confirm} />
-        {errors.form && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert">{errors.form}</p>}
-        <Button type="submit" fullWidth size="lg" loading={loading}>Create My Account</Button>
+        <TextField
+          id="ca-email"
+          label="Email address"
+          value={order.customer.email}
+          disabled
+          readOnly
+          hint="Linked to your confirmed order."
+        />
+        <PasswordField
+          id="ca-password"
+          label="Password"
+          autoComplete="new-password"
+          value={password}
+          onChange={setPassword}
+          error={errors.password}
+          showStrength
+        />
+        <PasswordField
+          id="ca-confirm"
+          label="Confirm password"
+          autoComplete="new-password"
+          value={confirm}
+          onChange={setConfirm}
+          error={errors.confirm}
+        />
+        {errors.form && (
+          <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert">
+            {errors.form}
+          </p>
+        )}
+        <Button type="submit" fullWidth size="lg" loading={loading}>
+          Create My Account
+        </Button>
       </form>
-    </AuthLayout>);
-
+    </AuthLayout>
+  );
 }

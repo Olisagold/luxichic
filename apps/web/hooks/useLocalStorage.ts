@@ -14,8 +14,8 @@ export function useLocalStorage<T>(key: string, initial: T | (() => T)) {
       const raw = window.localStorage.getItem(key);
       if (raw !== null) setValue(JSON.parse(raw) as T);
     } catch {
-
-      /* ignore */}
+      /* ignore */
+    }
     setLoaded(true);
   }, [key]);
 
@@ -24,8 +24,8 @@ export function useLocalStorage<T>(key: string, initial: T | (() => T)) {
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch {
-
-      /* storage full or unavailable */}
+      /* storage full or unavailable */
+    }
   }, [key, value, loaded]);
 
   const set = useCallback((v: T | ((prev: T) => T)) => setValue(v), []);

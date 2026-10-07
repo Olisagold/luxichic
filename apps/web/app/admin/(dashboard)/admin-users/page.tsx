@@ -8,6 +8,6 @@ export default function AdminUsersPage() {
   return (
     <RequirePermission permission="admins.manage">
       <AdminUsers />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

@@ -25,18 +25,18 @@ export const businessConfig = {
     bankName: '[Bank Name — to be provided]',
     accountName: '[Account Name — to be provided]',
     accountNumber: '0000000000',
-    instructions: ''
+    instructions: '',
   },
 
   whatsapp: {
     general: '2340000000000',
-    orders: '2340000000001'
+    orders: '2340000000001',
   },
 
   instagram: {
     hairs: { handle: '@luxichic.hairs', url: 'https://instagram.com/' },
     salon: { handle: '@luxichic.salonandspa', url: 'https://instagram.com/' },
-    tools: { handle: '@luxichic.wigtools', url: 'https://instagram.com/' }
+    tools: { handle: '@luxichic.wigtools', url: 'https://instagram.com/' },
   },
 
   tiktok: { handle: '@luxichic', url: 'https://www.tiktok.com/@luxichic' },
@@ -45,7 +45,7 @@ export const businessConfig = {
     email: 'hello@luxichic.example',
     phone: '+234 000 000 0000',
     address: '[Store address — to be provided], Nigeria',
-    hours: 'Mon – Sat, 9:00am – 7:00pm'
+    hours: 'Mon – Sat, 9:00am – 7:00pm',
   },
 
   delivery: {
@@ -54,7 +54,7 @@ export const businessConfig = {
     /** States LUXICHIC does not currently deliver to. */
     disabled: [] as string[],
     default: 7500,
-    estimate: 'Estimated delivery: 1–3 working days in Lagos, 3–7 working days elsewhere (to be confirmed).'
+    estimate: 'Estimated delivery: 1–3 working days in Lagos, 3–7 working days elsewhere (to be confirmed).',
   },
 
   promoCodes: [{ code: 'LUXE10', percent: 10, label: '10% off your order' }] as PromoCode[],
@@ -68,8 +68,8 @@ export const businessConfig = {
     slots: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
     bookingWindowDays: 60,
     /** Admin-defined unavailable dates/times. */
-    blocks: [] as AvailabilityBlock[]
-  }
+    blocks: [] as AvailabilityBlock[],
+  },
 };
 
 export function deliveryFeeFor(state: string): number {

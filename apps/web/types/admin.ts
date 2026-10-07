@@ -5,7 +5,8 @@ import type { SalonService } from '@/types/salon';
 /* Social links                                                        */
 /* ------------------------------------------------------------------ */
 
-export type SocialPlatform = 'instagram' | 'tiktok' | 'whatsapp' | 'facebook' | 'x' | 'youtube' | 'snapchat' | 'website';
+export type SocialPlatform =
+  'instagram' | 'tiktok' | 'whatsapp' | 'facebook' | 'x' | 'youtube' | 'snapchat' | 'website';
 export type SocialDivision = 'main' | 'hairs' | 'salon' | 'tools';
 
 export interface SocialLink {
@@ -24,28 +25,57 @@ export interface SocialLink {
 /* ------------------------------------------------------------------ */
 
 export type Permission =
-'dashboard.view' |
-'analytics.view' |
-'orders.view' | 'orders.confirmPayment' | 'orders.edit' | 'orders.delete' |
-'products.view' | 'products.create' | 'products.edit' | 'products.delete' | 'products.archive' |
-'inventory.manage' |
-'categories.manage' |
-'discounts.manage' |
-'customers.view' | 'customers.edit' | 'customers.delete' | 'customers.block' |
-'reviews.view' | 'reviews.moderate' |
-'appointments.view' | 'appointments.confirm' | 'appointments.reschedule' | 'appointments.reject' |
-'salon.services' | 'salon.specialists' | 'salon.availability' |
-'content.homepage' | 'content.pages' | 'content.media' |
-'settings.payment' | 'settings.delivery' | 'settings.whatsapp' | 'settings.email' | 'settings.general' |
-'admins.manage' |
-'logs.view';
+  | 'dashboard.view'
+  | 'analytics.view'
+  | 'orders.view'
+  | 'orders.confirmPayment'
+  | 'orders.edit'
+  | 'orders.delete'
+  | 'products.view'
+  | 'products.create'
+  | 'products.edit'
+  | 'products.delete'
+  | 'products.archive'
+  | 'inventory.manage'
+  | 'categories.manage'
+  | 'discounts.manage'
+  | 'customers.view'
+  | 'customers.edit'
+  | 'customers.delete'
+  | 'customers.block'
+  | 'reviews.view'
+  | 'reviews.moderate'
+  | 'appointments.view'
+  | 'appointments.confirm'
+  | 'appointments.reschedule'
+  | 'appointments.reject'
+  | 'salon.services'
+  | 'salon.specialists'
+  | 'salon.availability'
+  | 'content.homepage'
+  | 'content.pages'
+  | 'content.media'
+  | 'settings.payment'
+  | 'settings.delivery'
+  | 'settings.whatsapp'
+  | 'settings.email'
+  | 'settings.general'
+  | 'admins.manage'
+  | 'logs.view';
 
 export interface PermissionGroup {
   label: string;
-  items: {key: Permission;label: string;}[];
+  items: { key: Permission; label: string }[];
 }
 
-export type AdminRole = 'Super Admin' | 'Order Manager' | 'Product Manager' | 'Salon Manager' | 'Content Manager' | 'Customer Support' | 'Custom';
+export type AdminRole =
+  | 'Super Admin'
+  | 'Order Manager'
+  | 'Product Manager'
+  | 'Salon Manager'
+  | 'Content Manager'
+  | 'Customer Support'
+  | 'Custom';
 
 export interface AdminUser {
   id: string;
@@ -94,9 +124,9 @@ export interface AdminProduct extends Product {
   discountEnd?: string;
   benefits?: string;
   care?: string;
-  shipping: {estimate: string;method: string;pickup: boolean;notes: string;handling: string;};
+  shipping: { estimate: string; method: string; pickup: boolean; notes: string; handling: string };
   /** Per-option-value metadata keyed `${groupKey}::${label}`. */
-  variantMeta: Record<string, {sku?: string;enabled: boolean;}>;
+  variantMeta: Record<string, { sku?: string; enabled: boolean }>;
   updatedAt: string;
 }
 
@@ -140,7 +170,7 @@ export interface Specialist {
   serviceSlugs: string[];
   /** Working days 0–6 (0 = Sunday). */
   workingDays: number[];
-  hours: {start: string;end: string;};
+  hours: { start: string; end: string };
   status: 'active' | 'on-leave' | 'archived';
 }
 
@@ -175,16 +205,16 @@ export interface DeliveryRate {
 }
 
 export interface StoreSettings {
-  business: {name: string;email: string;phone: string;whatsapp: string;address: string;hours: string;};
-  instagram: {hairs: string;salon: string;tools: string;};
-  instagramHandles: {hairs: string;salon: string;tools: string;};
+  business: { name: string; email: string; phone: string; whatsapp: string; address: string; hours: string };
+  instagram: { hairs: string; salon: string; tools: string };
+  instagramHandles: { hairs: string; salon: string; tools: string };
   /** Optional for stores saved before TikTok was added. */
-  tiktok?: {handle: string;url: string;};
+  tiktok?: { handle: string; url: string };
   /** Footer social icons, managed from Admin → Settings → Social media. */
   socialLinks?: SocialLink[];
   payOnDeliveryEnabled: boolean;
-  bank: {bankName: string;accountName: string;accountNumber: string;instructions: string;};
-  delivery: {rates: DeliveryRate[];estimate: string;};
+  bank: { bankName: string; accountName: string; accountNumber: string; instructions: string };
+  delivery: { rates: DeliveryRate[]; estimate: string };
   whatsapp: {
     status: 'connected' | 'disconnected' | 'error';
     businessNumber: string;
@@ -197,9 +227,17 @@ export interface StoreSettings {
     orderTemplate: string;
     appointmentTemplate: string;
   };
-  smtp: {host: string;port: number;username: string;passwordSet: boolean;encryption: 'TLS' | 'SSL' | 'None';senderName: string;senderEmail: string;};
-  notifications: {email: boolean;lowStock: boolean;newOrder: boolean;newAppointment: boolean;newReview: boolean;};
-  security: {sessionTimeoutMinutes: number;loginAlerts: boolean;};
+  smtp: {
+    host: string;
+    port: number;
+    username: string;
+    passwordSet: boolean;
+    encryption: 'TLS' | 'SSL' | 'None';
+    senderName: string;
+    senderEmail: string;
+  };
+  notifications: { email: boolean; lowStock: boolean; newOrder: boolean; newAppointment: boolean; newReview: boolean };
+  security: { sessionTimeoutMinutes: number; loginAlerts: boolean };
 }
 
 export interface EmailTemplate {
@@ -212,7 +250,19 @@ export interface EmailTemplate {
 }
 
 export interface HomeSection {
-  id: 'announcement' | 'hero' | 'intro' | 'divisions' | 'collections' | 'hairs' | 'tools' | 'salon' | 'why' | 'testimonials' | 'instagram' | 'newsletter';
+  id:
+    | 'announcement'
+    | 'hero'
+    | 'intro'
+    | 'divisions'
+    | 'collections'
+    | 'hairs'
+    | 'tools'
+    | 'salon'
+    | 'why'
+    | 'testimonials'
+    | 'instagram'
+    | 'newsletter';
   label: string;
   enabled: boolean;
 }
@@ -228,21 +278,39 @@ export interface Testimonial {
 }
 
 export interface SiteContent {
-  announcements: {id: string;text: string;enabled: boolean;}[];
+  announcements: { id: string; text: string; enabled: boolean }[];
   sections: HomeSection[];
-  hero: {eyebrow: string;line1: string;line2: string;accent: string;text: string;primaryCta: string;secondaryCta: string;image: string;};
-  intro: {heading: string;accent: string;text: string;};
-  divisions: {id: 'hairs' | 'salon' | 'tools';title: string;text: string;cta: string;image: string;}[];
+  hero: {
+    eyebrow: string;
+    line1: string;
+    line2: string;
+    accent: string;
+    text: string;
+    primaryCta: string;
+    secondaryCta: string;
+    image: string;
+  };
+  intro: { heading: string; accent: string; text: string };
+  divisions: { id: 'hairs' | 'salon' | 'tools'; title: string; text: string; cta: string; image: string }[];
   featuredCollectionSlugs: string[];
   featuredProductIds: string[];
   featuredServiceSlugs: string[];
-  salonSection: {heading: string;text: string;};
-  why: {heading: string;items: {title: string;text: string;}[];};
+  salonSection: { heading: string; text: string };
+  why: { heading: string; items: { title: string; text: string }[] };
   testimonials: Testimonial[];
-  about: {title: string;intro: string;description: string;mission: string;vision: string;values: {title: string;text: string;}[];image: string;cta: string;};
-  contact: {heading: string;text: string;};
-  faqs: {category: string;items: {q: string;a: string;}[];}[];
-  policies: Record<string, {title: string;sections: {heading: string;body: string;}[];}>;
+  about: {
+    title: string;
+    intro: string;
+    description: string;
+    mission: string;
+    vision: string;
+    values: { title: string; text: string }[];
+    image: string;
+    cta: string;
+  };
+  contact: { heading: string; text: string };
+  faqs: { category: string; items: { q: string; a: string }[] }[];
+  policies: Record<string, { title: string; sections: { heading: string; body: string }[] }>;
 }
 
 export interface MediaItem {
@@ -261,8 +329,23 @@ export interface MediaItem {
 /* ------------------------------------------------------------------ */
 
 export type ActivitySection =
-'Orders' | 'Products' | 'Inventory' | 'Customers' | 'Reviews' | 'Appointments' | 'Salon' | 'Content' |
-'Payments' | 'Delivery' | 'WhatsApp' | 'Email' | 'Admin Users' | 'Settings' | 'Security' | 'Discounts' | 'Categories';
+  | 'Orders'
+  | 'Products'
+  | 'Inventory'
+  | 'Customers'
+  | 'Reviews'
+  | 'Appointments'
+  | 'Salon'
+  | 'Content'
+  | 'Payments'
+  | 'Delivery'
+  | 'WhatsApp'
+  | 'Email'
+  | 'Admin Users'
+  | 'Settings'
+  | 'Security'
+  | 'Discounts'
+  | 'Categories';
 
 export interface ActivityEntry {
   id: string;
@@ -294,7 +377,7 @@ export interface AdminNotification {
 export interface StoreDb {
   version: number;
   products: AdminProduct[];
-  categories: {hairs: Category[];tools: Category[];};
+  categories: { hairs: Category[]; tools: Category[] };
   services: AdminService[];
   specialists: Specialist[];
   blocks: AvailabilityBlock[];
@@ -308,6 +391,6 @@ export interface StoreDb {
   admins: AdminUser[];
   loginHistory: LoginEntry[];
   media: MediaItem[];
-  orderNotes: Record<string, {id: string;text: string;by: string;at: string;}[]>;
-  customerNotes: Record<string, {id: string;text: string;by: string;at: string;}[]>;
+  orderNotes: Record<string, { id: string; text: string; by: string; at: string }[]>;
+  customerNotes: Record<string, { id: string; text: string; by: string; at: string }[]>;
 }

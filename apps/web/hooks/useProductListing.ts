@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Category, Division, ProductFilterState, SortOption } from '@/types/product';
-import { countActiveFilters, emptyFilters, filterProducts, productInCategory, productsFor, searchProducts, sortProducts } from '@/lib/utils/products';
+import {
+  countActiveFilters,
+  emptyFilters,
+  filterProducts,
+  productInCategory,
+  productsFor,
+  searchProducts,
+  sortProducts,
+} from '@/lib/utils/products';
 
 export const PAGE_SIZE = 9;
 
@@ -19,8 +27,8 @@ export function useProductListing(division: Division, category: Category | undef
   useEffect(() => setPage(1), [filters, sort, query]);
 
   const base = useMemo(
-    () => category ? productsFor(division).filter((p) => productInCategory(p, category)) : [],
-    [division, category]
+    () => (category ? productsFor(division).filter((p) => productInCategory(p, category)) : []),
+    [division, category],
   );
 
   const results = useMemo(() => {
@@ -47,6 +55,6 @@ export function useProductListing(division: Division, category: Category | undef
     reset: () => {
       setFilters(emptyFilters());
       setQuery('');
-    }
+    },
   };
 }

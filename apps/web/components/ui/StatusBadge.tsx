@@ -39,20 +39,20 @@ const styles: Record<string, string> = {
   Rejected: red,
   Blocked: red,
   Error: red,
-  'Out of Stock': red
+  'Out of Stock': red,
 };
 
-export function StatusBadge({ status, className }: {status: string;className?: string;}) {
+export function StatusBadge({ status, className }: { status: string; className?: string }) {
   return (
     <span
       className={cn(
         'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset transition-colors duration-200',
         styles[status] ?? neutral,
-        className
-      )}>
-      
+        className,
+      )}
+    >
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" aria-hidden />
       {status}
-    </span>);
-
+    </span>
+  );
 }

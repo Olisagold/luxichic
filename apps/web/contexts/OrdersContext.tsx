@@ -7,7 +7,12 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { seedAppointments, seedOrders } from '@/data/seed';
 import { generatedAppointments, generatedOrders } from '@/data/adminSeed';
 import { businessConfig } from '@/data/config';
-import { generateAppointmentReference, generateOrderNumber, generateToken, generateTransactionReference } from '@/lib/utils/references';
+import {
+  generateAppointmentReference,
+  generateOrderNumber,
+  generateToken,
+  generateTransactionReference,
+} from '@/lib/utils/references';
 import { formatNaira } from '@/lib/utils/currency';
 import { wait } from '@/lib/utils/validation';
 import { pushNotification, updateDb } from '@/lib/mock-db/db';
@@ -53,7 +58,7 @@ const same = (a?: string, b?: string) => !!a && !!b && a.trim().toLowerCase() ==
 export function issueAccountToken() {
   return {
     token: generateToken(),
-    expiresAt: new Date(Date.now() + businessConfig.accountLinkExpiryHours * 3600 * 1000).toISOString()
+    expiresAt: new Date(Date.now() + businessConfig.accountLinkExpiryHours * 3600 * 1000).toISOString(),
   };
 }
 
@@ -64,41 +69,48 @@ export function confirmOrder(o: Order, by?: string): Order {
     ...o,
     status: 'Confirmed',
     paymentStatus: o.paymentMethod === 'bank_transfer' ? 'Payment Confirmed' : o.paymentStatus,
-    timeline: o.timeline.map((t) => t.step === 'Payment Confirmed' && !t.at ? { ...t, at: now } : t),
-    accountToken: o.accountEmail ? undefined : o.accountToken ?? issueAccountToken(),
-    confirmedBy: by ?? o.confirmedBy
+    timeline: o.timeline.map((t) => (t.step === 'Payment Confirmed' && !t.at ? { ...t, at: now } : t)),
+    accountToken: o.accountEmail ? undefined : (o.accountToken ?? issueAccountToken()),
+    confirmedBy: by ?? o.confirmedBy,
   };
 }
 
-export function OrdersProvider({ children }: {children: React.ReactNode;}) {
-  const [orders, setOrders, ordersLoaded] = useLocalStorage<Order[]>('lx_orders_v2', () => [...seedOrders, ...generatedOrders]);
-  const [appointments, setAppointments, appointmentsLoaded] = useLocalStorage<Appointment[]>('lx_appointments_v2', () => [...seedAppointments, ...generatedAppointments]);
+export function OrdersProvider({ children }: { children: React.ReactNode }) {
+  const [orders, setOrders, ordersLoaded] = useLocalStorage<Order[]>('lx_orders_v2', () => [
+    ...seedOrders,
+    ...generatedOrders,
+  ]);
+  const [appointments, setAppointments, appointmentsLoaded] = useLocalStorage<Appointment[]>(
+    'lx_appointments_v2',
+    () => [...seedAppointments, ...generatedAppointments],
+  );
 
   const placeOrder = async (input: PlaceOrderInput) => {
     await wait(1200);
     const now = new Date().toISOString();
     const isTransfer = input.paymentMethod === 'bank_transfer';
-    const timeline: TimelineEntry[] = isTransfer ?
-    [
-    { step: 'Order Placed', at: now },
-    { step: 'Awaiting Payment', at: now },
-    { step: 'Payment Confirmed', at: null },
-    { step: 'Processing', at: null },
-    { step: 'Shipped', at: null },
-    { step: 'Delivered', at: null }] :
-
-    [
-    { step: 'Order Placed', at: now },
-    { step: 'Processing', at: null },
-    { step: 'Shipped', at: null },
-    { step: 'Delivered', at: null }];
+    const timeline: TimelineEntry[] = isTransfer
+      ? [
+          { step: 'Order Placed', at: now },
+          { step: 'Awaiting Payment', at: now },
+          { step: 'Payment Confirmed', at: null },
+          { step: 'Processing', at: null },
+          { step: 'Shipped', at: null },
+          { step: 'Delivered', at: null },
+        ]
+      : [
+          { step: 'Order Placed', at: now },
+          { step: 'Processing', at: null },
+          { step: 'Shipped', at: null },
+          { step: 'Delivered', at: null },
+        ];
 
     const order: Order = {
       orderNumber: generateOrderNumber(orders.map((o) => o.orderNumber)),
       reference:
-      input.reference && !orders.some((o) => o.reference === input.reference) ?
-      input.reference :
-      generateTransactionReference(orders.map((o) => o.reference)),
+        input.reference && !orders.some((o) => o.reference === input.reference)
+          ? input.reference
+          : generateTransactionReference(orders.map((o) => o.reference)),
       createdAt: now,
       customer: input.customer,
       address: input.address,
@@ -111,7 +123,7 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
       paymentStatus: isTransfer ? 'Pending Verification' : 'Pay on Delivery',
       status: 'Pending',
       timeline,
-      accountEmail: input.accountEmail
+      accountEmail: input.accountEmail,
     };
     setOrders((prev) => [order, ...prev]);
 
@@ -127,14 +139,19 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
           if (v && v.stock !== undefined) v.stock = Math.max(0, v.stock - item.quantity);
         });
         if (p.trackInventory && p.stock <= p.lowStockThreshold) {
-          pushNotification(d, { kind: 'stock', title: 'Low stock', body: `${p.name} has ${p.stock} unit${p.stock === 1 ? '' : 's'} left.`, link: `/admin/inventory?q=${encodeURIComponent(p.name)}` });
+          pushNotification(d, {
+            kind: 'stock',
+            title: 'Low stock',
+            body: `${p.name} has ${p.stock} unit${p.stock === 1 ? '' : 's'} left.`,
+            link: `/admin/inventory?q=${encodeURIComponent(p.name)}`,
+          });
         }
       });
       pushNotification(d, {
         kind: isTransfer ? 'payment' : 'order',
         title: isTransfer ? 'Payment awaiting verification' : 'New order',
         body: `${order.orderNumber} · ${formatNaira(order.total)} · ${order.customer.fullName}`,
-        link: `/admin/orders/${order.orderNumber}`
+        link: `/admin/orders/${order.orderNumber}`,
       });
     });
     return order;
@@ -143,7 +160,9 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
   const getOrder = (orderNumber: string) => orders.find((o) => o.orderNumber === orderNumber);
 
   const lookupOrder = (orderNumber: string, email: string) =>
-  orders.find((o) => o.orderNumber.toUpperCase() === orderNumber.trim().toUpperCase() && same(o.customer.email, email));
+    orders.find(
+      (o) => o.orderNumber.toUpperCase() === orderNumber.trim().toUpperCase() && same(o.customer.email, email),
+    );
 
   const ordersForAccount = (email: string) => orders.filter((o) => same(o.accountEmail, email));
 
@@ -152,7 +171,7 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
     const o = orders.find((x) => x.orderNumber === orderNumber);
     if (!o) return undefined;
     const updated = confirmOrder(o);
-    setOrders((prev) => prev.map((x) => x.orderNumber === orderNumber ? updated : x));
+    setOrders((prev) => prev.map((x) => (x.orderNumber === orderNumber ? updated : x)));
     return updated;
   };
 
@@ -161,9 +180,13 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
   /** Attaches every guest order and appointment made with this email to the new account. */
   const linkGuestRecords = (email: string) => {
     setOrders((prev) =>
-    prev.map((o) => same(o.customer.email, email) && !o.accountEmail ? { ...o, accountEmail: email, accountToken: undefined } : o)
+      prev.map((o) =>
+        same(o.customer.email, email) && !o.accountEmail ? { ...o, accountEmail: email, accountToken: undefined } : o,
+      ),
     );
-    setAppointments((prev) => prev.map((a) => same(a.customer.email, email) && !a.accountEmail ? { ...a, accountEmail: email } : a));
+    setAppointments((prev) =>
+      prev.map((a) => (same(a.customer.email, email) && !a.accountEmail ? { ...a, accountEmail: email } : a)),
+    );
   };
 
   const bookAppointment: OrdersContextValue['bookAppointment'] = async (input) => {
@@ -174,15 +197,16 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
       reference: generateAppointmentReference(appointments.map((a) => a.reference)),
       status: 'Pending',
       createdAt: now,
-      history: [{ at: now, label: 'Appointment requested' }]
+      history: [{ at: now, label: 'Appointment requested' }],
     };
     setAppointments((prev) => [appt, ...prev]);
     updateDb((d) =>
-    pushNotification(d, {
-      kind: 'appointment', title: 'New appointment request',
-      body: `${appt.serviceName} · ${appt.date} ${appt.time} · ${appt.customer.fullName}`,
-      link: `/admin/appointments?ref=${appt.reference}`
-    })
+      pushNotification(d, {
+        kind: 'appointment',
+        title: 'New appointment request',
+        body: `${appt.serviceName} · ${appt.date} ${appt.time} · ${appt.customer.fullName}`,
+        link: `/admin/appointments?ref=${appt.reference}`,
+      }),
     );
     return appt;
   };
@@ -191,18 +215,26 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
     <OrdersContext.Provider
       value={{
         ready: ordersLoaded && appointmentsLoaded,
-        orders, appointments, placeOrder, getOrder, lookupOrder, ordersForAccount, simulateConfirmation,
-        findOrderByToken, linkGuestRecords, bookAppointment,
+        orders,
+        appointments,
+        placeOrder,
+        getOrder,
+        lookupOrder,
+        ordersForAccount,
+        simulateConfirmation,
+        findOrderByToken,
+        linkGuestRecords,
+        bookAppointment,
         getAppointment: (ref) => appointments.find((a) => a.reference === ref),
         appointmentsForAccount: (email) => appointments.filter((a) => same(a.accountEmail, email)),
-        updateOrder: (num, fn) => setOrders((prev) => prev.map((o) => o.orderNumber === num ? fn(o) : o)),
+        updateOrder: (num, fn) => setOrders((prev) => prev.map((o) => (o.orderNumber === num ? fn(o) : o))),
         deleteOrder: (num) => setOrders((prev) => prev.filter((o) => o.orderNumber !== num)),
-        updateAppointment: (ref, fn) => setAppointments((prev) => prev.map((a) => a.reference === ref ? fn(a) : a))
-      }}>
-      
+        updateAppointment: (ref, fn) => setAppointments((prev) => prev.map((a) => (a.reference === ref ? fn(a) : a))),
+      }}
+    >
       {children}
-    </OrdersContext.Provider>);
-
+    </OrdersContext.Provider>
+  );
 }
 
 export function useOrders() {

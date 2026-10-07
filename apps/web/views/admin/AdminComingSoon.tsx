@@ -13,8 +13,12 @@ export function AdminComingSoon() {
         icon={<CompassIcon className="h-5 w-5" />}
         title="This admin page doesn’t exist"
         text="Check the address, or use the sidebar to find what you need."
-        action={<AdminButton to="/admin/dashboard" variant="primary">Back to dashboard</AdminButton>} />
-      
-    </div>);
-
+        action={
+          <AdminButton to="/admin/dashboard" variant="primary">
+            Back to dashboard
+          </AdminButton>
+        }
+      />
+    </div>
+  );
 }

@@ -22,13 +22,15 @@ function PageFallback() {
       <div className="h-10 w-2/5 animate-pulse rounded-full bg-line/70" />
       <div className="mt-4 h-4 w-3/5 animate-pulse rounded-full bg-line/50" />
       <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => <div key={i} className="aspect-[4/5] animate-pulse rounded-2xl bg-line/40" />)}
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="aspect-[4/5] animate-pulse rounded-2xl bg-line/40" />
+        ))}
       </div>
-    </div>);
-
+    </div>
+  );
 }
 
-export function SiteLayout({ children }: {children: React.ReactNode;}) {
+export function SiteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
 
@@ -38,7 +40,10 @@ export function SiteLayout({ children }: {children: React.ReactNode;}) {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-ivory">
-      <a href="#main" className="sr-only z-[100] rounded-full bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
+      <a
+        href="#main"
+        className="sr-only z-[100] rounded-full bg-ink px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+      >
         Skip to content
       </a>
       <AnnouncementBar />
@@ -50,11 +55,9 @@ export function SiteLayout({ children }: {children: React.ReactNode;}) {
         className="flex-1"
         initial={reduce ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}>
-        
-        <Suspense fallback={<PageFallback />}>
-          {children}
-        </Suspense>
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+      >
+        <Suspense fallback={<PageFallback />}>{children}</Suspense>
       </motion.main>
       <Footer />
 
@@ -63,8 +66,8 @@ export function SiteLayout({ children }: {children: React.ReactNode;}) {
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-whatsapp text-white shadow-lift transition-[background-color,transform] duration-200 ease-lux hover:bg-whatsapp-hover active:scale-95"
-        aria-label="Chat with LUXICHIC on WhatsApp">
-        
+        aria-label="Chat with LUXICHIC on WhatsApp"
+      >
         <WhatsAppIcon className="h-7 w-7" />
       </a>
 
@@ -74,9 +77,9 @@ export function SiteLayout({ children }: {children: React.ReactNode;}) {
       <Toaster
         position="bottom-center"
         toastOptions={{
-          style: { borderRadius: '16px', fontFamily: 'Manrope, sans-serif', border: '1px solid #E9E3DE' }
-        }} />
-      
-    </div>);
-
+          style: { borderRadius: '16px', fontFamily: 'Manrope, sans-serif', border: '1px solid #E9E3DE' },
+        }}
+      />
+    </div>
+  );
 }

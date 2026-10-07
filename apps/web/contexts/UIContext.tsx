@@ -20,7 +20,7 @@ interface UIContextValue {
 
 const UIContext = createContext<UIContextValue | null>(null);
 
-export function UIProvider({ children }: {children: React.ReactNode;}) {
+export function UIProvider({ children }: { children: React.ReactNode }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [quickView, setQuickView] = useState<Product | null>(null);
@@ -32,7 +32,7 @@ export function UIProvider({ children }: {children: React.ReactNode;}) {
       if (!term) return;
       setRecent((prev) => [term, ...prev.filter((x) => x.toLowerCase() !== term.toLowerCase())].slice(0, 6));
     },
-    [setRecent]
+    [setRecent],
   );
 
   return (
@@ -48,12 +48,12 @@ export function UIProvider({ children }: {children: React.ReactNode;}) {
         setQuickView,
         recentSearches,
         addRecentSearch,
-        clearRecentSearches: () => setRecent([])
-      }}>
-      
+        clearRecentSearches: () => setRecent([]),
+      }}
+    >
       {children}
-    </UIContext.Provider>);
-
+    </UIContext.Provider>
+  );
 }
 
 export function useUI() {

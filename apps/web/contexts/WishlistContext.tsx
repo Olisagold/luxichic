@@ -12,21 +12,23 @@ interface WishlistContextValue {
 
 const WishlistContext = createContext<WishlistContextValue | null>(null);
 
-export function WishlistProvider({ children }: {children: React.ReactNode;}) {
+export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [ids, setIds] = useLocalStorage<string[]>('lx_wishlist', []);
 
   const has = (id: string) => ids.includes(id);
   const toggle = (id: string) => {
     const adding = !ids.includes(id);
-    setIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [id, ...prev]);
+    setIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [id, ...prev]));
     return adding;
   };
 
   return (
-    <WishlistContext.Provider value={{ ids, has, toggle, remove: (id) => setIds((prev) => prev.filter((x) => x !== id)) }}>
+    <WishlistContext.Provider
+      value={{ ids, has, toggle, remove: (id) => setIds((prev) => prev.filter((x) => x !== id)) }}
+    >
       {children}
-    </WishlistContext.Provider>);
-
+    </WishlistContext.Provider>
+  );
 }
 
 export function useWishlist() {

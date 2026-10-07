@@ -45,8 +45,12 @@ body {
 }
 /* ---------- Homepage glow & motion ---------- */
 @keyframes lx-shimmer {
-  0% { background-position: 200% 50%; }
-  100% { background-position: -200% 50%; }
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
 }
 .lx-shimmer-text {
   background-image: linear-gradient(100deg, #c4146e 0%, #c4146e 38%, #ff8cc6 50%, #c4146e 62%, #c4146e 100%);
@@ -58,28 +62,50 @@ body {
   filter: drop-shadow(0 0 18px rgba(240, 40, 140, 0.35));
 }
 @keyframes lx-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 .lx-marquee {
   animation: lx-marquee 32s linear infinite;
 }
 @keyframes lx-twinkle {
-  0%, 100% { opacity: 0.15; transform: scale(0.7) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.7) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
 }
 .lx-twinkle {
   animation: lx-twinkle 3.2s ease-in-out infinite;
 }
 @keyframes lx-glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 40, 140, 0.45), 0 10px 30px -10px rgba(240, 40, 140, 0.6); }
-  50% { box-shadow: 0 0 0 10px rgba(240, 40, 140, 0), 0 14px 40px -8px rgba(240, 40, 140, 0.85); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(240, 40, 140, 0.45),
+      0 10px 30px -10px rgba(240, 40, 140, 0.6);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(240, 40, 140, 0),
+      0 14px 40px -8px rgba(240, 40, 140, 0.85);
+  }
 }
 .lx-glow-pulse {
   animation: lx-glow-pulse 2.6s ease-in-out infinite;
 }
 @keyframes lx-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .lx-spin-slow {
   animation: lx-spin 14s linear infinite;

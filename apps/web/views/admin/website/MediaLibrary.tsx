@@ -32,7 +32,11 @@ export function MediaLibrary() {
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const filtered = useMemo(() => media.filter((m) => (folder === 'all' || m.folder === folder) && m.name.toLowerCase().includes(q.toLowerCase())), [media, folder, q]);
+  const filtered = useMemo(
+    () =>
+      media.filter((m) => (folder === 'all' || m.folder === folder) && m.name.toLowerCase().includes(q.toLowerCase())),
+    [media, folder, q],
+  );
   const usedIn = (url: string) => {
     const where: string[] = products.filter((p) => p.images.includes(url)).map((p) => p.name);
     if (JSON.stringify(content).includes(url)) where.push('Website content');
@@ -49,7 +53,14 @@ export function MediaLibrary() {
         const img = new Image();
         img.src = url;
         await img.decode().catch(() => undefined);
-        addMedia(actor, { url, name: f.name, folder: folder === 'all' ? 'Products' : folder, width: img.naturalWidth, height: img.naturalHeight, sizeKb: Math.round(url.length * 0.75 / 1024) });
+        addMedia(actor, {
+          url,
+          name: f.name,
+          folder: folder === 'all' ? 'Products' : folder,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          sizeKb: Math.round((url.length * 0.75) / 1024),
+        });
         ok += 1;
       } catch (e) {
         toast.error(`${f.name}: ${e instanceof Error ? e.message : 'could not be read'}`);
@@ -64,64 +75,148 @@ export function MediaLibrary() {
       <PageHeader
         title="Media library"
         description="Images used across the store. Uploads are resized automatically for faster loading."
-        actions={<AdminButton variant="primary" loading={busy} icon={<UploadIcon className="h-4 w-4" />} onClick={() => fileRef.current?.click()}>Upload</AdminButton>} />
-      
-      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => {upload(e.target.files);e.target.value = '';}} />
+        actions={
+          <AdminButton
+            variant="primary"
+            loading={busy}
+            icon={<UploadIcon className="h-4 w-4" />}
+            onClick={() => fileRef.current?.click()}
+          >
+            Upload
+          </AdminButton>
+        }
+      />
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          upload(e.target.files);
+          e.target.value = '';
+        }}
+      />
       <div
         className="rounded-xl border border-line bg-white"
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {e.preventDefault();upload(e.dataTransfer.files);}}>
-        
+        onDrop={(e) => {
+          e.preventDefault();
+          upload(e.dataTransfer.files);
+        }}
+      >
         <div className="space-y-3 border-b border-line p-3 sm:p-4">
-          <FilterTabs label="Folder" value={folder} onChange={setFolder} options={[{ value: 'all', label: 'All', count: media.length }, ...folders.map((f) => ({ value: f, label: f, count: media.filter((m) => m.folder === f).length }))]} />
+          <FilterTabs
+            label="Folder"
+            value={folder}
+            onChange={setFolder}
+            options={[
+              { value: 'all', label: 'All', count: media.length },
+              ...folders.map((f) => ({ value: f, label: f, count: media.filter((m) => m.folder === f).length })),
+            ]}
+          />
           <SearchInput value={q} onChange={setQ} placeholder="Search by file name" className="sm:max-w-sm" />
         </div>
-        {filtered.length === 0 ?
-        <AdminEmpty icon={<ImageIcon className="h-5 w-5" />} title="No images here" text="Drop images anywhere on this panel to upload." /> :
-
-        <ul className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 lg:grid-cols-6">
-            {filtered.map((m) =>
-          <li key={m.id}>
+        {filtered.length === 0 ? (
+          <AdminEmpty
+            icon={<ImageIcon className="h-5 w-5" />}
+            title="No images here"
+            text="Drop images anywhere on this panel to upload."
+          />
+        ) : (
+          <ul className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 lg:grid-cols-6">
+            {filtered.map((m) => (
+              <li key={m.id}>
                 <button onClick={() => setOpen(m)} className="group block w-full text-left">
-                  <img src={m.url} alt={m.name} className="aspect-square w-full rounded-lg object-cover ring-1 ring-line transition-[box-shadow] duration-150 group-hover:ring-ink/40" />
+                  <img
+                    src={m.url}
+                    alt={m.name}
+                    className="aspect-square w-full rounded-lg object-cover ring-1 ring-line transition-[box-shadow] duration-150 group-hover:ring-ink/40"
+                  />
                   <p className="mt-1 truncate text-xs font-medium text-ink">{m.name}</p>
                   <p className="text-[11px] text-subtle">{m.folder}</p>
                 </button>
               </li>
-          )}
+            ))}
           </ul>
-        }
+        )}
       </div>
 
-      <Modal open={!!open} onClose={() => setOpen(null)} title={open?.name ?? 'Image'} className="max-w-2xl rounded-2xl">
-        {open &&
-        <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_220px]">
+      <Modal
+        open={!!open}
+        onClose={() => setOpen(null)}
+        title={open?.name ?? 'Image'}
+        className="max-w-2xl rounded-2xl"
+      >
+        {open && (
+          <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_220px]">
             <img src={open.url} alt={open.name} className="max-h-[60vh] w-full rounded-lg object-contain" />
             <div className="space-y-3 text-[13px]">
               <dl className="space-y-1.5">
-                <div className="flex justify-between"><dt className="text-subtle">Folder</dt><dd className="text-ink">{open.folder}</dd></div>
-                <div className="flex justify-between"><dt className="text-subtle">Size</dt><dd className="text-ink">{open.width}×{open.height} · {open.sizeKb} KB</dd></div>
-                <div className="flex justify-between"><dt className="text-subtle">Uploaded</dt><dd className="text-ink">{formatDate(open.uploadedAt)}</dd></div>
+                <div className="flex justify-between">
+                  <dt className="text-subtle">Folder</dt>
+                  <dd className="text-ink">{open.folder}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-subtle">Size</dt>
+                  <dd className="text-ink">
+                    {open.width}×{open.height} · {open.sizeKb} KB
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-subtle">Uploaded</dt>
+                  <dd className="text-ink">{formatDate(open.uploadedAt)}</dd>
+                </div>
               </dl>
               <div>
                 <p className="text-xs font-semibold text-subtle">Used in</p>
                 <p className="mt-0.5 text-charcoal">{usedIn(open.url).join(', ') || 'Not used'}</p>
               </div>
-              <AdminButton size="sm" className="w-full" icon={<CopyIcon className="h-3.5 w-3.5" />} onClick={() => {navigator.clipboard?.writeText(open.url);toast.success('Image link copied');}}>Copy link</AdminButton>
-              <AdminButton size="sm" variant="dangerGhost" className="w-full" icon={<TrashIcon className="h-3.5 w-3.5" />} onClick={() => {setRemoving(open);setOpen(null);}}>Delete</AdminButton>
+              <AdminButton
+                size="sm"
+                className="w-full"
+                icon={<CopyIcon className="h-3.5 w-3.5" />}
+                onClick={() => {
+                  navigator.clipboard?.writeText(open.url);
+                  toast.success('Image link copied');
+                }}
+              >
+                Copy link
+              </AdminButton>
+              <AdminButton
+                size="sm"
+                variant="dangerGhost"
+                className="w-full"
+                icon={<TrashIcon className="h-3.5 w-3.5" />}
+                onClick={() => {
+                  setRemoving(open);
+                  setOpen(null);
+                }}
+              >
+                Delete
+              </AdminButton>
             </div>
           </div>
-        }
+        )}
       </Modal>
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        onConfirm={() => {if (removing) deleteMedia(actor, removing.id);setRemoving(null);toast.success('Image deleted from the library');}}
+        onConfirm={() => {
+          if (removing) deleteMedia(actor, removing.id);
+          setRemoving(null);
+          toast.success('Image deleted from the library');
+        }}
         title="Delete this image?"
         tone="danger"
         confirmLabel="Delete image"
-        message={removing && usedIn(removing.url).length ? `It’s still used in: ${usedIn(removing.url).join(', ')}. Those places keep showing it until you replace it.` : 'It isn’t used anywhere.'} />
-      
-    </div>);
-
+        message={
+          removing && usedIn(removing.url).length
+            ? `It’s still used in: ${usedIn(removing.url).join(', ')}. Those places keep showing it until you replace it.`
+            : 'It isn’t used anywhere.'
+        }
+      />
+    </div>
+  );
 }

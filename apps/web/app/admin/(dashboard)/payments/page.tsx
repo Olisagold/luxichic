@@ -8,6 +8,6 @@ export default function AdminPaymentSettingsPage() {
   return (
     <RequirePermission permission="settings.payment">
       <PaymentSettings />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

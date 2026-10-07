@@ -32,13 +32,31 @@ function readSession() {
 
 function describeDevice() {
   const ua = navigator.userAgent;
-  const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : /Firefox\//.test(ua) ? 'Firefox' : 'Browser';
-  const os = /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Linux/.test(ua) ? 'Linux' : 'Unknown OS';
+  const browser = /Edg\//.test(ua)
+    ? 'Edge'
+    : /Chrome\//.test(ua)
+      ? 'Chrome'
+      : /Safari\//.test(ua)
+        ? 'Safari'
+        : /Firefox\//.test(ua)
+          ? 'Firefox'
+          : 'Browser';
+  const os = /Windows/.test(ua)
+    ? 'Windows'
+    : /Mac OS/.test(ua)
+      ? 'macOS'
+      : /Android/.test(ua)
+        ? 'Android'
+        : /iPhone|iPad/.test(ua)
+          ? 'iOS'
+          : /Linux/.test(ua)
+            ? 'Linux'
+            : 'Unknown OS';
   const kind = /Mobi|iPhone|Android/.test(ua) ? 'Mobile' : 'Desktop';
   return { browser, device: `${os} · ${kind}` };
 }
 
-export function AdminAuthProvider({ children }: {children: React.ReactNode;}) {
+export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -53,16 +71,27 @@ export function AdminAuthProvider({ children }: {children: React.ReactNode;}) {
     await wait(900);
     const match = findAdmin(email);
     if (!match || match.password !== password) return { ok: false, error: 'Incorrect email or password.' };
-    if (match.status !== 'active') return { ok: false, error: 'This administrator account is suspended. Contact the main administrator.' };
+    if (match.status !== 'active')
+      return { ok: false, error: 'This administrator account is suspended. Contact the main administrator.' };
     const now = new Date().toISOString();
     const { browser, device } = describeDevice();
     updateDb((d) => {
       const a = d.admins.find((x) => x.id === match.id);
       if (a) a.lastLoginAt = now;
       d.loginHistory = [
-      { id: generateId('login'), adminId: match.id, adminName: match.fullName, email: match.email, at: now, browser, device, location: 'Location provided by backend', current: true },
-      ...d.loginHistory.map((l) => ({ ...l, current: false }))].
-      slice(0, 100);
+        {
+          id: generateId('login'),
+          adminId: match.id,
+          adminName: match.fullName,
+          email: match.email,
+          at: now,
+          browser,
+          device,
+          location: 'Location provided by backend',
+          current: true,
+        },
+        ...d.loginHistory.map((l) => ({ ...l, current: false })),
+      ].slice(0, 100);
       logActivity(d, match, 'Security', 'Signed in', `${browser} · ${device}`);
     });
     window.localStorage.removeItem(KEY);
@@ -94,7 +123,11 @@ export function AdminAuthProvider({ children }: {children: React.ReactNode;}) {
     return { ok: true };
   };
 
-  return <AdminAuthContext.Provider value={{ admin, ready, login, logout, can, changePassword }}>{children}</AdminAuthContext.Provider>;
+  return (
+    <AdminAuthContext.Provider value={{ admin, ready, login, logout, can, changePassword }}>
+      {children}
+    </AdminAuthContext.Provider>
+  );
 }
 
 export function useAdminAuth() {

@@ -8,6 +8,6 @@ export default function AdminCustomerActivityPage() {
   return (
     <RequirePermission permission="customers.view">
       <CustomerActivity />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

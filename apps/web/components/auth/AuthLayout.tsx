@@ -19,6 +19,6 @@ export function AuthLayout({ title, text, image = images.heroModel, children }: 
         {text && <div className="mt-3 text-[15px] leading-relaxed text-subtle">{text}</div>}
         <div className="mt-8">{children}</div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

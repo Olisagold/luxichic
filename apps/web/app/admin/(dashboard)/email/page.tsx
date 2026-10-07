@@ -8,6 +8,6 @@ export default function AdminEmailSettingsPage() {
   return (
     <RequirePermission permission="settings.email">
       <EmailSettings />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

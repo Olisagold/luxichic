@@ -8,6 +8,6 @@ export default function AdminBusinessSettingsPage() {
   return (
     <RequirePermission permission="settings.general">
       <BusinessSettings mode="general" />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

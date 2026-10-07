@@ -8,6 +8,6 @@ export default function AdminAvailabilityPage() {
   return (
     <RequirePermission permission="salon.availability">
       <Availability />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

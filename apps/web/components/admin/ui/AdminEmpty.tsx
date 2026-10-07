@@ -14,6 +14,6 @@ export function AdminEmpty({ icon, title, text, action }: AdminEmptyProps) {
       <p className="mt-3 text-sm font-semibold text-ink">{title}</p>
       {text && <p className="mt-1 max-w-sm text-[13px] text-subtle">{text}</p>}
       {action && <div className="mt-4">{action}</div>}
-    </div>);
-
+    </div>
+  );
 }

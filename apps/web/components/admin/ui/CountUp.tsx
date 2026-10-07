@@ -22,7 +22,7 @@ export function CountUp({ value, format = (n) => Math.round(n).toLocaleString() 
     const controls = animate(prev.current, value, {
       duration: 0.6,
       ease: [0.23, 1, 0.32, 1],
-      onUpdate: (v) => setDisplay(v)
+      onUpdate: (v) => setDisplay(v),
     });
     prev.current = value;
     return () => controls.stop();

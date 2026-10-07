@@ -8,6 +8,6 @@ export default function AdminCalendarPage() {
   return (
     <RequirePermission permission="appointments.view">
       <AdminCalendar />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

@@ -8,6 +8,6 @@ export default function AdminActivityLogsPage() {
   return (
     <RequirePermission permission="logs.view">
       <ActivityLogs />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

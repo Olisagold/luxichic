@@ -23,12 +23,17 @@ export function AccountOrderDetail() {
         <ArrowLeftIcon className="h-4 w-4" aria-hidden /> All orders
       </Link>
       <div className="mt-6">
-        {order && owns ?
-        <OrderDetailsView order={order} /> :
-
-        <EmptyState icon={<PackageSearchIcon className="h-7 w-7" />} title="Order not found" text="This order isn’t linked to your account." actions={<Button to="/account/orders">Back to orders</Button>} />
-        }
+        {order && owns ? (
+          <OrderDetailsView order={order} />
+        ) : (
+          <EmptyState
+            icon={<PackageSearchIcon className="h-7 w-7" />}
+            title="Order not found"
+            text="This order isn’t linked to your account."
+            actions={<Button to="/account/orders">Back to orders</Button>}
+          />
+        )}
       </div>
-    </div>);
-
+    </div>
+  );
 }

@@ -8,6 +8,6 @@ export default function AdminInventoryPage() {
   return (
     <RequirePermission permission="inventory.manage">
       <Inventory />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

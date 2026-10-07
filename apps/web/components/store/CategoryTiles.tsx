@@ -20,15 +20,20 @@ export function CategoryTiles({ division, categories, columns = 3 }: CategoryTil
         'grid grid-cols-2 gap-4 md:gap-5',
         columns === 3 && 'md:grid-cols-3',
         columns === 5 && 'md:grid-cols-3 lg:grid-cols-5',
-        columns === 6 && 'md:grid-cols-3 lg:grid-cols-6'
-      )}>
-      
-      {categories.map((c, i) =>
-      <li key={c.slug}>
+        columns === 6 && 'md:grid-cols-3 lg:grid-cols-6',
+      )}
+    >
+      {categories.map((c, i) => (
+        <li key={c.slug}>
           <Reveal delay={Math.min(i, 5) * 0.04}>
             <Link href={`/${division}/shop/${c.slug}`} className="group block">
               <div className="relative overflow-hidden rounded-[22px] bg-champagne">
-                <img src={c.image} alt="" loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-[1.04]" />
+                <img
+                  src={c.image}
+                  alt=""
+                  loading="lazy"
+                  className="aspect-[4/5] w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-[1.04]"
+                />
                 <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink transition-transform duration-200 ease-lux group-hover:rotate-45">
                   <ArrowUpRightIcon className="h-4 w-4" aria-hidden />
                 </span>
@@ -38,7 +43,7 @@ export function CategoryTiles({ division, categories, columns = 3 }: CategoryTil
             </Link>
           </Reveal>
         </li>
-      )}
-    </ul>);
-
+      ))}
+    </ul>
+  );
 }

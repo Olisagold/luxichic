@@ -10,7 +10,14 @@ import { generateId, generateTransactionReference } from '@/lib/utils/references
 import { isValidEmail, isValidPhone } from '@/lib/utils/validation';
 
 const emptyAddress = (): Address => ({
-  id: generateId('addr'), country: 'Nigeria', state: '', city: '', street: '', houseNumber: '', landmark: '', instructions: ''
+  id: generateId('addr'),
+  country: 'Nigeria',
+  state: '',
+  city: '',
+  street: '',
+  houseNumber: '',
+  landmark: '',
+  instructions: '',
 });
 
 export function useCheckout() {
@@ -24,7 +31,7 @@ export function useCheckout() {
   const { payOnDeliveryEnabled } = useSettings();
   const router = useRouter();
 
-  const source = buyNow ? cart.buyNowItem ? [cart.buyNowItem] : [] : cart.activeItems;
+  const source = buyNow ? (cart.buyNowItem ? [cart.buyNowItem] : []) : cart.activeItems;
   const items: OrderItem[] = source.map(({ savedForLater: _s, ...rest }) => rest);
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const discount = buyNow ? 0 : cart.discount;
@@ -33,7 +40,11 @@ export function useCheckout() {
   const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
 
   const [step, setStep] = useState(0);
-  const [customer, setCustomer] = useState<Customer>({ fullName: user?.fullName ?? '', email: user?.email ?? '', phone: user?.phone ?? '' });
+  const [customer, setCustomer] = useState<Customer>({
+    fullName: user?.fullName ?? '',
+    email: user?.email ?? '',
+    phone: user?.phone ?? '',
+  });
   const [addressId, setAddressId] = useState<string>(defaultAddr?.id ?? 'new');
   const [address, setAddress] = useState<Address>(defaultAddr ? { ...defaultAddr } : emptyAddress());
   const [saveToAccount, setSaveToAccount] = useState(true);
@@ -45,14 +56,18 @@ export function useCheckout() {
   // Prefill when a customer signs in mid-checkout.
   useEffect(() => {
     if (!user) return;
-    setCustomer((c) => ({ fullName: c.fullName || user.fullName, email: c.email || user.email, phone: c.phone || user.phone }));
+    setCustomer((c) => ({
+      fullName: c.fullName || user.fullName,
+      email: c.email || user.email,
+      phone: c.phone || user.phone,
+    }));
     const d = user.addresses.find((a) => a.isDefault) ?? user.addresses[0];
     if (d) {
       setAddressId(d.id);
       setAddress({ ...d });
     }
-  // Only prefill when a different customer signs in, not on every profile edit.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only prefill when a different customer signs in, not on every profile edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   useEffect(() => {
@@ -64,7 +79,11 @@ export function useCheckout() {
   const chooseAddress = (id: string) => {
     setAddressId(id);
     const found = savedAddresses.find((a) => a.id === id);
-    setAddress(found ? { ...found, instructions: address.instructions } : { ...emptyAddress(), instructions: address.instructions });
+    setAddress(
+      found
+        ? { ...found, instructions: address.instructions }
+        : { ...emptyAddress(), instructions: address.instructions },
+    );
     setErrors({});
   };
 
@@ -74,11 +93,13 @@ export function useCheckout() {
       if (customer.fullName.trim().length < 2) e.fullName = 'Please enter your full name.';
       if (!isValidEmail(customer.email)) e.email = 'Please enter a valid email address.';
       if (!isValidPhone(customer.phone)) e.phone = 'Please enter a valid phone number.';
-      if (isBlockedEmail(customer.email)) e.email = 'This account can’t place orders right now. Please contact LUXICHIC for help.';
+      if (isBlockedEmail(customer.email))
+        e.email = 'This account can’t place orders right now. Please contact LUXICHIC for help.';
     }
     if (s === 1) {
-      if (!address.state) e.state = 'Please select your state.';else
-      if (!isDeliveryAvailable(address.state)) e.state = `We don’t currently deliver to ${address.state}. Please contact us on WhatsApp.`;
+      if (!address.state) e.state = 'Please select your state.';
+      else if (!isDeliveryAvailable(address.state))
+        e.state = `We don’t currently deliver to ${address.state}. Please contact us on WhatsApp.`;
       if (address.city.trim().length < 2) e.city = 'Please enter your city.';
       if (address.street.trim().length < 3) e.street = 'Please enter your street address.';
     }
@@ -107,15 +128,15 @@ export function useCheckout() {
         discount,
         paymentMethod: method,
         accountEmail: user?.email,
-        reference
+        reference,
       });
       if (user && addressId === 'new' && saveToAccount) {
         const { instructions: _i, ...rest } = address;
         saveAddress({ ...rest, label: 'Saved address', isDefault: savedAddresses.length === 0 });
       }
       router.push(`/order/${order.orderNumber}`);
-      if (buyNow) cart.setBuyNowItem(null);else
-      cart.clearActive();
+      if (buyNow) cart.setBuyNowItem(null);
+      else cart.clearActive();
     } catch {
       setPlaceError('We could not place your order. Please try again.');
       setPlacing(false);
@@ -123,9 +144,33 @@ export function useCheckout() {
   };
 
   return {
-    buyNow, items, subtotal, discount, deliveryFee, promoCode: buyNow ? null : cart.promoCode,
-    user, savedAddresses, step, next, back, goTo,
-    customer, setCustomer, address, setAddress, addressId, chooseAddress, saveToAccount, setSaveToAccount,
-    method, setMethod, payOnDeliveryEnabled, errors, placing, placeError, place, reference
+    buyNow,
+    items,
+    subtotal,
+    discount,
+    deliveryFee,
+    promoCode: buyNow ? null : cart.promoCode,
+    user,
+    savedAddresses,
+    step,
+    next,
+    back,
+    goTo,
+    customer,
+    setCustomer,
+    address,
+    setAddress,
+    addressId,
+    chooseAddress,
+    saveToAccount,
+    setSaveToAccount,
+    method,
+    setMethod,
+    payOnDeliveryEnabled,
+    errors,
+    placing,
+    placeError,
+    place,
+    reference,
   };
 }

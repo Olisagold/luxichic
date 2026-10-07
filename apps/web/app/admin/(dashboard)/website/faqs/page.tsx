@@ -8,6 +8,6 @@ export default function AdminFaqContentPage() {
   return (
     <RequirePermission permission="content.pages">
       <FaqContent />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

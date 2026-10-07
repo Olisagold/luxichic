@@ -23,17 +23,28 @@ const variants: Record<Variant, string> = {
   outline: 'border border-ink text-ink hover:bg-ink hover:text-white',
   ghost: 'text-ink hover:bg-ink/5',
   light: 'bg-white text-ink hover:bg-blush',
-  outlineLight: 'border border-white/40 text-white hover:bg-white hover:text-ink'
+  outlineLight: 'border border-white/40 text-white hover:bg-white hover:text-ink',
 };
 
 const sizes: Record<Size, string> = {
   sm: 'h-9 px-4 text-[11px]',
   md: 'h-12 px-6 text-xs',
-  lg: 'h-14 px-8 text-xs'
+  lg: 'h-14 px-8 text-xs',
 };
 
 export function Button({
-  variant = 'primary', size = 'md', to, href, loading, fullWidth, className, children, disabled, onClick, type = 'button', ...rest
+  variant = 'primary',
+  size = 'md',
+  to,
+  href,
+  loading,
+  fullWidth,
+  className,
+  children,
+  disabled,
+  onClick,
+  type = 'button',
+  ...rest
 }: ButtonProps) {
   const classes = cn(
     'inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-full font-bold uppercase tracking-[0.14em]',
@@ -42,33 +53,40 @@ export function Button({
     variants[variant],
     sizes[size],
     fullWidth && 'w-full',
-    className
+    className,
   );
 
-  const content =
-  <>
+  const content = (
+    <>
       {loading && <Loader2Icon className="h-4 w-4 animate-spin" aria-hidden />}
       {children}
-    </>;
-
+    </>
+  );
 
   if (to && !disabled) {
     return (
       <Link href={to} className={classes} onClick={onClick as unknown as React.MouseEventHandler<HTMLAnchorElement>}>
         {content}
-      </Link>);
-
+      </Link>
+    );
   }
   if (href && !disabled) {
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className={classes}>
         {content}
-      </a>);
-
+      </a>
+    );
   }
   return (
-    <button type={type} className={classes} disabled={disabled || loading} aria-busy={loading || undefined} onClick={onClick} {...rest}>
+    <button
+      type={type}
+      className={classes}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      onClick={onClick}
+      {...rest}
+    >
       {content}
-    </button>);
-
+    </button>
+  );
 }

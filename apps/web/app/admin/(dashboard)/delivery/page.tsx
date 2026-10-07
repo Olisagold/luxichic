@@ -8,6 +8,6 @@ export default function AdminDeliverySettingsPage() {
   return (
     <RequirePermission permission="settings.delivery">
       <DeliverySettings />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

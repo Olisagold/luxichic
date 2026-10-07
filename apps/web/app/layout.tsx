@@ -10,12 +10,12 @@ export const metadata: Metadata = {
   description: 'Premium wigs and human hair, professional hair tools and a luxury beauty salon & spa.',
 };
 
-export default function RootLayout({ children }: {children: React.ReactNode;}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
       </body>
-    </html>);
-
+    </html>
+  );
 }

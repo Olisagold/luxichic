@@ -31,7 +31,9 @@ export function useAdminOps() {
     const has = o.timeline.some((t) => t.step === step);
     return {
       ...o,
-      timeline: has ? o.timeline.map((t) => t.step === step && !t.at ? { ...t, at: now } : t) : [...o.timeline, { step, at: now }]
+      timeline: has
+        ? o.timeline.map((t) => (t.step === step && !t.at ? { ...t, at: now } : t))
+        : [...o.timeline, { step, at: now }],
     };
   };
 
@@ -51,7 +53,7 @@ export function useAdminOps() {
     orders.updateOrder(orderNumber, (o) => {
       let next: Order = { ...o, status };
       if (status === 'Confirmed') {
-        next = { ...next, accountToken: o.accountEmail ? undefined : o.accountToken ?? issueAccountToken() };
+        next = { ...next, accountToken: o.accountEmail ? undefined : (o.accountToken ?? issueAccountToken()) };
       }
       if (status === 'Processing') next = stamp(next, 'Processing');
       if (status === 'Shipped') next = stamp(stamp(next, 'Processing'), 'Shipped');
@@ -62,7 +64,12 @@ export function useAdminOps() {
       if (status === 'Cancelled') next = { ...stamp(next, 'Cancelled'), cancelReason: reason };
       return next;
     });
-    log('Orders', `Marked as ${status.toLowerCase()}`, `${orderNumber}${reason ? ` · ${reason}` : ''}`, `/admin/orders/${orderNumber}`);
+    log(
+      'Orders',
+      `Marked as ${status.toLowerCase()}`,
+      `${orderNumber}${reason ? ` · ${reason}` : ''}`,
+      `/admin/orders/${orderNumber}`,
+    );
     return true;
   };
 
@@ -77,7 +84,7 @@ export function useAdminOps() {
 
   const event = (a: Appointment, label: string, note?: string): Appointment => ({
     ...a,
-    history: [...(a.history ?? []), { at: new Date().toISOString(), label, by: admin?.fullName, note }]
+    history: [...(a.history ?? []), { at: new Date().toISOString(), label, by: admin?.fullName, note }],
   });
 
   const confirmAppointment = (ref: string) => {
@@ -101,25 +108,33 @@ export function useAdminOps() {
     return true;
   };
 
-  const rescheduleAppointment = (ref: string, next: {date: string;time: string;personnelId?: string;personnelName?: string;reason: string;}) => {
+  const rescheduleAppointment = (
+    ref: string,
+    next: { date: string; time: string; personnelId?: string; personnelName?: string; reason: string },
+  ) => {
     if (!admin || !can('appointments.reschedule')) return false;
     orders.updateAppointment(ref, (a) =>
-    event(
-      {
-        ...a,
-        status: 'Rescheduled',
-        original: a.original ?? { date: a.date, time: a.time, personnelName: a.personnelName },
-        date: next.date,
-        time: next.time,
-        personnelId: next.personnelId ?? a.personnelId,
-        personnelName: next.personnelName ?? a.personnelName,
-        reason: next.reason
-      },
-      `Rescheduled to ${next.date} ${next.time}`,
-      next.reason
-    )
+      event(
+        {
+          ...a,
+          status: 'Rescheduled',
+          original: a.original ?? { date: a.date, time: a.time, personnelName: a.personnelName },
+          date: next.date,
+          time: next.time,
+          personnelId: next.personnelId ?? a.personnelId,
+          personnelName: next.personnelName ?? a.personnelName,
+          reason: next.reason,
+        },
+        `Rescheduled to ${next.date} ${next.time}`,
+        next.reason,
+      ),
     );
-    log('Appointments', 'Rescheduled appointment', `${ref} → ${next.date} ${next.time}`, `/admin/appointments?ref=${ref}`);
+    log(
+      'Appointments',
+      'Rescheduled appointment',
+      `${ref} → ${next.date} ${next.time}`,
+      `/admin/appointments?ref=${ref}`,
+    );
     return true;
   };
 
@@ -146,7 +161,10 @@ export function useAdminOps() {
     return true;
   };
 
-  const updateCustomer = (u: User, patch: Partial<Pick<User, 'fullName' | 'email' | 'phone' | 'status' | 'addresses'>>) => {
+  const updateCustomer = (
+    u: User,
+    patch: Partial<Pick<User, 'fullName' | 'email' | 'phone' | 'status' | 'addresses'>>,
+  ) => {
     if (!admin || !can('customers.edit')) return false;
     auth.adminUpdateCustomer(u.id, patch);
     log('Customers', 'Edited customer', u.email, `/admin/customers/${u.id}`);
@@ -165,7 +183,11 @@ export function useAdminOps() {
   const setReviewStatus = (id: string, status: 'visible' | 'hidden' | 'archived') => {
     if (!admin || !can('reviews.moderate')) return false;
     reviews.setStatus(id, status);
-    log('Reviews', status === 'visible' ? 'Restored review' : status === 'hidden' ? 'Hid review' : 'Archived review', id);
+    log(
+      'Reviews',
+      status === 'visible' ? 'Restored review' : status === 'hidden' ? 'Hid review' : 'Archived review',
+      id,
+    );
     return true;
   };
 
@@ -177,9 +199,19 @@ export function useAdminOps() {
   };
 
   return {
-    confirmPayment, setOrderStatus, deleteOrder,
-    confirmAppointment, completeAppointment, rejectAppointment, rescheduleAppointment, cancelAppointment,
-    setCustomerBlocked, deleteCustomer, updateCustomer, createCustomer,
-    setReviewStatus, deleteReview
+    confirmPayment,
+    setOrderStatus,
+    deleteOrder,
+    confirmAppointment,
+    completeAppointment,
+    rejectAppointment,
+    rescheduleAppointment,
+    cancelAppointment,
+    setCustomerBlocked,
+    deleteCustomer,
+    updateCustomer,
+    createCustomer,
+    setReviewStatus,
+    deleteReview,
   };
 }

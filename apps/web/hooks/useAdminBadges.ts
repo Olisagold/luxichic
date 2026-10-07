@@ -5,7 +5,7 @@ import { useDb } from '@/lib/mock-db/db';
 import { stockState } from '@/lib/mock-db/catalog';
 
 /** Live counts for sidebar badges and the dashboard's "Needs attention" panel. */
-export function useAdminBadges(): Record<NavBadge, number> & {awaitingAmount: number;} {
+export function useAdminBadges(): Record<NavBadge, number> & { awaitingAmount: number } {
   const { orders, appointments } = useOrders();
   const products = useDb((s) => s.products);
   const notifications = useDb((s) => s.notifications);
@@ -18,7 +18,7 @@ export function useAdminBadges(): Record<NavBadge, number> & {awaitingAmount: nu
       lowStock: products.filter((p) => p.status !== 'archived' && stockState(p) !== 'In Stock').length,
       unread: notifications.filter((n) => !n.read).length,
       hiddenReviews: 0,
-      awaitingAmount: awaiting.reduce((s, o) => s + o.total, 0)
+      awaitingAmount: awaiting.reduce((s, o) => s + o.total, 0),
     };
   }, [orders, appointments, products, notifications]);
 }

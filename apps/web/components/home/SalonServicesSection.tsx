@@ -8,11 +8,22 @@ import { Reveal } from '@/components/ui/Reveal';
 import { ServiceCard } from '@/components/salon/ServiceCard';
 import { salonServices } from '@/data/services';
 
-const homeSlugs = ['manicure', 'pedicure', 'facials', 'eyelash-extensions', 'nail-services', 'braiding', 'hair-treatment', 'barbing'];
+const homeSlugs = [
+  'manicure',
+  'pedicure',
+  'facials',
+  'eyelash-extensions',
+  'nail-services',
+  'braiding',
+  'hair-treatment',
+  'barbing',
+];
 
 export function SalonServicesSection() {
   const reduce = useReducedMotion();
-  const services = homeSlugs.map((s) => salonServices.find((x) => x.slug === s)).filter((s): s is NonNullable<typeof s> => !!s);
+  const services = homeSlugs
+    .map((s) => salonServices.find((x) => x.slug === s))
+    .filter((s): s is NonNullable<typeof s> => !!s);
 
   return (
     <section className="bg-white py-20 md:py-28">
@@ -23,7 +34,8 @@ export function SalonServicesSection() {
               The Salon <span className="italic text-pink-deep">&amp; Spa</span>
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-subtle">
-              Nails, lashes, skin, braids and grooming by specialists who take their time. Book online in a minute — and only pay after your service.
+              Nails, lashes, skin, braids and grooming by specialists who take their time. Book online in a minute — and
+              only pay after your service.
             </p>
           </div>
           <Button to="/salon/book" size="lg" variant="pink">
@@ -31,19 +43,19 @@ export function SalonServicesSection() {
           </Button>
         </Reveal>
         <div className="grid grid-cols-1 gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
-          {services.map((s, i) =>
-          <motion.div
-            key={s.slug}
-            initial={reduce ? false : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.3, delay: i % 4 * 0.05, ease: [0.23, 1, 0.32, 1] }}>
-            
+          {services.map((s, i) => (
+            <motion.div
+              key={s.slug}
+              initial={reduce ? false : { opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.3, delay: (i % 4) * 0.05, ease: [0.23, 1, 0.32, 1] }}
+            >
               <ServiceCard service={s} showWhatsApp={false} />
             </motion.div>
-          )}
+          ))}
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }

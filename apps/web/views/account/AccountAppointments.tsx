@@ -16,10 +16,16 @@ export function AccountAppointments() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-5xl text-ink">Appointments</h1>
-        <Button to="/salon/book" size="sm">Book new</Button>
+        <Button to="/salon/book" size="sm">
+          Book new
+        </Button>
       </div>
-      <p className="mt-3 text-sm text-subtle">Salon services are paid for after your service. Message your specialist anytime on WhatsApp.</p>
-      <div className="mt-6"><AppointmentList appointments={list} /></div>
-    </div>);
-
+      <p className="mt-3 text-sm text-subtle">
+        Salon services are paid for after your service. Message your specialist anytime on WhatsApp.
+      </p>
+      <div className="mt-6">
+        <AppointmentList appointments={list} />
+      </div>
+    </div>
+  );
 }

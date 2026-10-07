@@ -32,10 +32,10 @@ export function discountFor(subtotal: number, code: string | null): number {
   const promo = businessConfig.promoCodes.find((p) => p.code === code);
   if (!promo || subtotal < (promo.minSpend ?? 0)) return 0;
   if (promo.amount) return Math.min(subtotal, promo.amount);
-  return Math.round(subtotal * promo.percent / 100);
+  return Math.round((subtotal * promo.percent) / 100);
 }
 
-export function CartProvider({ children }: {children: React.ReactNode;}) {
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useLocalStorage<CartItem[]>('lx_cart', []);
   const [promoCode, setPromoCode] = useLocalStorage<string | null>('lx_promo', null);
   const [lastAddedKey, setLastAddedKey] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export function CartProvider({ children }: {children: React.ReactNode;}) {
       const existing = prev.find((i) => i.key === item.key);
       if (existing) {
         return prev.map((i) =>
-        i.key === item.key ? { ...i, quantity: Math.min(99, i.quantity + item.quantity), savedForLater: false } : i
+          i.key === item.key ? { ...i, quantity: Math.min(99, i.quantity + item.quantity), savedForLater: false } : i,
         );
       }
       return [item, ...prev];
@@ -63,10 +63,10 @@ export function CartProvider({ children }: {children: React.ReactNode;}) {
   const removeItem = (key: string) => setItems((prev) => prev.filter((i) => i.key !== key));
 
   const updateQuantity = (key: string, quantity: number) =>
-  setItems((prev) => prev.map((i) => i.key === key ? { ...i, quantity: Math.max(1, Math.min(99, quantity)) } : i));
+    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, quantity: Math.max(1, Math.min(99, quantity)) } : i)));
 
   const toggleSaveForLater = (key: string) =>
-  setItems((prev) => prev.map((i) => i.key === key ? { ...i, savedForLater: !i.savedForLater } : i));
+    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, savedForLater: !i.savedForLater } : i)));
 
   const applyPromo = (code: string) => {
     const match = businessConfig.promoCodes.find((p) => p.code === code.trim().toUpperCase());
@@ -83,14 +83,28 @@ export function CartProvider({ children }: {children: React.ReactNode;}) {
   return (
     <CartContext.Provider
       value={{
-        items, activeItems, savedItems, count, subtotal, promoCode, discount, lastAddedKey,
-        addItem, removeItem, updateQuantity, toggleSaveForLater, applyPromo,
-        removePromo: () => setPromoCode(null), clearActive, buyNowItem, setBuyNowItem
-      }}>
-      
+        items,
+        activeItems,
+        savedItems,
+        count,
+        subtotal,
+        promoCode,
+        discount,
+        lastAddedKey,
+        addItem,
+        removeItem,
+        updateQuantity,
+        toggleSaveForLater,
+        applyPromo,
+        removePromo: () => setPromoCode(null),
+        clearActive,
+        buyNowItem,
+        setBuyNowItem,
+      }}
+    >
       {children}
-    </CartContext.Provider>);
-
+    </CartContext.Provider>
+  );
 }
 
 export function useCart() {

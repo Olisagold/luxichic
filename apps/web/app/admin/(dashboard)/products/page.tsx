@@ -8,6 +8,6 @@ export default function AdminProductsPage() {
   return (
     <RequirePermission permission="products.view">
       <Products />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

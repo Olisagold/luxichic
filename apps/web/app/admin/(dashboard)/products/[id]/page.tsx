@@ -8,6 +8,6 @@ export default function AdminProductEditorPage() {
   return (
     <RequirePermission permission="products.view">
       <ProductEditor />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

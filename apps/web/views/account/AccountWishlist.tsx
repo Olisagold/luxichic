@@ -7,7 +7,9 @@ export function AccountWishlist() {
   return (
     <div>
       <h1 className="font-display text-5xl text-ink">Wishlist</h1>
-      <div className="mt-8"><WishlistGrid /></div>
-    </div>);
-
+      <div className="mt-8">
+        <WishlistGrid />
+      </div>
+    </div>
+  );
 }

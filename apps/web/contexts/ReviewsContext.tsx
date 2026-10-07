@@ -26,20 +26,32 @@ const ReviewsContext = createContext<ReviewsContextValue | null>(null);
 const isVisible = (r: Review) => (r.status ?? 'visible') === 'visible';
 
 /** In production, edit/delete/moderation must be authorised server-side. */
-export function ReviewsProvider({ children }: {children: React.ReactNode;}) {
+export function ReviewsProvider({ children }: { children: React.ReactNode }) {
   const [reviews, setReviews] = useLocalStorage<Review[]>('lx_reviews_v2', () => [...generatedReviews, ...seedReviews]);
 
   const value: ReviewsContextValue = {
     all: reviews,
-    forProduct: (productId) => reviews.filter((r) => r.productId === productId && isVisible(r)).sort((a, b) => b.date.localeCompare(a.date)),
-    byAuthor: (email) => reviews.filter((r) => r.authorEmail?.toLowerCase() === email.toLowerCase() && r.status !== 'archived'),
+    forProduct: (productId) =>
+      reviews.filter((r) => r.productId === productId && isVisible(r)).sort((a, b) => b.date.localeCompare(a.date)),
+    byAuthor: (email) =>
+      reviews.filter((r) => r.authorEmail?.toLowerCase() === email.toLowerCase() && r.status !== 'archived'),
     addReview: (r) => {
-      setReviews((prev) => [{ ...r, id: generateId('r'), date: new Date().toISOString().slice(0, 10), status: 'visible' }, ...prev]);
-      updateDb((d) => pushNotification(d, { kind: 'review', title: 'New review', body: `${r.authorName} left a ${r.rating}★ review.`, link: '/admin/reviews' }));
+      setReviews((prev) => [
+        { ...r, id: generateId('r'), date: new Date().toISOString().slice(0, 10), status: 'visible' },
+        ...prev,
+      ]);
+      updateDb((d) =>
+        pushNotification(d, {
+          kind: 'review',
+          title: 'New review',
+          body: `${r.authorName} left a ${r.rating}★ review.`,
+          link: '/admin/reviews',
+        }),
+      );
     },
-    updateReview: (id, patch) => setReviews((prev) => prev.map((r) => r.id === id ? { ...r, ...patch } : r)),
+    updateReview: (id, patch) => setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r))),
     deleteReview: (id) => setReviews((prev) => prev.filter((r) => r.id !== id)),
-    setStatus: (id, status) => setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status } : r))
+    setStatus: (id, status) => setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r))),
   };
 
   return <ReviewsContext.Provider value={value}>{children}</ReviewsContext.Provider>;

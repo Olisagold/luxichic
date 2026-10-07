@@ -8,6 +8,6 @@ export default function AdminWhatsAppSettingsPage() {
   return (
     <RequirePermission permission="settings.whatsapp">
       <WhatsAppSettings />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }

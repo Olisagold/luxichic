@@ -8,6 +8,6 @@ export default function AdminMediaLibraryPage() {
   return (
     <RequirePermission permission="content.media">
       <MediaLibrary />
-    </RequirePermission>);
-
+    </RequirePermission>
+  );
 }
