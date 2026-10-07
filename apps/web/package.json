@@ -12,9 +12,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@luxichic/types": "workspace:*",
-    "@luxichic/ui": "workspace:*",
-    "@luxichic/validation": "workspace:*",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
     "date-fns": "^4.1.0",

@@ -16,7 +16,7 @@ Monorepo for the Luxichic platform: storefront (hair, tools), salon booking, cus
   - `db/`, `actions/`, `services/`, `validations/`: Drizzle schema/queries, server actions,
     business logic and Zod schemas (to be filled in as features move to Supabase)
 - `supabase/`: migrations, seed data and local config
-- `packages/`: shared `ui`, `types`, `validation` and `config`
+- `packages/config`: shared TypeScript (and later ESLint) config
 - `docs/`: architecture, database, business rules, integrations, API, deployment
 - `scripts/`: setup, database and deployment scripts
 - `legacy/luxichic-react`: previous Vite + React frontend

@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  transpilePackages: ["@luxichic/ui", "@luxichic/types", "@luxichic/validation"],
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;
