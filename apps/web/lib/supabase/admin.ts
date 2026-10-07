@@ -4,7 +4,7 @@ import { requireEnv } from '@/lib/env';
 
 // Bypasses Row Level Security. Server-side use only.
 export function createAdminClient() {
-  return createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE_KEY'), {
+  return createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SECRET_KEY'), {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }

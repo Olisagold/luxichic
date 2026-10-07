@@ -15,7 +15,7 @@ const serverSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   // Supabase (Phase 1–2)
   DATABASE_URL: optional(z.string().url()),
-  SUPABASE_SERVICE_ROLE_KEY: optional(z.string().min(1)),
+  SUPABASE_SECRET_KEY: optional(z.string().min(1)),
   // Telegram bot (Phase 9)
   TELEGRAM_BOT_TOKEN: optional(z.string().min(1)),
   TELEGRAM_WEBHOOK_SECRET: optional(z.string().min(16, 'Use at least 16 characters')),
@@ -28,19 +28,19 @@ const clientSchema = z
   .object({
     NEXT_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
     NEXT_PUBLIC_SUPABASE_URL: optional(z.string().url()),
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: optional(z.string().min(1)),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(1)),
     NEXT_PUBLIC_SENTRY_DSN: optional(z.string().url()),
   })
-  .refine((e) => !e.NEXT_PUBLIC_SUPABASE_URL === !e.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-    message: 'Set both NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, or neither',
-    path: ['NEXT_PUBLIC_SUPABASE_ANON_KEY'],
+  .refine((e) => !e.NEXT_PUBLIC_SUPABASE_URL === !e.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+    message: 'Set both NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, or neither',
+    path: ['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'],
   });
 
 // NEXT_PUBLIC_* must be read by their full names so Next.js can inline them into the browser bundle.
 const clientValues = {
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 };
 
@@ -62,7 +62,7 @@ export const env: Env = isServer
   : // Server-only keys are undefined in the browser; reading them there is a bug.
     (parse(clientSchema, clientValues) as Env);
 
-export const isSupabaseConfigured = Boolean(env.NEXT_PUBLIC_SUPABASE_URL && env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+export const isSupabaseConfigured = Boolean(env.NEXT_PUBLIC_SUPABASE_URL && env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
 /** Returns a variable that a feature can't run without, with a clear error if it isn't set. */
 export function requireEnv<K extends keyof Env>(key: K): NonNullable<Env[K]> {

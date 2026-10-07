@@ -11,8 +11,8 @@ All variables are listed in [`.env.example`](../../.env.example) and validated a
 | Variable                                                                  | Where it comes from                                                        | Needed from       |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------- |
 | `NEXT_PUBLIC_SITE_URL`                                                    | Your domain (`http://localhost:3000` locally)                              | Now               |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`               | Supabase → Project Settings → API (or `pnpm db:status` locally)            | Phase 1–2         |
-| `SUPABASE_SERVICE_ROLE_KEY`                                               | Supabase → Project Settings → API. **Server only, never expose**           | Phase 1–2         |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`        | Supabase → Project Settings → API (or `pnpm db:status` locally)            | Phase 1–2         |
+| `SUPABASE_SECRET_KEY`                                                     | Supabase → Project Settings → API. **Server only, never expose**           | Phase 1–2         |
 | `DATABASE_URL`                                                            | Supabase → Connect → connection string                                     | Phase 1           |
 | `NEXT_PUBLIC_SENTRY_DSN`                                                  | Sentry → Project Settings → Client Keys (DSN)                              | Production        |
 | `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`                       | Sentry org slug, project slug and an organization auth token (source maps) | Production builds |
