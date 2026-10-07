@@ -97,6 +97,16 @@ Status: done, except Sentry account setup. See [`docs/deployment/environments.md
 The Next.js port should look and behave exactly like `legacy/luxichic-react` before backend work starts.
 Differences have been reported on the live site, including responsiveness.
 
+- ✅ **Fixed:** horizontal overflow (pages up to 1875px wide on a 390px phone, so mobile browsers zoomed out).
+  The prototype had it too. All 27 storefront routes now fit at 390, 768 and 1280px.
+- ✅ **Checked:** the home page matches the prototype pixel-for-pixel at 390px and 1440px.
+  The reported header and spacing differences are the prototype's original design, not migration changes:
+  - The mobile header has no account icon.
+  - Desktop has no hamburger menu.
+  - Content is capped at 1280px and centred.
+
+  Changing them is a design decision, tracked below.
+
 1. **Collect the differences.** For each one, record the page/URL, the screen size (mobile, tablet or desktop),
    what the prototype does, and what the Next.js app does. Screenshots of both side by side are best.
    Run the prototype locally for comparison:
