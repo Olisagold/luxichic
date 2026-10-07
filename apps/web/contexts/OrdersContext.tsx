@@ -26,6 +26,8 @@ export interface PlaceOrderInput {
 }
 
 interface OrdersContextValue {
+  /** False until stored orders and appointments have loaded on the client. */
+  ready: boolean;
   orders: Order[];
   appointments: Appointment[];
   placeOrder: (input: PlaceOrderInput) => Promise<Order>;
@@ -69,8 +71,8 @@ export function confirmOrder(o: Order, by?: string): Order {
 }
 
 export function OrdersProvider({ children }: {children: React.ReactNode;}) {
-  const [orders, setOrders] = useLocalStorage<Order[]>('lx_orders_v2', () => [...seedOrders, ...generatedOrders]);
-  const [appointments, setAppointments] = useLocalStorage<Appointment[]>('lx_appointments_v2', () => [...seedAppointments, ...generatedAppointments]);
+  const [orders, setOrders, ordersLoaded] = useLocalStorage<Order[]>('lx_orders_v2', () => [...seedOrders, ...generatedOrders]);
+  const [appointments, setAppointments, appointmentsLoaded] = useLocalStorage<Appointment[]>('lx_appointments_v2', () => [...seedAppointments, ...generatedAppointments]);
 
   const placeOrder = async (input: PlaceOrderInput) => {
     await wait(1200);
@@ -188,6 +190,7 @@ export function OrdersProvider({ children }: {children: React.ReactNode;}) {
   return (
     <OrdersContext.Provider
       value={{
+        ready: ordersLoaded && appointmentsLoaded,
         orders, appointments, placeOrder, getOrder, lookupOrder, ordersForAccount, simulateConfirmation,
         findOrderByToken, linkGuestRecords, bookAppointment,
         getAppointment: (ref) => appointments.find((a) => a.reference === ref),
