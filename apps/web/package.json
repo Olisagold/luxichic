@@ -1,0 +1,19 @@
+{
+  "name": "@luxichic/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@luxichic/types": "workspace:*",
+    "@luxichic/ui": "workspace:*",
+    "@luxichic/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@luxichic/config": "workspace:*"
+  }
+}

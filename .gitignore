@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Builds
+.next/
+dist/
+.turbo/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Storage (keep structure, ignore contents)
+storage/**/*
+!storage/**/
+!storage/**/.gitkeep
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
