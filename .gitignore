@@ -23,3 +23,23 @@ dist/
 # Supabase
 supabase/.branches
 supabase/.temp
+
+# Vercel
+.vercel
+
+# Sentry
+.sentryclirc
+.env.sentry-build-plugin
+
+# Testing (Vitest / Playwright)
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Lint caches
+.eslintcache
+
+# Secrets
+*.pem
