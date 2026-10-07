@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@luxichic/types": "workspace:*",
@@ -16,12 +17,18 @@
     "@luxichic/validation": "workspace:*",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
+    "date-fns": "^4.1.0",
     "drizzle-orm": "^0.36.0",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "0.522.0",
     "next": "^15.0.0",
     "postgres": "^3.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "^2.15.0",
     "server-only": "^0.0.1",
+    "sonner": "^1.7.4",
+    "tailwind-merge": "^2.6.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
@@ -29,7 +36,10 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.28.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "3.4.17",
     "typescript": "^5.6.0"
   }
 }
