@@ -5,3 +5,4 @@ pnpm-lock.yaml
 .turbo/
 supabase/migrations/
 apps/web/public/
+.env.example
