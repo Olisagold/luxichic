@@ -1,8 +1,5 @@
-export default async function SalonServicePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  return <main>Service: {slug}</main>;
+import { ServiceDetail } from '@/views/salon/ServiceDetail';
+
+export default function ServiceDetailPage() {
+  return <ServiceDetail />;
 }
