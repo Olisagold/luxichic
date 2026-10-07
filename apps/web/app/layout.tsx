@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -15,6 +16,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
+        {/* Page views and Web Vitals; only reports on Vercel deployments. */}
+        <Analytics />
       </body>
     </html>
   );
