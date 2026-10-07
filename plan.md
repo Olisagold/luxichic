@@ -73,15 +73,21 @@ Agreed rules. Phase 5 builds them; Phase 8 adds the admin side.
 
 ## Phase 0: Tooling and environments
 
-1. Add ESLint (Next.js config) and Prettier; fix or suppress existing warnings; add `pnpm lint` to CI.
-2. Validate environment variables with Zod (`lib/env.ts`) so missing keys fail at startup, not at runtime.
-3. Create Supabase projects: **dev** and **prod**. Run local development with `supabase start`.
-4. Create the Vercel project, link the GitHub repo, and set env vars for Preview and Production.
-   Every pull request gets a preview URL.
-5. Add Sentry (`@sentry/nextjs`) for client, server and edge; upload source maps from Vercel builds.
-6. Add Vercel Analytics (`@vercel/analytics`) to the root layout.
-7. ~~Remove the empty shared packages~~. Done: `packages/ui`, `types` and `validation` are removed;
-   `packages/config` stays.
+Status: the code side is done. Steps 3–5 still need your account setup; see
+[`docs/deployment/environments.md`](docs/deployment/environments.md).
+
+1. ✅ ESLint (Next.js rules) and Prettier. CI runs format check, lint, typecheck and build.
+2. ✅ Environment variables validated with Zod (`apps/web/lib/env.ts`); invalid values fail dev/build immediately.
+3. ⏳ Supabase.
+   - ✅ The Supabase CLI is installed: `pnpm db:start` / `db:status` / `db:stop` / `db:reset`.
+   - **You:** create the `luxichic-dev` and `luxichic-prod` projects.
+4. ⏳ **You:** create the Vercel project (Root Directory `apps/web`), set Preview and Production env vars, and
+   enable Analytics.
+5. ⏳ Sentry.
+   - ✅ Client, server and edge are set up; source maps upload when the Sentry env vars are present.
+   - **You:** create the Sentry project and add its keys to Vercel.
+6. ✅ Vercel Analytics in the root layout.
+7. ✅ The empty shared packages are removed; `packages/config` stays.
 
 ## Phase 1: Database schema (Drizzle)
 
