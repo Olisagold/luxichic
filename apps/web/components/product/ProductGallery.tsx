@@ -21,7 +21,10 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
   return (
     <div className="flex flex-col-reverse gap-4 md:flex-row">
       {images.length > 1 && (
-        <ul className="no-scrollbar flex gap-3 overflow-x-auto md:w-20 md:flex-col" aria-label="Product images">
+        <ul
+          className="no-scrollbar flex gap-3 relative overflow-x-auto md:w-20 md:flex-col"
+          aria-label="Product images"
+        >
           {images.map((src, i) => (
             <li key={src + i}>
               <button

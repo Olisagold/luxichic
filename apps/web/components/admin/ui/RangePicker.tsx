@@ -17,7 +17,7 @@ export function RangePicker({ value, onChange, custom, onCustom }: RangePickerPr
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div
-        className="no-scrollbar flex overflow-x-auto rounded-lg border border-line bg-white p-0.5"
+        className="no-scrollbar flex relative overflow-x-auto rounded-lg border border-line bg-white p-0.5"
         role="group"
         aria-label="Date range"
       >

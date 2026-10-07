@@ -23,7 +23,7 @@ export function SalonServices() {
       <div
         role="tablist"
         aria-label="Service categories"
-        className="no-scrollbar -mx-5 mt-8 flex gap-2 overflow-x-auto px-5"
+        className="no-scrollbar -mx-5 mt-8 flex gap-2 relative overflow-x-auto px-5"
       >
         {categories.map((c) => (
           <button

@@ -74,7 +74,7 @@ export function HomepageContent() {
         }
       />
 
-      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-line" role="tablist">
+      <div className="mb-5 flex gap-1 relative overflow-x-auto border-b border-line" role="tablist">
         {tabs.map(([k, l]) => (
           <button
             key={k}

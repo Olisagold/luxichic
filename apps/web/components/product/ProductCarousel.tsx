@@ -41,7 +41,7 @@ export function ProductCarousel({ products, label, perView = 4, dark }: ProductC
       </div>
       <ul
         ref={ref}
-        className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-5 pb-2 lg:mx-0 lg:px-0"
+        className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-5 relative overflow-x-auto scroll-smooth px-5 pb-2 lg:mx-0 lg:px-0"
       >
         {products.map((p) => (
           <li

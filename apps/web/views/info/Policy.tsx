@@ -16,9 +16,9 @@ export function Policy() {
   return (
     <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: policy.title }]} />
-      <div className="mt-6 grid gap-12 lg:grid-cols-[240px_1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-12 lg:grid-cols-[240px_1fr]">
         <nav aria-label="Policies" className="lg:sticky lg:top-28 lg:h-fit">
-          <ul className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 lg:mx-0 lg:flex-col lg:px-0">
+          <ul className="no-scrollbar -mx-5 flex gap-2 relative overflow-x-auto px-5 lg:mx-0 lg:flex-col lg:px-0">
             {Object.entries(policies).map(([key, p]) => (
               <li key={key}>
                 <Link

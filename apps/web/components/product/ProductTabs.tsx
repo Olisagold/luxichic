@@ -32,7 +32,7 @@ export function ProductTabs({ product }: { product: Product }) {
       <div
         role="tablist"
         aria-label="Product information"
-        className="no-scrollbar flex gap-8 overflow-x-auto border-b border-line"
+        className="no-scrollbar flex gap-8 relative overflow-x-auto border-b border-line"
       >
         {tabs.map((t, i) => (
           <button

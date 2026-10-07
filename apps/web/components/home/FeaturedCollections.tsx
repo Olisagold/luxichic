@@ -104,7 +104,7 @@ export function FeaturedCollections() {
           </div>
         </div>
 
-        <div className="no-scrollbar -mx-5 flex snap-x gap-4 overflow-x-auto px-5 lg:hidden">
+        <div className="no-scrollbar -mx-5 flex snap-x gap-4 relative overflow-x-auto px-5 lg:hidden">
           {collections.map((c) => (
             <Link
               key={c.slug}

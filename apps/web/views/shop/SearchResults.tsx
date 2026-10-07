@@ -61,7 +61,7 @@ export function SearchResults() {
 
       <div className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div
-          className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 md:mx-0 md:px-0"
+          className="no-scrollbar -mx-5 flex gap-2 relative overflow-x-auto px-5 md:mx-0 md:px-0"
           role="radiogroup"
           aria-label="Search in"
         >

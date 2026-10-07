@@ -43,7 +43,7 @@ export function AccountLayout({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-subtle">Signed in as</p>
             <p className="mt-0.5 truncate font-display text-2xl text-ink">{user.fullName}</p>
           </div>
-          <nav className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 lg:mx-0 lg:mt-6 lg:flex-col lg:gap-1 lg:px-0">
+          <nav className="no-scrollbar -mx-5 flex gap-2 relative overflow-x-auto px-5 lg:mx-0 lg:mt-6 lg:flex-col lg:gap-1 lg:px-0">
             {links.map((l) => (
               <NavLink
                 key={l.to}

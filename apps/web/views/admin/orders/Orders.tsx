@@ -202,7 +202,7 @@ export function Orders() {
         ) : (
           <>
             {/* Desktop table */}
-            <div className="hidden overflow-x-auto lg:block">
+            <div className="hidden relative overflow-x-auto lg:block">
               <table className="w-full text-left text-[13px]">
                 <thead className="border-b border-line text-xs text-subtle">
                   <tr>

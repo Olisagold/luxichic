@@ -12,7 +12,7 @@ interface FilterTabsProps<T extends string> {
 
 export function FilterTabs<T extends string>({ value, onChange, options, label }: FilterTabsProps<T>) {
   return (
-    <div role="tablist" aria-label={label} className="no-scrollbar -mx-1 flex gap-1 overflow-x-auto px-1">
+    <div role="tablist" aria-label={label} className="no-scrollbar -mx-1 flex gap-1 relative overflow-x-auto px-1">
       {options.map((o) => {
         const active = o.value === value;
         return (

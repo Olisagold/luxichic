@@ -76,7 +76,11 @@ export function SearchOverlay() {
           >
             <div className="mx-auto max-w-4xl px-5 py-8">
               <div className="flex items-center justify-between gap-4">
-                <div className="no-scrollbar flex gap-2 overflow-x-auto" role="radiogroup" aria-label="Search in">
+                <div
+                  className="no-scrollbar flex gap-2 relative overflow-x-auto"
+                  role="radiogroup"
+                  aria-label="Search in"
+                >
                   {searchScopes.map((s) => (
                     <button
                       key={s.value}

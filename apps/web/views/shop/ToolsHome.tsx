@@ -101,7 +101,7 @@ export function ToolsHome() {
           <div
             role="tablist"
             aria-label="Departments"
-            className="no-scrollbar -mx-5 mb-10 flex gap-2 overflow-x-auto px-5 lg:mx-0 lg:px-0"
+            className="no-scrollbar -mx-5 mb-10 flex gap-2 relative overflow-x-auto px-5 lg:mx-0 lg:px-0"
           >
             {departments.map((d) => (
               <button

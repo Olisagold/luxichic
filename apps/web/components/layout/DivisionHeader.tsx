@@ -125,7 +125,10 @@ export function DivisionHeader() {
               </button>
             </form>
           ) : (
-            <nav aria-label={`${c.name} navigation`} className="no-scrollbar flex flex-1 items-center overflow-x-auto">
+            <nav
+              aria-label={`${c.name} navigation`}
+              className="no-scrollbar flex flex-1 items-center relative overflow-x-auto"
+            >
               {links.map((l) => {
                 const active = l.to === activeTo;
                 return (

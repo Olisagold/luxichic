@@ -127,7 +127,7 @@ export function VariantsSection({ editor }: { editor: ProductEditorState }) {
                   <Trash2Icon className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="overflow-x-auto">
+              <div className="relative overflow-x-auto">
                 <table className="w-full min-w-[560px] text-[13px]">
                   <thead className="text-[11px] text-subtle">
                     <tr>

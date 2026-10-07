@@ -63,7 +63,7 @@ export function ProductListing({ division }: { division: Division }) {
           </p>
         </div>
         {related.length > 0 && (
-          <div className="no-scrollbar -mx-5 mt-6 flex gap-2 overflow-x-auto px-5">
+          <div className="no-scrollbar -mx-5 mt-6 flex gap-2 relative overflow-x-auto px-5">
             {related.map((c) => (
               <Link
                 key={c.slug}
