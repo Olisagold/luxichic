@@ -73,21 +73,46 @@ Agreed rules. Phase 5 builds them; Phase 8 adds the admin side.
 
 ## Phase 0: Tooling and environments
 
-Status: the code side is done. Steps 3–5 still need your account setup; see
-[`docs/deployment/environments.md`](docs/deployment/environments.md).
+Status: done, except Sentry account setup. See [`docs/deployment/environments.md`](docs/deployment/environments.md).
 
 1. ✅ ESLint (Next.js rules) and Prettier. CI runs format check, lint, typecheck and build.
 2. ✅ Environment variables validated with Zod (`apps/web/lib/env.ts`); invalid values fail dev/build immediately.
-3. ⏳ Supabase.
-   - ✅ The Supabase CLI is installed: `pnpm db:start` / `db:status` / `db:stop` / `db:reset`.
-   - **You:** create the `luxichic-dev` and `luxichic-prod` projects.
-4. ⏳ **You:** create the Vercel project (Root Directory `apps/web`), set Preview and Production env vars, and
-   enable Analytics.
+3. ✅ Supabase.
+   - The `luxichic-dev` and `luxichic-prod` projects are created, with automatic RLS on.
+   - The Supabase CLI is installed: `pnpm db:start` / `db:status` / `db:stop` / `db:reset`.
+4. ✅ Vercel project `luxichic` (Root Directory `apps/web`), live at https://luxichic.vercel.app.
+   - Function region: Dublin (`dub1`, eu-west-1).
+   - Preview uses the dev Supabase keys; Production uses the prod keys.
+   - Server secrets are passed through Turbo's strict env mode (`turbo.json` → `passThroughEnv`).
 5. ⏳ Sentry.
-   - ✅ Client, server and edge are set up; source maps upload when the Sentry env vars are present.
-   - **You:** create the Sentry project and add its keys to Vercel.
-6. ✅ Vercel Analytics in the root layout.
+   - The code is set up.
+   - **You:** create the Sentry project and add `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT` and
+     `SENTRY_AUTH_TOKEN` to Vercel (Production).
+   - Until then, the "No auth token provided" build warnings are expected and harmless.
+6. ✅ Vercel Analytics in the root layout (enable it in the Vercel dashboard).
 7. ✅ The empty shared packages are removed; `packages/config` stays.
+
+## Phase 0.5: UI parity with the prototype
+
+The Next.js port should look and behave exactly like `legacy/luxichic-react` before backend work starts.
+Differences have been reported on the live site, including responsiveness.
+
+1. **Collect the differences.** For each one, record the page/URL, the screen size (mobile, tablet or desktop),
+   what the prototype does, and what the Next.js app does. Screenshots of both side by side are best.
+   Run the prototype locally for comparison:
+   `cd legacy/luxichic-react && npm install && npm run dev`.
+2. **Compare systematically** at 375px, 768px and 1280px on these pages:
+   - Home, hairs/tools homes, a listing, a product page
+   - Cart, checkout, salon, booking
+   - Account, admin dashboard
+3. **Fix the causes, not the symptoms.** Likely areas from the port:
+   - Hydration/remount behaviour, so animations and layout don't shift after the stored data loads.
+   - Layout wrappers: `SiteLayout`, `AccountLayout` and `AdminLayout` now wrap `children` instead of `<Outlet />`.
+   - Active-link logic in the new `NavLink`.
+   - React 19 / framer-motion differences.
+   - Styles that depended on Vite-only behaviour.
+4. One commit per fix (or per group of related fixes), each verified at all three screen sizes.
+5. **Done when** every page on the list matches the prototype at all three sizes.
 
 ## Phase 1: Database schema (Drizzle)
 
