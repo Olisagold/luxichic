@@ -1,0 +1,101 @@
+/* @import url() FONT IMPORTS MUST ALWAYS BE AT THE VERY TOP OF THIS FILE, ABOVE THE TAILWIND IMPORTS — DO NOT DELETE THIS COMMENT */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* END TAILWIND IMPORTS — ALL OTHER CSS MUST GO BELOW THIS LINE */
+
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: #faf8f6;
+  color: #292529;
+  font-family: Manrope, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.font-display {
+  letter-spacing: -0.01em;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.prose-admin h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0.4em 0;
+}
+.prose-admin ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.prose-admin ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.prose-admin a {
+  color: #c4146e;
+  text-decoration: underline;
+}
+/* ---------- Homepage glow & motion ---------- */
+@keyframes lx-shimmer {
+  0% { background-position: 200% 50%; }
+  100% { background-position: -200% 50%; }
+}
+.lx-shimmer-text {
+  background-image: linear-gradient(100deg, #c4146e 0%, #c4146e 38%, #ff8cc6 50%, #c4146e 62%, #c4146e 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lx-shimmer 5s linear infinite;
+  filter: drop-shadow(0 0 18px rgba(240, 40, 140, 0.35));
+}
+@keyframes lx-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.lx-marquee {
+  animation: lx-marquee 32s linear infinite;
+}
+@keyframes lx-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.7) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+.lx-twinkle {
+  animation: lx-twinkle 3.2s ease-in-out infinite;
+}
+@keyframes lx-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 40, 140, 0.45), 0 10px 30px -10px rgba(240, 40, 140, 0.6); }
+  50% { box-shadow: 0 0 0 10px rgba(240, 40, 140, 0), 0 14px 40px -8px rgba(240, 40, 140, 0.85); }
+}
+.lx-glow-pulse {
+  animation: lx-glow-pulse 2.6s ease-in-out infinite;
+}
+@keyframes lx-spin {
+  to { transform: rotate(360deg); }
+}
+.lx-spin-slow {
+  animation: lx-spin 14s linear infinite;
+}
+:focus-visible {
+  outline: 2px solid #c4146e;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
