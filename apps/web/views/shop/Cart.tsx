@@ -41,7 +41,7 @@ export function Cart() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Shopping Cart' }]} />
       <h1 className="mt-6 font-display text-5xl text-ink md:text-6xl">Shopping Cart</h1>
 
@@ -61,7 +61,7 @@ export function Cart() {
           }
         />
       ) : (
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
+        <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px]">
           <section aria-label="Cart items">
             <div className="hidden grid-cols-[1fr_140px_120px] border-b border-line pb-3 text-xs font-semibold text-subtle md:grid">
               <span>Product</span>
@@ -138,7 +138,7 @@ export function Cart() {
           <h2 id="saved-heading" className="font-display text-3xl text-ink">
             Saved for later ({savedItems.length})
           </h2>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {savedItems.map((item) => (
               <li key={item.key} className="flex gap-4 rounded-2xl bg-white p-4">
                 <img src={item.image} alt="" className="h-24 w-20 rounded-xl object-cover" />

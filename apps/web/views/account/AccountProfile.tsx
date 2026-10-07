@@ -71,7 +71,7 @@ export function AccountProfile() {
           error={pErrors.fullName}
           onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
         />
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <TextField
             id="pf-email"
             type="email"
@@ -109,7 +109,7 @@ export function AccountProfile() {
           onChange={(v) => setPw({ ...pw, current: v })}
           error={wErrors.current}
         />
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <PasswordField
             id="pw-next"
             label="New password"

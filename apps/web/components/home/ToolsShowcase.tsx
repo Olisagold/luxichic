@@ -24,7 +24,7 @@ export function ToolsShowcase() {
 
   return (
     <section className="bg-blush/60 py-20 md:py-28">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[360px_1fr] lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 lg:grid-cols-[360px_1fr] lg:px-8">
         <Reveal className="flex flex-col overflow-hidden rounded-[28px] bg-ink text-white">
           <img src={images.hotComb} alt="Sonar professional hot combs" className="h-64 w-full object-cover lg:h-72" />
           <div className="flex flex-1 flex-col p-7">

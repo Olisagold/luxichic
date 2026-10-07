@@ -35,7 +35,7 @@ export function SalonHome() {
       <section className="relative overflow-hidden bg-ink text-white">
         <img src={images.salonInterior} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45" />
         <div className="absolute inset-0 bg-ink/40" aria-hidden />
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-24 md:py-32 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:px-8">
+        <div className="relative mx-auto grid grid-cols-1 max-w-site gap-10 px-5 py-24 md:py-32 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:px-8">
           <motion.div
             initial={reduce ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -65,7 +65,7 @@ export function SalonHome() {
       </section>
 
       <section className="bg-ivory py-20 md:py-28">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading
             title={
               <>
@@ -84,11 +84,11 @@ export function SalonHome() {
       </section>
 
       <section className="bg-white py-20 md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <Reveal>
             <h2 className="max-w-2xl font-display text-4xl leading-tight text-ink md:text-5xl">How booking works</h2>
           </Reveal>
-          <ol className="mt-12 grid gap-10 md:grid-cols-3">
+          <ol className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-3">
             {how.map((h, i) => (
               <li key={h.title} className="border-t border-ink pt-6">
                 <div className="flex items-center justify-between">

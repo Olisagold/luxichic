@@ -16,7 +16,7 @@ function AdminFallback() {
   return (
     <div className="space-y-4" aria-busy="true" aria-label="Loading">
       <div className="h-8 w-60 animate-pulse rounded-lg bg-line/70" />
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {[0, 1, 2].map((i) => (
           <div key={i} className="h-28 animate-pulse rounded-xl bg-white" />
         ))}

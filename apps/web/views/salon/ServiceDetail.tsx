@@ -23,7 +23,7 @@ export function ServiceDetail() {
 
   return (
     <div>
-      <div className="mx-auto max-w-7xl px-5 pt-8 lg:px-8">
+      <div className="mx-auto max-w-site px-5 pt-8 lg:px-8">
         <Breadcrumbs
           items={[
             { label: 'Home', to: '/' },
@@ -33,7 +33,7 @@ export function ServiceDetail() {
           ]}
         />
       </div>
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8">
+      <section className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 pb-16 pt-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8">
         <img
           src={service.image}
           alt={service.name}
@@ -43,7 +43,7 @@ export function ServiceDetail() {
           <p className="text-xs font-semibold text-pink-deep">{service.category}</p>
           <h1 className="mt-2 font-display text-5xl leading-none text-ink md:text-6xl">{service.name}</h1>
           <p className="mt-6 text-base leading-relaxed text-charcoal">{service.description}</p>
-          <dl className="mt-8 grid gap-4 border-y border-line py-6 sm:grid-cols-2">
+          <dl className="mt-8 grid grid-cols-1 gap-4 border-y border-line py-6 sm:grid-cols-2">
             <div>
               <dt className="text-xs text-subtle">Price</dt>
               <dd className="mt-1 font-semibold text-ink">{servicePriceLabel(service)}</dd>
@@ -58,7 +58,7 @@ export function ServiceDetail() {
             )}
           </dl>
           <h2 className="mt-8 text-sm font-semibold text-ink">What’s included</h2>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {service.includes.map((i) => (
               <li key={i} className="flex gap-2 text-sm text-charcoal">
                 <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold" aria-hidden />
@@ -98,7 +98,7 @@ export function ServiceDetail() {
       </section>
 
       <section className="bg-ivory py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <h2 className="font-display text-4xl text-ink">You may also love</h2>
           <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((s) => (

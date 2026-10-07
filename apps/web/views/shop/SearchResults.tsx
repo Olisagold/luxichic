@@ -36,7 +36,7 @@ export function SearchResults() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-12 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-12 lg:px-8">
       <form
         role="search"
         onSubmit={(e) => {

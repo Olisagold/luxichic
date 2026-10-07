@@ -74,7 +74,7 @@ export function HairsHome() {
       />
 
       <section className="bg-white py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading
             title="Shop by construction"
             text="From beginner-friendly closures to ponytail-ready 360 lace."
@@ -102,7 +102,7 @@ export function HairsHome() {
       />
 
       <section className="bg-ink py-16 text-white md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading light title="Popular textures" text="Every texture, every mood." />
           <ul className="flex flex-wrap gap-3">
             {pick(textureSlugs).map((c) => (
@@ -121,7 +121,7 @@ export function HairsHome() {
       </section>
 
       <section className="bg-ivory py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading
             title="All products"
             action={{ label: `View all ${hairProducts.length}`, to: '/hairs/shop/all' }}
@@ -131,7 +131,7 @@ export function HairsHome() {
       </section>
 
       <section className="bg-white py-16 md:py-24">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+        <div className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
           <div>
             <h2 className="font-display text-4xl leading-[1.05] text-ink md:text-6xl">Hair services</h2>
             <p className="mt-4 max-w-md text-[15px] leading-relaxed text-subtle">

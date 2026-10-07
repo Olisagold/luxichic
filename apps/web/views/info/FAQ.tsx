@@ -9,9 +9,9 @@ import { businessConfig } from '@/data/config';
 
 export function FAQ() {
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'FAQs' }]} />
-      <div className="mt-6 grid gap-12 lg:grid-cols-[260px_1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-12 lg:grid-cols-[260px_1fr]">
         <aside className="lg:sticky lg:top-28 lg:h-fit">
           <h1 className="font-display text-5xl text-ink">FAQs</h1>
           <nav aria-label="FAQ categories" className="mt-6 hidden lg:block">

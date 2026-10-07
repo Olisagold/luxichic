@@ -75,13 +75,13 @@ export function WhatsAppSettings() {
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <Panel
             title="Connection"
             description="Your API key is sent to the server and never shown again. Only the last 4 characters are displayed."
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <AdminInput
                 id="wa-biz"
                 label="Business WhatsApp number"

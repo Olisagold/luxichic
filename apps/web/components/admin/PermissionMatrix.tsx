@@ -17,7 +17,7 @@ export function PermissionMatrix({
 }) {
   const toggle = (p: Permission) => onChange?.(value.includes(p) ? value.filter((x) => x !== p) : [...value, p]);
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {permissionGroups.map((g) => {
         const keys = g.items.map((i) => i.key);
         const all = keys.every((k) => value.includes(k));

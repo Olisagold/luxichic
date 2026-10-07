@@ -18,7 +18,7 @@ import { whatsappLink } from '@/lib/utils/whatsapp';
 /** Lightweight placeholder shown while a route's code loads. */
 function PageFallback() {
   return (
-    <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8" aria-busy="true" aria-label="Loading page">
+    <div className="mx-auto max-w-site px-5 py-16 lg:px-8" aria-busy="true" aria-label="Loading page">
       <div className="h-10 w-2/5 animate-pulse rounded-full bg-line/70" />
       <div className="mt-4 h-4 w-3/5 animate-pulse rounded-full bg-line/50" />
       <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">

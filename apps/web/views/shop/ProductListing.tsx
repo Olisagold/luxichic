@@ -40,7 +40,7 @@ export function ProductListing({ division }: { division: Division }) {
 
   return (
     <div className="bg-ivory">
-      <header className="mx-auto max-w-7xl px-5 pb-8 pt-10 lg:px-8">
+      <header className="mx-auto max-w-site px-5 pb-8 pt-10 lg:px-8">
         <Breadcrumbs
           items={[
             { label: 'Home', to: '/' },
@@ -77,7 +77,7 @@ export function ProductListing({ division }: { division: Division }) {
         )}
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 pb-24 lg:grid-cols-[260px_1fr] lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 pb-24 lg:grid-cols-[260px_1fr] lg:px-8">
         <aside className="hidden lg:block" aria-label="Filters">
           <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
             <div className="mb-2 flex items-center justify-between">
@@ -131,7 +131,7 @@ export function ProductListing({ division }: { division: Division }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setDrawer(true)}
-                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-white px-5 text-sm font-medium lg:hidden"
+                className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-white px-5 text-sm font-medium lg:hidden"
               >
                 <SlidersHorizontalIcon className="h-4 w-4" aria-hidden /> Filters
                 {listing.activeCount > 0 && (
@@ -145,7 +145,7 @@ export function ProductListing({ division }: { division: Division }) {
                 id="sort"
                 value={listing.sort}
                 onChange={(e) => listing.setSort(e.target.value as SortOption)}
-                className="h-11 flex-1 rounded-full border border-line bg-white px-5 text-sm focus:border-ink focus:outline-none sm:w-60 sm:flex-none"
+                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-white px-5 text-sm focus:border-ink focus:outline-none sm:w-60 sm:flex-none"
               >
                 {sortOptions.map((o) => (
                   <option key={o.value} value={o.value}>

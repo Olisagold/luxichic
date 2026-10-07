@@ -53,7 +53,7 @@ export function AdminLogin() {
   };
 
   return (
-    <div className="grid min-h-screen w-full bg-ink font-sans text-white lg:grid-cols-[1fr_minmax(0,560px)]">
+    <div className="grid grid-cols-1 min-h-screen w-full bg-ink font-sans text-white lg:grid-cols-[1fr_minmax(0,560px)]">
       <div className="relative hidden overflow-hidden lg:block">
         <img src={images.heroModel} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50" />
         <div className="absolute inset-0 bg-ink/40" />

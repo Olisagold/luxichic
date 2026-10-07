@@ -33,7 +33,7 @@ export function QuickViewModal() {
   return (
     <Modal open={!!product} onClose={close} title={product?.name ?? 'Quick view'} hideTitle>
       {product && priced && (
-        <div className="grid md:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="aspect-[4/5] bg-ivory md:aspect-auto">
             <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
           </div>

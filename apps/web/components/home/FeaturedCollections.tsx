@@ -30,7 +30,7 @@ export function FeaturedCollections() {
 
   return (
     <section className="bg-ivory py-20 md:py-28">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="mx-auto max-w-site px-5 lg:px-8">
         <SectionHeading
           title="Featured Hair Collections"
           text="Find your texture. Every collection comes in a range of lengths, densities and lace types."

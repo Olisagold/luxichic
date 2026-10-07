@@ -52,7 +52,7 @@ export function SecuritySettings() {
   return (
     <div>
       <PageHeader title="Security" description="Your password, sign-in alerts and recent logins." />
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Panel title="Change password">
           <form onSubmit={submit} className="space-y-4">
             <PasswordField

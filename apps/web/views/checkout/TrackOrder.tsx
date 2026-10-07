@@ -44,9 +44,9 @@ export function TrackOrder() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Track an Order' }]} />
-      <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
+      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_420px] lg:items-end">
         <div>
           <h1 className="font-display text-5xl text-ink md:text-6xl">Track your order</h1>
           <p className="mt-3 max-w-xl text-[15px] text-subtle">

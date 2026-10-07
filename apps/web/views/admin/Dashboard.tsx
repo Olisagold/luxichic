@@ -128,7 +128,7 @@ export function Dashboard() {
           </h2>
           <span className="text-xs text-white/50">Updated live</span>
         </div>
-        <div className="grid divide-y divide-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+        <div className="grid grid-cols-1 divide-y divide-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
           <AttentionItem
             icon={<LandmarkIcon className="h-4 w-4" />}
             to="/admin/orders?status=awaiting"
@@ -158,7 +158,7 @@ export function Dashboard() {
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Panel
           title={
             <span className="flex items-baseline gap-3">
@@ -270,7 +270,7 @@ export function Dashboard() {
         />
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Panel title="Sales by division" description="Product revenue in range">
           <DonutChart data={data.division} format={compactNaira} centerLabel="Total" />
         </Panel>
@@ -310,7 +310,7 @@ export function Dashboard() {
         </Panel>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Panel title="Best-selling products" description="By revenue in range" bodyClassName="p-0">
           <ul className="divide-y divide-line">
             {data.top.map((p) => (

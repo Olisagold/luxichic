@@ -121,10 +121,10 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           <Panel title="Details">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <AdminInput
                 id="s-name"
                 label="Service name"
@@ -172,7 +172,7 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
           </Panel>
 
           <Panel title="Pricing & duration" description="Leave the price empty to show “Price on consultation”.">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <AdminInput
                 id="s-price"
                 label="Starting price"

@@ -17,7 +17,7 @@ export function AnnouncementBar() {
 
   return (
     <div className="bg-blush text-ink" role="region" aria-label="Announcements">
-      <div className="relative mx-auto flex h-9 max-w-7xl items-center justify-center overflow-hidden px-5">
+      <div className="relative mx-auto flex h-9 max-w-site items-center justify-center overflow-hidden px-5">
         <AnimatePresence mode="wait" initial={false}>
           <motion.p
             key={i}

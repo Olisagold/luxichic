@@ -6,7 +6,7 @@ import { siteContent } from '@/data/content';
 export function IntroSection() {
   return (
     <section className="bg-white py-20 md:py-28">
-      <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 lg:grid-cols-2 lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-site items-center gap-14 px-5 lg:grid-cols-2 lg:px-8">
         <Reveal>
           <h2 className="font-display text-5xl uppercase leading-[0.95] text-ink md:text-7xl">
             {siteContent.intro.heading}

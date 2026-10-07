@@ -150,7 +150,7 @@ export function Analytics() {
         ))}
       </dl>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Panel
           title={metric === 'revenue' ? 'Revenue' : 'Orders'}
           actions={
@@ -178,7 +178,7 @@ export function Analytics() {
         </Panel>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
         <Panel title="Best-selling products" bodyClassName="p-0" className="xl:col-span-2">
           {top.length === 0 ? (
             <p className="px-5 py-6 text-[13px] text-subtle">No sales in this period.</p>

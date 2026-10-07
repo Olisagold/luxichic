@@ -14,7 +14,7 @@ export function Policy() {
   if (!policy) return <NotFound />;
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: policy.title }]} />
       <div className="mt-6 grid grid-cols-1 gap-12 lg:grid-cols-[240px_1fr]">
         <nav aria-label="Policies" className="lg:sticky lg:top-28 lg:h-fit">

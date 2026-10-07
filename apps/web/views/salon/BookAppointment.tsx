@@ -11,7 +11,7 @@ export function BookAppointment() {
   const service = params.get('service') ?? undefined;
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs
         items={[
           { label: 'Home', to: '/' },
@@ -19,7 +19,7 @@ export function BookAppointment() {
           { label: 'Book an Appointment' },
         ]}
       />
-      <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_340px]">
+      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_340px]">
         <div className="rounded-[28px] bg-white p-6 md:p-10">
           <h1 className="font-display text-5xl text-ink md:text-6xl">Book an appointment</h1>
           <p className="mt-3 text-[15px] text-subtle">

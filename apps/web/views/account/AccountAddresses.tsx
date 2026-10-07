@@ -71,7 +71,7 @@ export function AccountAddresses() {
             actions={<Button onClick={() => setEditing(blank())}>Add address</Button>}
           />
         ) : (
-          <ul className="grid gap-4 md:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {user.addresses.map((a) => (
               <li key={a.id} className="flex flex-col rounded-[24px] bg-white p-6">
                 <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export function AccountAddresses() {
         className="max-w-xl"
       >
         {editing && (
-          <form onSubmit={save} noValidate className="grid gap-4 p-6 sm:grid-cols-2">
+          <form onSubmit={save} noValidate className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
             <TextField
               id="ad-label"
               label="Label"

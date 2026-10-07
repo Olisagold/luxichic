@@ -8,12 +8,12 @@ import { Reveal } from '@/components/ui/Reveal';
 export function InstagramGallery() {
   return (
     <section className="bg-white py-20 md:py-28">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="mx-auto max-w-site px-5 lg:px-8">
         <SectionHeading
           title="Follow the glow"
           text="Three accounts, three worlds of inspiration. Follow the LUXICHIC division you love."
         />
-        <div className="grid gap-12 md:grid-cols-3 md:gap-6">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-6">
           {instagramGalleries.map((g, gi) => {
             const ig = businessConfig.instagram[g.id];
             return (

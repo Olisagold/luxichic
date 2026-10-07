@@ -150,7 +150,7 @@ export function MediaLibrary() {
         className="max-w-2xl rounded-2xl"
       >
         {open && (
-          <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_220px]">
             <img src={open.url} alt={open.name} className="max-h-[60vh] w-full rounded-lg object-contain" />
             <div className="space-y-3 text-[13px]">
               <dl className="space-y-1.5">

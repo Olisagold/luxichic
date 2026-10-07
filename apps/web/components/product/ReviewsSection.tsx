@@ -35,7 +35,7 @@ export function ReviewsSection({ product }: { product: Product }) {
   }));
 
   return (
-    <div className="grid gap-12 lg:grid-cols-[300px_1fr]">
+    <div className="grid grid-cols-1 gap-12 lg:grid-cols-[300px_1fr]">
       <aside>
         <p className="font-display text-6xl leading-none text-ink">{product.rating.toFixed(1)}</p>
         <Stars rating={product.rating} size="md" className="mt-3" />

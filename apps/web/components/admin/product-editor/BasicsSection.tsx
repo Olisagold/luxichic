@@ -22,7 +22,7 @@ export function BasicsSection({ editor }: { editor: ProductEditorState }) {
 
   return (
     <Panel title="Basic information" as="section">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <AdminInput
           id="p-name"
           label="Product name"
@@ -112,7 +112,7 @@ export function BasicsSection({ editor }: { editor: ProductEditorState }) {
           value={draft.description}
           onChange={(html) => update({ description: html })}
         />
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <RichTextEditor
             id="p-benefits"
             label="Benefits"

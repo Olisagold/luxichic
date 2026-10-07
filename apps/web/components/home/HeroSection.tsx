@@ -123,7 +123,7 @@ export function HeroSection() {
         }}
       />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8 lg:px-8 lg:pb-24 lg:pt-16">
+      <div className="relative mx-auto grid grid-cols-1 max-w-site items-center gap-12 px-5 pb-20 pt-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8 lg:px-8 lg:pb-24 lg:pt-16">
         <div className="relative z-10">
           <motion.p
             className="inline-flex items-center gap-2 text-xs font-semibold text-pink-deep"

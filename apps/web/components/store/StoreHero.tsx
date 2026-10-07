@@ -30,7 +30,7 @@ export function StoreHero({
   const reduce = useReducedMotion();
   return (
     <section className="bg-ivory">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8 lg:pb-20 lg:pt-14">
+      <div className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 pb-16 pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8 lg:pb-20 lg:pt-14">
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

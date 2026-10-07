@@ -36,8 +36,8 @@ export function AccountLayout({ children }: { children: React.ReactNode }) {
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(pathname)}`} replace />;
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
-      <div className="grid gap-8 lg:grid-cols-[240px_1fr] lg:gap-12">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr] lg:gap-12">
         <aside className="lg:sticky lg:top-28 lg:h-fit" aria-label="Account navigation">
           <div className="hidden lg:block">
             <p className="text-xs text-subtle">Signed in as</p>

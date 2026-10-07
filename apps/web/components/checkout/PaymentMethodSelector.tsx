@@ -32,7 +32,7 @@ export function PaymentMethodSelector({ value, onChange, payOnDeliveryEnabled }:
   ];
 
   return (
-    <div role="radiogroup" aria-label="Payment method" className="grid gap-3 sm:grid-cols-2">
+    <div role="radiogroup" aria-label="Payment method" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {options.map((o) => {
         const active = value === o.id;
         return (

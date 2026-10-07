@@ -203,7 +203,7 @@ function DiscountDialog({
           className="font-mono uppercase tracking-wide"
           placeholder="LUXE10"
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AdminSelect
             id="d-type"
             label="Type"

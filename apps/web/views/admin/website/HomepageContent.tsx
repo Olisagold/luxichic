@@ -92,7 +92,7 @@ export function HomepageContent() {
       </div>
 
       {tab === 'layout' && (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <Panel title="Announcement bar" description="Messages rotate at the top of every page.">
             <ul className="space-y-2">
               {draft.announcements.map((a, i) => (
@@ -187,10 +187,10 @@ export function HomepageContent() {
       )}
 
       {tab === 'hero' && (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-5">
             <Panel title="Hero">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <AdminInput
                   id="h-eyebrow"
                   label="Small line above heading"
@@ -240,7 +240,7 @@ export function HomepageContent() {
               </div>
             </Panel>
             <Panel title="Introduction">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <AdminInput
                   id="i-h"
                   label="Heading"
@@ -267,7 +267,7 @@ export function HomepageContent() {
                 {draft.divisions.map((d, i) => (
                   <div
                     key={d.id}
-                    className="grid gap-3 rounded-lg border border-line p-3 sm:grid-cols-[96px_minmax(0,1fr)]"
+                    className="grid grid-cols-1 gap-3 rounded-lg border border-line p-3 sm:grid-cols-[96px_minmax(0,1fr)]"
                   >
                     <MediaPicker
                       value={d.image}
@@ -280,7 +280,7 @@ export function HomepageContent() {
                       label={`${d.title} image`}
                       compact
                     />
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <AdminInput
                         id={`d-t-${d.id}`}
                         label="Title"
@@ -334,7 +334,7 @@ export function HomepageContent() {
       {tab === 'featured' && <FeaturedTab draft={draft} set={set} />}
 
       {tab === 'social' && (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <Panel title="Why choose LUXICHIC">
             <AdminInput
               id="w-h"
@@ -411,7 +411,7 @@ function FeaturedTab({
     .filter((p) => !draft.featuredProductIds.includes(p.id) && p.name.toLowerCase().includes(q.toLowerCase()))
     .slice(0, 6);
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <Panel title="Featured hair products" description="Drag to set the order on the homepage.">
         <Reorder.Group
           axis="y"

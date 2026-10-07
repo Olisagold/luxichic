@@ -63,7 +63,7 @@ export function ToolsHome() {
       />
 
       <section className="bg-white py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading title="Shop by category" action={{ label: 'All products', to: '/tools/shop/all' }} />
           <CategoryTiles division="tools" categories={deptCats} columns={5} />
         </div>
@@ -92,7 +92,7 @@ export function ToolsHome() {
       />
 
       <section className="bg-white py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading
             title="Shop by department"
             action={{ label: `All ${activeDept.label}`, to: `/tools/shop/${dept}` }}
@@ -127,7 +127,7 @@ export function ToolsHome() {
       </section>
 
       <section className="bg-ink py-16 text-white md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading
             light
             title={
@@ -143,7 +143,7 @@ export function ToolsHome() {
       </section>
 
       <section className="bg-ivory py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <SectionHeading
             title="All products"
             action={{ label: `View all ${toolProducts.length}`, to: '/tools/shop/all' }}

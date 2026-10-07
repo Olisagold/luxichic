@@ -27,8 +27,8 @@ export function SalonServicesSection() {
 
   return (
     <section className="bg-white py-20 md:py-28">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
-        <Reveal className="mb-14 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div className="mx-auto max-w-site px-5 lg:px-8">
+        <Reveal className="mb-14 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="max-w-2xl">
             <h2 className="font-display text-4xl leading-[1.05] text-ink md:text-6xl">
               The Salon <span className="italic text-pink-deep">&amp; Spa</span>

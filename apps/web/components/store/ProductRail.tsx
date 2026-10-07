@@ -18,7 +18,7 @@ export function ProductRail({ title, text, products, action, tone = 'white' }: P
   if (!products.length) return null;
   return (
     <section className={cn('py-16 md:py-24', tones[tone])}>
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="mx-auto max-w-site px-5 lg:px-8">
         <SectionHeading title={title} text={text} action={action} reserveArrows />
         <ProductCarousel products={products} label={typeof title === 'string' ? title : 'Products'} />
       </div>

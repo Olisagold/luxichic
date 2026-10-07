@@ -12,7 +12,7 @@ export function SalonServices() {
   const list = cat === 'All' ? salonServices : salonServices.filter((s) => s.category === cat);
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs
         items={[{ label: 'Home', to: '/' }, { label: 'Beauty Salon & Spa', to: '/salon' }, { label: 'All Services' }]}
       />

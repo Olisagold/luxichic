@@ -49,7 +49,7 @@ export function Checkout() {
       c.setAddress({ ...c.address, [k]: e.target.value });
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <h1 className="font-display text-5xl text-ink">Checkout</h1>
         <p className="flex items-center gap-2 text-xs text-subtle">
@@ -60,7 +60,7 @@ export function Checkout() {
         <CheckoutStepper current={c.step} />
       </div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
+      <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px]">
         <section aria-labelledby="step-title" className="rounded-[28px] bg-white p-6 md:p-8">
           <h2 id="step-title" className="font-display text-3xl text-ink">
             {stepTitles[c.step]}
@@ -95,7 +95,7 @@ export function Checkout() {
                     error={c.errors.fullName}
                     onChange={(e) => c.setCustomer({ ...c.customer, fullName: e.target.value })}
                   />
-                  <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <TextField
                       id="co-email"
                       type="email"
@@ -123,7 +123,11 @@ export function Checkout() {
               {c.step === 1 && (
                 <div className="space-y-5">
                   {c.savedAddresses.length > 0 && (
-                    <div role="radiogroup" aria-label="Saved addresses" className="grid gap-3 sm:grid-cols-2">
+                    <div
+                      role="radiogroup"
+                      aria-label="Saved addresses"
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                    >
                       {[
                         ...c.savedAddresses.map((a) => ({
                           id: a.id,
@@ -154,7 +158,7 @@ export function Checkout() {
                     </div>
                   )}
                   {c.addressId === 'new' && (
-                    <div className="grid gap-5 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                       <SelectField
                         id="co-country"
                         label="Country"
@@ -244,7 +248,7 @@ export function Checkout() {
                       Edit cart
                     </Link>
                   )}
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="rounded-2xl bg-ivory p-4 text-sm">
                       <div className="flex justify-between">
                         <p className="font-semibold text-ink">Contact</p>

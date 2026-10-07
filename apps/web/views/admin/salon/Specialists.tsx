@@ -218,7 +218,7 @@ function SpecialistDialog({
             />
           </label>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AdminInput id="sp-name" label="Name" value={sp.name} onChange={(e) => set({ name: e.target.value })} />
           <AdminInput
             id="sp-title"
@@ -286,7 +286,7 @@ function SpecialistDialog({
             ))}
           </div>
         </fieldset>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <AdminInput
             id="sp-start"
             type="time"

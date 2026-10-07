@@ -34,7 +34,7 @@ export function PaymentSettings() {
   return (
     <div>
       <PageHeader title="Payments" description="Choose how customers pay and the bank details shown at checkout." />
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Panel title="Bank transfer" description="Shown on checkout, the order confirmation page and in emails.">
           <div className="space-y-4">
             <AdminInput

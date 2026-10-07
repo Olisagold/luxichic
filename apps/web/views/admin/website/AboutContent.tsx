@@ -31,7 +31,7 @@ export function AboutContent() {
           </AdminButton>
         }
       />
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="space-y-5">
           <Panel title="Story">
             <div className="space-y-4">
@@ -55,7 +55,7 @@ export function AboutContent() {
                 onChange={(e) => set({ description: e.target.value })}
                 className="min-h-[120px]"
               />
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <AdminTextarea
                   id="ab-mission"
                   label="Mission"

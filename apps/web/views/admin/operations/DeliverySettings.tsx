@@ -43,7 +43,7 @@ export function DeliverySettings() {
         title="Delivery"
         description="Set the delivery fee for each state, offer free delivery, or switch delivery off for a state."
       />
-      <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
         <div className="space-y-5">
           <Panel title="General">
             <AdminInput

@@ -47,7 +47,7 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-3">
           <StepLabel n={++n}>Pick a date</StepLabel>
           <AppointmentCalendar value={b.date} onChange={b.selectDate} />
@@ -127,7 +127,7 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
             to use your saved details.
           </p>
         )}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
             id="bk-name"
             label="Full name"

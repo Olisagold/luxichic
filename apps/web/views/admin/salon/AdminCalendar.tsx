@@ -118,7 +118,7 @@ export function AdminCalendar() {
   return (
     <div>
       <PageHeader title="Calendar" description="See bookings and block times so customers can’t book them." />
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="rounded-xl border border-line bg-white" aria-label="Calendar">
           <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
             <div className="flex items-center gap-1">

@@ -44,10 +44,10 @@ export function Contact() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-5 pb-24 pt-10 lg:px-8">
+    <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Contact Us' }]} />
       <h1 className="mt-6 font-display text-5xl text-ink md:text-6xl">We’d love to hear from you</h1>
-      <div className="mt-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-[28px] bg-white p-6 md:p-8" aria-label="Contact form">
           {status === 'sent' ? (
             <div role="status" className="py-10 text-center">
@@ -71,7 +71,7 @@ export function Contact() {
               </Button>
             </div>
           ) : (
-            <form onSubmit={submit} noValidate className="grid gap-5 sm:grid-cols-2">
+            <form onSubmit={submit} noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <TextField
                 id="ct-name"
                 label="Name"

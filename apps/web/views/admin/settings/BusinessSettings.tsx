@@ -45,7 +45,7 @@ export function BusinessSettings({ mode = 'business' }: { mode?: Mode }) {
           <PageHeader title="General" description="Your store’s name and regional settings." />
           <div className="grid max-w-3xl gap-5">
             <Panel title="Store">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <AdminInput
                   id="g-name"
                   label="Business name"
@@ -68,7 +68,7 @@ export function BusinessSettings({ mode = 'business' }: { mode?: Mode }) {
           />
           <div className="grid max-w-3xl gap-5">
             <Panel title="Contact details">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <AdminInput
                   id="b-email"
                   type="email"

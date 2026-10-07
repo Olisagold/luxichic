@@ -110,7 +110,7 @@ export function SocialSettings() {
         }
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           {socialDivisions.map((d) => {
             const group = links.filter((l) => l.division === d.key);

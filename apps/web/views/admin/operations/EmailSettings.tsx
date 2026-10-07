@@ -66,7 +66,7 @@ export function EmailSettings() {
       </div>
 
       {tab === 'templates' ? (
-        <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
           <nav aria-label="Email templates" className="rounded-xl border border-line bg-white p-1.5 lg:self-start">
             {templates.map((t) => (
               <button
@@ -107,7 +107,7 @@ function TemplateEditor({ template, onSave }: { template: EmailTemplate; onSave:
   const [t, setT] = useState(template);
   const dirty = JSON.stringify(t) !== JSON.stringify(template);
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
       <Panel
         title={template.name}
         actions={
@@ -186,9 +186,9 @@ function SmtpForm() {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
       <Panel title="SMTP settings">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AdminInput
             id="smtp-host"
             label="Host"

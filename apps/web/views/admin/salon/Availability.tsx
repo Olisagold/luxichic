@@ -66,7 +66,7 @@ export function Availability() {
         title="Availability"
         description="Block dates and times for holidays, training or a specialist’s day off. You can also block single slots from the calendar."
       />
-      <div className="grid gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
         <div className="space-y-5">
           <Panel title="Block time">
             <form onSubmit={submit} className="space-y-4">

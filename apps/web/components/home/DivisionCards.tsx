@@ -43,7 +43,7 @@ export function DivisionCards() {
   const reduce = useReducedMotion();
   return (
     <section className="bg-ink py-20 text-white md:py-28">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="mx-auto max-w-site px-5 lg:px-8">
         <SectionHeading
           light
           title={
@@ -54,7 +54,7 @@ export function DivisionCards() {
           text="Each division has its own boutique, its own specialists and its own Instagram — all sharing one cart, one account and one standard of care."
         />
 
-        <div className="grid gap-8 lg:grid-cols-3 lg:gap-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-6">
           {divisions.map((d, i) => (
             <motion.article
               key={d.title}

@@ -163,7 +163,7 @@ export function SearchOverlay() {
               ) : q.trim().length >= 2 ? (
                 <p className="mt-6 text-sm text-subtle">No quick matches. Press Enter to see the full results page.</p>
               ) : (
-                <div className="mt-8 grid gap-8 md:grid-cols-2">
+                <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
                   <div>
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-semibold text-subtle">Recent searches</p>

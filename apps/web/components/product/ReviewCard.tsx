@@ -15,7 +15,7 @@ interface ReviewCardProps {
 
 export function ReviewCard({ review, isOwn, onEdit, onDelete }: ReviewCardProps) {
   return (
-    <article className="grid gap-4 py-7 md:grid-cols-[200px_1fr]">
+    <article className="grid grid-cols-1 gap-4 py-7 md:grid-cols-[200px_1fr]">
       <div>
         <p className="text-sm font-semibold text-ink">{review.authorName}</p>
         <p className="mt-0.5 text-xs text-subtle">{formatDate(review.date)}</p>

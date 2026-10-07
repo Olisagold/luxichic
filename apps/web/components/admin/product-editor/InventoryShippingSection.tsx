@@ -21,7 +21,7 @@ export function InventorySection({ editor }: { editor: ProductEditorState }) {
         onChange={(v) => update({ trackInventory: v })}
       />
       {draft.trackInventory && (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AdminInput
             id="p-stock"
             label="Stock quantity"

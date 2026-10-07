@@ -59,8 +59,8 @@ export function Footer() {
   const { contact } = businessConfig;
   return (
     <footer className="bg-ink text-white">
-      <div className="mx-auto max-w-7xl px-5 pb-10 pt-20 lg:px-8">
-        <div className="grid gap-14 lg:grid-cols-[1.1fr_2fr]">
+      <div className="mx-auto max-w-site px-5 pb-10 pt-20 lg:px-8">
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-[1.1fr_2fr]">
           <div>
             <Logo variant="main" className="-ml-1 h-16" />
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/70">

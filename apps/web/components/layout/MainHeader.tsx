@@ -58,7 +58,7 @@ export function MainHeader() {
 
   return (
     <header className="sticky top-0 z-50 bg-ink text-white" onMouseLeave={leave}>
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-4 px-5 lg:px-8">
+      <div className="mx-auto flex h-[72px] max-w-site items-center gap-4 px-5 lg:px-8">
         <button onClick={() => setMobileOpen(true)} className={cn(iconBtn, '-ml-2 lg:hidden')} aria-label="Open menu">
           <MenuIcon className="h-5 w-5" />
         </button>
@@ -135,11 +135,7 @@ export function MainHeader() {
             <HeartIcon className="h-[18px] w-[18px]" />
             {ids.length > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-pink" aria-hidden />}
           </Link>
-          <Link
-            href={user ? '/account' : '/login'}
-            className={cn(iconBtn, 'hidden sm:flex')}
-            aria-label={user ? 'My account' : 'Sign in'}
-          >
+          <Link href={user ? '/account' : '/login'} className={iconBtn} aria-label={user ? 'My account' : 'Sign in'}>
             <UserIcon className="h-[18px] w-[18px]" />
           </Link>
           <button onClick={openCart} className={iconBtn} aria-label={`Shopping cart, ${count} items`}>

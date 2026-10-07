@@ -37,7 +37,7 @@ export function About() {
   const about = siteContent.about;
   return (
     <>
-      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-16 md:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8">
+      <section className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 py-16 md:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8">
         <Reveal>
           <h1 className="font-display text-5xl leading-[0.98] text-ink md:text-7xl">
             {about.title} <span className="italic text-pink-deep">{about.accent}</span>
@@ -45,7 +45,7 @@ export function About() {
           <p className="mt-6 max-w-xl text-base leading-relaxed text-charcoal">{about.intro}</p>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-subtle">{about.description}</p>
           {(about.mission || about.vision) && (
-            <dl className="mt-8 grid max-w-xl gap-6 border-t border-line pt-6 sm:grid-cols-2">
+            <dl className="mt-8 grid grid-cols-1 max-w-xl gap-6 border-t border-line pt-6 sm:grid-cols-2">
               {about.mission && (
                 <div>
                   <dt className="font-display text-2xl text-ink">Mission</dt>
@@ -69,12 +69,15 @@ export function About() {
       </section>
 
       <section className="bg-ink py-20 text-white md:py-28">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-site px-5 lg:px-8">
           <h2 className="font-display text-4xl md:text-6xl">Our divisions</h2>
           <ul className="mt-12 divide-y divide-white/10 border-y border-white/10">
             {divisions.map((d) => (
               <li key={d.title}>
-                <Link href={d.to} className="group grid items-center gap-6 py-8 md:grid-cols-[160px_1fr_auto]">
+                <Link
+                  href={d.to}
+                  className="group grid grid-cols-1 items-center gap-6 py-8 md:grid-cols-[160px_1fr_auto]"
+                >
                   <img
                     src={d.image}
                     alt=""
@@ -97,9 +100,9 @@ export function About() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 md:py-28 lg:px-8">
+      <section className="mx-auto max-w-site px-5 py-20 md:py-28 lg:px-8">
         <h2 className="font-display text-4xl text-ink md:text-5xl">What we stand for</h2>
-        <dl className="mt-10 grid gap-x-10 gap-y-8 md:grid-cols-2 lg:grid-cols-4">
+        <dl className="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2 lg:grid-cols-4">
           {brandValues.map((v) => (
             <div key={v.title} className="border-t border-ink pt-5">
               <dt className="font-display text-2xl text-ink">{v.title}</dt>

@@ -85,7 +85,7 @@ export function DivisionHeader() {
 
   return (
     <div className="bg-ivory">
-      <div className="mx-auto max-w-7xl px-5 pt-4 lg:px-8">
+      <div className="mx-auto max-w-site px-5 pt-4 lg:px-8">
         <div className="flex items-center gap-2 rounded-full border border-line bg-white p-1.5 shadow-soft">
           <Link
             href={c.home}

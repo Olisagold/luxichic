@@ -21,7 +21,7 @@ export function MegaMenu({ menu, onNavigate }: MegaMenuProps) {
       transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
       className="absolute inset-x-0 top-full border-t border-white/10 bg-white text-charcoal shadow-lift"
     >
-      <div className="mx-auto grid max-w-7xl grid-cols-[1fr_300px] gap-10 px-8 py-10">
+      <div className="mx-auto grid max-w-site grid-cols-[1fr_300px] gap-10 px-8 py-10">
         <div className="grid grid-cols-4 gap-8">
           {menu.columns.map((col) => (
             <div key={col.title}>

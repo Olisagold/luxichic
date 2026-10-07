@@ -38,7 +38,7 @@ export function Roles() {
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
         <ul className="space-y-1.5 lg:self-start">
           {presets.map((r) => {
             const count = admins.filter((a) => a.role === r).length;

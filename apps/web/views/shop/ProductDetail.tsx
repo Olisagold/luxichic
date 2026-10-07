@@ -66,7 +66,7 @@ export function ProductDetail({ division }: { division: Division }) {
 
   return (
     <div className="bg-ivory">
-      <div className="mx-auto max-w-7xl px-5 pb-20 pt-8 lg:px-8">
+      <div className="mx-auto max-w-site px-5 pb-20 pt-8 lg:px-8">
         <Breadcrumbs
           items={[
             { label: 'Home', to: '/' },
@@ -76,7 +76,7 @@ export function ProductDetail({ division }: { division: Division }) {
           ]}
         />
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+        <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
           <ProductGallery images={product.images} name={product.name} />
 
           <div className="lg:pt-4">
@@ -127,7 +127,7 @@ export function ProductDetail({ division }: { division: Division }) {
                 Add to Cart
               </Button>
             </div>
-            <div className="mt-3 flex gap-3">
+            <div className="mt-3 flex flex-wrap gap-3">
               <Button size="lg" variant="pink" className="flex-1" disabled={priced.stock <= 0} onClick={buyNow}>
                 <ZapIcon className="h-4 w-4" aria-hidden /> Buy Now
               </Button>

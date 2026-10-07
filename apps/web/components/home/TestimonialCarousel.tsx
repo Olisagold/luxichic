@@ -32,7 +32,7 @@ export function TestimonialCarousel() {
       aria-roledescription="carousel"
       aria-label="Customer testimonials"
     >
-      <div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-site gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
         <div>
           <h2 className="font-display text-4xl leading-[1.05] md:text-6xl">What our clients say</h2>
           <p className="mt-4 inline-flex rounded-full border border-gold/60 px-3 py-1 text-[11px] font-semibold text-gold">

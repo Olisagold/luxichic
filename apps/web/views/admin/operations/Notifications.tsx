@@ -63,7 +63,7 @@ export function Notifications() {
           )
         }
       />
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="rounded-xl border border-line bg-white">
           <div className="border-b border-line p-3 sm:p-4">
             <FilterTabs

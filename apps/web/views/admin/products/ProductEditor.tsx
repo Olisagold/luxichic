@@ -109,7 +109,7 @@ function Editor({ id }: { id?: string }) {
         </div>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[160px_minmax(0,1fr)_300px]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[160px_minmax(0,1fr)_300px]">
         <nav aria-label="Editor sections" className="hidden lg:block">
           <ul className="sticky top-20 space-y-0.5">
             {sections.map(([k, l]) => (

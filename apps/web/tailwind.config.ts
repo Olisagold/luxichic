@@ -33,6 +33,10 @@ const config: Config = {
       transitionTimingFunction: {
         lux: 'cubic-bezier(0.23, 1, 0.32, 1)',
       },
+      maxWidth: {
+        // Storefront content width: header, page sections and footer all line up on it.
+        site: '90rem',
+      },
       boxShadow: {
         soft: '0 1px 2px rgba(10,10,10,0.04), 0 8px 24px -12px rgba(10,10,10,0.12)',
         lift: '0 24px 60px -20px rgba(10,10,10,0.35)',

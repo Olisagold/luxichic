@@ -37,7 +37,7 @@ export function PagesContent() {
         title="Contact & policies"
         description="Edit the contact page intro and every policy page customers can read."
       />
-      <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
         <nav aria-label="Pages" className="rounded-xl border border-line bg-white p-1.5 lg:self-start">
           {[['contact', 'Contact page'], ...keys.map((k) => [k, policies[k].title])].map(([k, l]) => (
             <button

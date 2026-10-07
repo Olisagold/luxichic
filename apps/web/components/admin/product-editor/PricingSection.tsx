@@ -15,7 +15,7 @@ export function PricingSection({ editor }: { editor: ProductEditorState }) {
 
   return (
     <Panel title="Pricing" description="Prices in Nigerian naira. Discounts can be scheduled.">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <AdminInput
           id="p-price"
           label="Regular price"
@@ -59,7 +59,7 @@ export function PricingSection({ editor }: { editor: ProductEditorState }) {
         </div>
 
         {draft.discountMode !== 'none' && (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {draft.discountMode === 'percent' ? (
               <AdminInput
                 id="p-pct"

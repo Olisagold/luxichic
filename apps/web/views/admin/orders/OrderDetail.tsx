@@ -143,7 +143,7 @@ export function OrderDetail() {
         }
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
           {awaitingTransfer && (
             <section aria-labelledby="verify" className="overflow-hidden rounded-xl border-2 border-ink bg-white">
@@ -153,7 +153,7 @@ export function OrderDetail() {
                   Bank transfer awaiting verification
                 </h2>
               </div>
-              <div className="grid gap-4 p-5 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-3">
                 <div>
                   <p className="text-xs text-subtle">Expected amount</p>
                   <p className="text-2xl font-bold tabular-nums text-ink">{formatNaira(order.total)}</p>
