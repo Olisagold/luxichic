@@ -3,6 +3,8 @@ node_modules/
 vendor/
 
 # Builds
+next-env.d.ts
+*.tsbuildinfo
 .next/
 dist/
 .turbo/
@@ -12,13 +14,12 @@ dist/
 .env.*
 !.env.example
 
-# Storage (keep structure, ignore contents)
-storage/**/*
-!storage/**/
-!storage/**/.gitkeep
-
 # OS / editor
 .DS_Store
 *.log
 .idea/
 .vscode/
+
+# Supabase
+supabase/.branches
+supabase/.temp
