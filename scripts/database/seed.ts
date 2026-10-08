@@ -123,12 +123,15 @@ const ts = (v?: string | null) => (v ? new Date(v) : undefined);
 /* Seed                                                                */
 /* ------------------------------------------------------------------ */
 
-async function createLogin(email: string, fullName: string): Promise<string> {
+// Admin logins are marked with app_metadata.kind = 'admin'; inserting their admins row removes the
+// customer profile the auth trigger created.
+async function createLogin(email: string, fullName: string, kind: 'customer' | 'admin'): Promise<string> {
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: { full_name: fullName },
+    app_metadata: kind === 'admin' ? { kind } : {},
   });
   if (error || !data.user) throw new Error(`Could not create login for ${email}: ${error?.message}`);
   return data.user.id;
@@ -184,7 +187,7 @@ async function main() {
   const adminIds = new Map<string, string>();
   const adminIdByName = new Map<string, string>();
   for (const a of store.admins) {
-    const id = await createLogin(a.email, a.fullName);
+    const id = await createLogin(a.email, a.fullName, 'admin');
     adminIds.set(a.id, id);
     adminIdByName.set(a.fullName, id);
     await db.insert(s.admins).values({
@@ -221,10 +224,10 @@ async function main() {
   /* Customers */
   const userIdByEmail = new Map<string, string>();
   for (const c of customers) {
-    const id = await createLogin(c.email, c.fullName);
+    const id = await createLogin(c.email, c.fullName, 'customer');
     userIdByEmail.set(c.email.toLowerCase(), id);
-    await db.insert(s.profiles).values({
-      id,
+    // The auth trigger has already created a bare profile; fill in the prototype's details.
+    const profile = {
       fullName: c.fullName,
       email: c.email,
       phone: c.phone,
@@ -232,7 +235,11 @@ async function main() {
       pendingSetup: c.pendingSetup ?? false,
       lastActiveAt: ts(c.lastActiveAt),
       createdAt: new Date(c.createdAt),
-    });
+    } as const;
+    await db
+      .insert(s.profiles)
+      .values({ id, ...profile })
+      .onConflictDoUpdate({ target: s.profiles.id, set: profile });
     if (c.addresses.length) {
       await db.insert(s.addresses).values(
         c.addresses.map((ad, i) => ({

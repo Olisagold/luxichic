@@ -15,6 +15,13 @@
       "when": 1791466092826,
       "tag": "20261008132812_api_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791476531382,
+      "tag": "20261008162211_auth_profiles",
+      "breakpoints": true
     }
   ]
 }

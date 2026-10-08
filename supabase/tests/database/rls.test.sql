@@ -9,13 +9,10 @@ select plan(22);
 -- ------------------------------------------------------------------
 -- Fixtures (inserted as the postgres superuser, bypassing RLS)
 -- ------------------------------------------------------------------
-insert into auth.users (id, email) values
-  ('00000000-0000-0000-0000-00000000000a', 'ada@test.local'),
-  ('00000000-0000-0000-0000-00000000000b', 'bola@test.local');
-
-insert into profiles (id, full_name, email) values
-  ('00000000-0000-0000-0000-00000000000a', 'Ada', 'ada@test.local'),
-  ('00000000-0000-0000-0000-00000000000b', 'Bola', 'bola@test.local');
+-- The auth trigger creates their profiles (see auth_profiles.test.sql).
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-00000000000a', 'ada@test.local', '{"full_name": "Ada"}'),
+  ('00000000-0000-0000-0000-00000000000b', 'bola@test.local', '{"full_name": "Bola"}');
 
 insert into products (id, division, slug, sku, name, price, status) values
   ('10000000-0000-0000-0000-000000000001', 'hairs', 'published-wig', 'T-1', 'Published wig', 1000, 'published'),
