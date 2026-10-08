@@ -1,8 +1,10 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { requireEnv } from '@/lib/env';
+import { REMEMBER_COOKIE, sessionCookieOptions } from '@/lib/supabase/cookies';
 
-export async function createClient() {
+/** `remember` overrides the visitor's saved choice, for the sign-in request itself. */
+export async function createClient({ remember }: { remember?: boolean } = {}) {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -14,8 +16,11 @@ export async function createClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          const keep = remember ?? cookieStore.get(REMEMBER_COOKIE)?.value !== '0';
           try {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, sessionCookieOptions(options, keep)),
+            );
           } catch {
             // Called from a Server Component; middleware refreshes the session.
           }
