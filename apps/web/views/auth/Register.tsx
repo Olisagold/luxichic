@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Navigate } from '@/components/ui/Navigate';
 import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { AuthDivider, GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { TextField } from '@/components/ui/FormField';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +24,7 @@ export function Register() {
   const [terms, setTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [exists, setExists] = useState(false);
 
   if (user && !loading) return <Navigate to={redirect} replace />;
 
@@ -48,11 +50,20 @@ export function Register() {
       phone: form.phone,
       password: form.password,
     });
-    setLoading(false);
-    if (!res.ok) return setErrors({ form: res.error ?? 'Registration failed.' });
-    toast.success('Your LUXICHIC account has been created', {
-      description: 'Prototype: a welcome email will be sent once the backend is connected.',
-    });
+    setExists(!!res.exists);
+    // On success the button keeps spinning until the redirect below, so the "already signed in" guard can't win.
+    if (!res.ok) {
+      setLoading(false);
+      return setErrors({ form: res.error ?? 'Registration failed.' });
+    }
+    if (res.needsConfirmation) {
+      toast.success('Check your inbox', {
+        description: `We sent a link to ${form.email.trim()}. Open it to confirm your email and sign in.`,
+        duration: 10000,
+      });
+      return router.replace(`/login?email=${encodeURIComponent(form.email.trim())}`);
+    }
+    toast.success('Your LUXICHIC account has been created');
     router.replace(redirect === '/account' ? '/account?welcome=1' : redirect);
   };
 
@@ -66,6 +77,10 @@ export function Register() {
       }
       text="Save your details, track orders and manage salon appointments in one place."
     >
+      <div className="mb-6 space-y-6">
+        <GoogleSignInButton next={redirect} />
+        <AuthDivider />
+      </div>
       <form onSubmit={submit} noValidate className="space-y-5">
         <TextField
           id="reg-name"
@@ -142,9 +157,11 @@ export function Register() {
         {errors.form && (
           <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert">
             {errors.form}{' '}
-            <Link href={`/login?email=${encodeURIComponent(form.email)}`} className="font-semibold underline">
-              Sign in
-            </Link>
+            {exists && (
+              <Link href={`/login?email=${encodeURIComponent(form.email)}`} className="font-semibold underline">
+                Sign in
+              </Link>
+            )}
           </p>
         )}
         <Button type="submit" fullWidth size="lg" loading={loading}>

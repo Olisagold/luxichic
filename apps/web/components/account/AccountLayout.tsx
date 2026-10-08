@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Navigate } from '@/components/ui/Navigate';
 import { NavLink } from '@/components/ui/NavLink';
@@ -31,8 +31,10 @@ export function AccountLayout({ children }: { children: React.ReactNode }) {
   const { user, ready, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  // While signing out, don't bounce to /login: we're heading to the homepage.
+  const [signingOut, setSigningOut] = useState(false);
 
-  if (!ready) return <div className="min-h-[60vh]" aria-busy="true" />;
+  if (!ready || signingOut) return <div className="min-h-[60vh]" aria-busy="true" />;
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(pathname)}`} replace />;
 
   return (
@@ -62,9 +64,10 @@ export function AccountLayout({ children }: { children: React.ReactNode }) {
               </NavLink>
             ))}
             <button
-              onClick={() => {
-                logout();
-                router.push('/');
+              onClick={async () => {
+                setSigningOut(true);
+                await logout();
+                router.replace('/');
               }}
               className="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-full border border-line bg-white px-4 py-2.5 text-sm font-medium text-subtle hover:text-ink lg:mt-4 lg:rounded-xl lg:border-transparent lg:bg-transparent"
             >

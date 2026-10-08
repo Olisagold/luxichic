@@ -38,8 +38,15 @@ export function AccountProfile() {
     if (!res.ok) return setPErrors({ form: res.error ?? 'Could not save.' });
     toast.success(
       'Profile updated',
-      emailChanged ? { description: 'Prototype: in production, your new email must be verified first.' } : undefined,
+      res.emailPending
+        ? {
+            description: `We sent a confirmation link to ${profile.email.trim()}. Your email changes once you open it.`,
+            duration: 10000,
+          }
+        : undefined,
     );
+    // Until it's confirmed, the account keeps the current email.
+    if (res.emailPending) setProfile((p) => ({ ...p, email: user.email }));
   };
 
   const savePassword = async (e: React.FormEvent) => {

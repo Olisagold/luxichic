@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Navigate } from '@/components/ui/Navigate';
 import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { AuthDivider, GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { TextField } from '@/components/ui/FormField';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { Button } from '@/components/ui/Button';
@@ -16,6 +17,14 @@ export function safeRedirect(value: string | null, fallback = '/account'): strin
   return value && value.startsWith('/') && !value.startsWith('//') ? value : fallback;
 }
 
+/** Messages for `?error=` from app/auth/callback. */
+const callbackErrors: Record<string, string> = {
+  link: 'That link is invalid or has expired. Please sign in, or request a new link.',
+  reset_link: 'That password reset link is invalid or has expired. Please request a new one.',
+  suspended: 'This account has been suspended. Please contact LUXICHIC for help.',
+  cancelled: 'Google sign-in was cancelled.',
+};
+
 export function Login() {
   const { user, login } = useAuth();
   const params = useSearchParams();
@@ -24,7 +33,10 @@ export function Login() {
   const [email, setEmail] = useState(params.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>((): Record<string, string> => {
+    const message = callbackErrors[params.get('error') ?? ''];
+    return message ? { form: message } : {};
+  });
   const [loading, setLoading] = useState(false);
 
   if (user && !loading) return <Navigate to={redirect} replace />;
@@ -38,8 +50,11 @@ export function Login() {
     if (Object.keys(errs).length) return;
     setLoading(true);
     const res = await login(email, password, remember);
-    setLoading(false);
-    if (!res.ok) return setErrors({ form: res.error ?? 'Sign in failed.' });
+    // On success the button keeps spinning until the redirect below, so the "already signed in" guard can't win.
+    if (!res.ok) {
+      setLoading(false);
+      return setErrors({ form: res.error ?? 'Sign in failed.' });
+    }
     toast.success('Welcome back to LUXICHIC');
     router.replace(redirect);
   };
@@ -53,6 +68,10 @@ export function Login() {
       }
       text="Sign in to track orders, manage appointments and check out faster."
     >
+      <div className="mb-6 space-y-6">
+        <GoogleSignInButton next={redirect} />
+        <AuthDivider />
+      </div>
       <form onSubmit={submit} noValidate className="space-y-5">
         <TextField
           id="login-email"

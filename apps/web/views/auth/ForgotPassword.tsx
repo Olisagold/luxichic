@@ -6,7 +6,6 @@ import { MailCheckIcon } from 'lucide-react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { TextField } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/Button';
-import { PrototypeNote } from '@/components/ui/PrototypeNote';
 import { useAuth } from '@/contexts/AuthContext';
 import { isValidEmail } from '@/lib/utils/validation';
 
@@ -16,16 +15,15 @@ export function ForgotPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [demoToken, setDemoToken] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidEmail(email)) return setError('Please enter a valid email address.');
     setError('');
     setLoading(true);
-    const token = await requestPasswordReset(email);
+    const res = await requestPasswordReset(email);
     setLoading(false);
-    setDemoToken(token);
+    if (!res.ok) return setError(res.error ?? 'We could not send the email. Please try again.');
     setSent(true);
   };
 
@@ -40,19 +38,8 @@ export function ForgotPassword() {
           <p className="mt-4 font-display text-2xl text-ink">Check your inbox</p>
           <p className="mt-2 text-sm leading-relaxed text-subtle">
             If an account exists for <strong className="text-ink">{email}</strong>, password reset instructions will be
-            sent to that email address.
+            sent to that email address. The link expires after one hour.
           </p>
-          <PrototypeNote className="mt-6">
-            <p>No email is sent in this prototype. In production, the reset link is delivered by email (SMTP).</p>
-            {demoToken && (
-              <Link
-                href={`/reset-password?token=${demoToken}`}
-                className="mt-2 inline-block font-semibold text-pink-deep underline-offset-4 hover:underline"
-              >
-                Open the simulated reset link
-              </Link>
-            )}
-          </PrototypeNote>
           <Link
             href="/login"
             className="mt-6 inline-block text-sm font-semibold text-ink underline-offset-4 hover:underline"

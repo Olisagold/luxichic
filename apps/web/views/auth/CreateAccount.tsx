@@ -19,13 +19,14 @@ export function CreateAccount() {
   const params = useSearchParams();
   const token = params.get('token') ?? '';
   const { findOrderByToken, linkGuestRecords } = useOrders();
-  const { emailExists, register } = useAuth();
+  const { register } = useAuth();
   const router = useRouter();
   const [order] = useState(() => findOrderByToken(token));
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [exists, setExists] = useState(false);
 
   const expired = !order?.accountToken || new Date(order.accountToken.expiresAt).getTime() < Date.now();
 
@@ -49,7 +50,7 @@ export function CreateAccount() {
     );
   }
 
-  if (emailExists(order.customer.email)) {
+  if (exists) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-24">
         <EmptyState
@@ -83,6 +84,7 @@ export function CreateAccount() {
     });
     if (!res.ok) {
       setLoading(false);
+      if (res.exists) return setExists(true);
       return setErrors({ form: res.error ?? 'We could not create your account.' });
     }
     linkGuestRecords(order.customer.email);

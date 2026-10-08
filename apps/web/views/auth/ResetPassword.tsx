@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle2Icon, LinkIcon } from 'lucide-react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
@@ -12,15 +11,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { validatePassword } from '@/lib/utils/validation';
 
 export function ResetPassword() {
-  const params = useSearchParams();
-  const token = params.get('token') ?? '';
-  const { isValidResetToken, resetPassword } = useAuth();
-  const [valid] = useState(() => isValidResetToken(token));
+  // The emailed link signs the customer in with a short-lived recovery session (see app/auth/callback).
+  const { user, ready, resetPassword } = useAuth();
+  const valid = !!user;
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+
+  if (!ready) return <div className="min-h-[60vh]" aria-busy="true" />;
 
   if (!valid && !done) {
     return (
@@ -44,7 +44,7 @@ export function ResetPassword() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
-    const res = await resetPassword(token, password);
+    const res = await resetPassword(password);
     setLoading(false);
     if (!res.ok) return setErrors({ form: res.error ?? 'Something went wrong.' });
     setDone(true);
@@ -56,9 +56,9 @@ export function ResetPassword() {
         <div role="status" className="rounded-[24px] bg-white p-6">
           <CheckCircle2Icon className="h-8 w-8 text-emerald-600" aria-hidden />
           <p className="mt-4 font-display text-2xl text-ink">Password updated</p>
-          <p className="mt-2 text-sm text-subtle">You can now sign in with your new password.</p>
-          <Button to="/login" className="mt-6">
-            Sign In
+          <p className="mt-2 text-sm text-subtle">You are signed in with your new password.</p>
+          <Button to="/account" className="mt-6">
+            Go to My Account
           </Button>
         </div>
       ) : (

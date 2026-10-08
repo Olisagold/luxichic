@@ -34,7 +34,7 @@ export function AccountAddresses() {
   const set = (k: keyof Address) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     editing && setEditing({ ...editing, [k]: e.target.value });
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing) return;
     const errs: Record<string, string> = {};
@@ -43,7 +43,8 @@ export function AccountAddresses() {
     if (editing.street.trim().length < 3) errs.street = 'Please enter a street address.';
     setErrors(errs);
     if (Object.keys(errs).length) return;
-    saveAddress({ ...editing, label: editing.label?.trim() || 'Address' });
+    const res = await saveAddress({ ...editing, label: editing.label?.trim() || 'Address' });
+    if (!res.ok) return setErrors({ street: res.error ?? 'We could not save this address.' });
     toast.success('Address saved');
     setEditing(null);
   };
@@ -103,9 +104,10 @@ export function AccountAddresses() {
                     </button>
                   )}
                   <button
-                    onClick={() => {
-                      deleteAddress(a.id);
-                      toast('Address deleted');
+                    onClick={async () => {
+                      const res = await deleteAddress(a.id);
+                      if (res.ok) toast('Address deleted');
+                      else toast.error(res.error ?? 'We could not delete this address.');
                     }}
                     className="inline-flex items-center gap-1.5 text-subtle hover:text-red-700"
                   >
