@@ -160,8 +160,9 @@ Status: done locally. Applying to the hosted projects is the remaining step. See
 10. ✅ Seed script (`pnpm db:seed`) loads all prototype data (42 products, 33 orders, 42 appointments,
     25 customers, 2 admins, 11 reviews). Local by default; `--remote` for the dev project only.
 11. ✅ Schema, access rules and workflow documented in `docs/database/README.md`.
-12. ⏳ **Apply the migrations to `luxichic-dev` and `luxichic-prod`** (`supabase link` + `supabase db push`), and
-    seed `luxichic-dev`. This needs your Supabase login and each project's database password.
+12. ✅ Migrations applied to `luxichic-dev` and `luxichic-prod` (2026-10-08). `luxichic-dev` is seeded and
+    checked through the API: visitors see 42 products and are refused orders and admins; a seeded customer signs
+    in and sees only their own 3 orders. Production has the tables and no data. The CLI stays linked to dev.
 13. ⏳ **Later:** run `pnpm db:test` in CI (needs Docker in GitHub Actions). Scheduled with Phase 10.
 
 ## Phase 2: Authentication
