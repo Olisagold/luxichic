@@ -1,5 +1,6 @@
 -- Row Level Security and API grant tests. Run with: pnpm db:test
 -- Everything runs in a transaction that is rolled back, so no test data is left behind.
+-- Assertions only look at the fixture rows below, so the suite passes on an empty or a seeded database.
 begin;
 create extension if not exists pgtap with schema extensions;
 
@@ -64,9 +65,15 @@ select throws_ok(
 -- ------------------------------------------------------------------
 set local role anon;
 
-select is((select count(*)::int from products), 1, 'anon sees only published products');
-select is((select count(*)::int from product_images), 1, 'anon sees only images of published products');
-select is((select count(*)::int from reviews), 1, 'anon sees only visible reviews');
+select is((select count(*)::int from products where sku in ('T-1', 'T-2')), 1, 'anon sees only published products');
+select is(
+  (select count(*)::int from product_images where product_id in ('10000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002')),
+  1, 'anon sees only images of published products'
+);
+select is(
+  (select count(*)::int from reviews where product_id = '10000000-0000-0000-0000-000000000001'),
+  1, 'anon sees only visible reviews'
+);
 select throws_ok('select author_email from reviews', '42501', null, 'anon cannot read reviewer emails');
 select throws_ok('select * from orders', '42501', null, 'anon cannot read orders');
 select throws_ok('select * from payments', '42501', null, 'anon cannot read payments');
