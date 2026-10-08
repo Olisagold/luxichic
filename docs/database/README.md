@@ -89,5 +89,7 @@ Never edit a migration that has been applied to a hosted project. Write a new on
 Migrations are applied to `luxichic-dev` and `luxichic-prod` with the Supabase CLI
 (`supabase link --project-ref <ref>` and then `supabase db push`). The seed script is for local and dev only:
 `pnpm db:seed -- --remote` needs the dev project's `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL` and
-`SUPABASE_SECRET_KEY`, and it refuses anything that looks like production. Production never gets demo data or
-demo accounts.
+`SUPABASE_SECRET_KEY`, and it only accepts the dev project. Production never gets demo data or demo accounts.
+
+The first admin on any project is created with `pnpm db:create-owner` (see [`docs/auth`](../auth/README.md)),
+which also loads the permission list and role presets.

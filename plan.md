@@ -168,26 +168,42 @@ Status: done locally. Applying to the hosted projects is the remaining step. See
 
 ## Phase 2: Authentication
 
-1. Supabase Auth email + password: sign up, sign in, sign out, forgot and reset password
-   (`(storefront)/(auth)/*` pages keep their UI).
-2. Google sign-in: Google Cloud OAuth client, configured in the Supabase dashboard, plus a callback route.
-3. A database trigger creates a `profiles` row for every new user.
+Code done and tested locally on 2026-10-09; going live needs the dashboard steps in step 10. How it works and
+the setup checklist: `docs/auth/README.md`.
+
+1. ✅ Supabase Auth email + password: sign up, sign in, sign out, forgot and reset password. The pages keep their
+   UI; login and register gain a **Continue with Google** button.
+2. ✅ Google sign-in in code (button + `/auth/callback`). ⏳ Needs a Google Cloud OAuth client, enabled in both
+   Supabase projects.
+3. ✅ Database triggers: a `profiles` row for every new login; confirmed email changes copied over; adding an
+   admin removes their customer profile. pgTAP tests (29 checks in total) pass.
 4. **Deferred to Phase 11** (no domain yet, decided 2026-10-08): Supabase Auth emails through Resend SMTP, with
    LUXICHIC-branded templates. Until then "Confirm email" stays off on the hosted projects so sign-up works, and
    the built-in mailer only reaches the Supabase team's own address (about 2 emails an hour).
-5. Re-enable the session refresh in `middleware.ts` (it is skipped today when Supabase env vars are missing).
-6. Server-side route protection for `/account/*` (redirect in the layout), replacing the client-only guard.
-7. Admin auth: admins sign in with Supabase Auth and must have an active `admins` row.
-   - `/admin/(dashboard)` layout checks this on the server.
-   - Add a `requirePermission()` helper for server actions.
-   - Record each sign-in in `login_history`.
-8. Replace `AuthContext` and `AdminAuthContext` internals with Supabase sessions; delete their localStorage logic.
-9. **Remove every demo credential from the code.** `DEMO_EMAIL`, `DEMO_PASSWORD`, `DEMO_ADMIN_*` and
-   `DEMO_SUBADMIN_*` in `data/seed.ts` and `data/adminSeed.ts`, plus the seeded users' `password` fields, ship in the
-   browser bundle today because the prototype checks logins in the browser.
-   - Dev/preview test accounts are created by the seed script in Supabase instead.
-   - Production gets no demo accounts.
-   - (The visible demo boxes on both sign-in pages were removed on 2026-10-08.)
+5. ✅ Session refresh in `middleware.ts`, skipped for visitors with no session. Signed-out visitors to `/account`
+   and `/admin` go to the right sign-in page, keeping the page they asked for.
+6. ✅ `/account/*` checked on the server in the layout.
+7. ✅ Admin auth:
+   - Sign-in needs an active `admins` row.
+   - `/admin/(dashboard)` layout checks this on the server; no admin content reaches anyone else.
+   - `requirePermission()` helper for server actions.
+   - Each sign-in recorded in `login_history` and `audit_logs`.
+8. ✅ `AuthContext` and `AdminAuthContext` run on Supabase sessions. Their local-storage sessions, passwords and
+   reset tokens are gone and cleared from visitors' browsers. The admin screens' customer list stays on prototype
+   data until Phase 8.
+9. ✅ Demo credentials removed from the code and the `User`/`AdminUser` types; verified no demo password appears
+   in any script the browser loads. Dev logins come from the seed script; production gets none.
+10. ⏳ **Go live** (dashboard steps, in this order):
+    1. Apply the new migration (`…_auth_profiles.sql`) to `luxichic-dev` and `luxichic-prod` (`supabase db push`).
+    2. Supabase Auth settings on both projects: URL configuration, "Confirm email" off, password rules.
+    3. Create the owner on prod: `pnpm db:create-owner` for olisaejezie@gmail.com.
+    4. Vercel env vars: prod keys for Production, dev keys for Preview; redeploy.
+    5. Google Cloud OAuth client, then enable Google in both projects.
+
+Tested end to end in a browser against local Supabase (33 checks): redirects, sign-in, wrong password,
+"Remember me", registration and duplicate emails, reset by real email (Mailpit) including used links, suspended
+customers and admins, admin sign-in and its logging, customers kept out of `/admin`, addresses, and no demo
+passwords in the bundle.
 
 ## Phase 3: Catalog and content (read side)
 
