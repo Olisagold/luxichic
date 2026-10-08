@@ -134,32 +134,35 @@ Differences have been reported on the live site, including responsiveness.
 
 ## Phase 1: Database schema (Drizzle)
 
-Translate the prototype types (`types/*.ts`, `lib/mock-db/db.ts`) into tables. Fill the existing `db/schema/*` files.
+Status: done locally. Applying to the hosted projects is the remaining step. See
+[`docs/database/README.md`](docs/database/README.md).
 
-1. **Identity:** `profiles` (1:1 with `auth.users`), `admins`, `roles`, `permissions`, `role_permissions`.
-2. **Catalog:** `categories` (division: hairs / tools), `products`, `product_variants`, `product_images`, `inventory`
-   (stock, low-stock threshold, out-of-stock behaviour).
-3. **Commerce:** `carts` / `cart_items` (signed-in users), `discounts` (promo codes), `orders`, `order_items`,
-   `payments`, `delivery_rates` (fee per state, enabled, free).
-   - `orders` has a unique `order_number` (internal) and a unique 8-digit `transaction_reference`
-     (customer-facing, enforced with a check constraint).
-   - `payments` holds the method and status (`pending_verification`, `payment_confirmed`, `pay_on_delivery`,
-     `paid`) and who confirmed it and when.
-4. **Engagement:** `reviews`, `wishlists`, `addresses`, `newsletter_subscribers` (email, source, subscribed/unsubscribed
-   dates).
-5. **Salon:** `services`, `specialists`, `specialist_services`, `availability` (weekly hours), `blocks`
-   (closed days), `appointments`.
-6. **Content:** `site_content` (hero, intro, about, sections), `faqs`, `policies`, `announcements`, `testimonials`,
-   `media`, `social_links`, `settings` (business details, bank details, email and alert toggles), `email_templates`.
-7. **Operations:** `notifications` (admin in-app), `audit_logs`, `login_history`.
-8. Generate the migration with `drizzle-kit generate` into `supabase/migrations`, and apply it locally.
-9. **Row Level Security** on every table:
-   - Public read for published catalog, services and content.
-   - Customers can read and write only their own orders, addresses, wishlist, cart and reviews.
-   - Admin writes go through server code (service role) after a permission check.
-10. Seed script (`scripts/database/seed.ts`) that loads today's `data/*.ts` seed into the database, so dev and
-    preview environments look like the prototype.
-11. Document the schema and RLS rules in `docs/database/`.
+1. ✅ **Identity:** `profiles` (1:1 with `auth.users`), `admins`, `admin_permissions`, `roles`, `role_permissions`,
+   `permissions`, `login_history`.
+2. ✅ **Catalog:** `categories`, `products`, `product_images`, `product_categories`, `product_options`,
+   `product_option_values`, `inventory`, `stock_movements`.
+3. ✅ **Commerce:** `carts` / `cart_items`, `discounts`, `orders`, `order_items`, `order_events`, `payments`,
+   `delivery_rates`, `admin_notes`.
+   - Unique internal `order_number` and unique 8-digit `transaction_reference` (check constraint), never equal.
+   - `payment_confirmed` requires a confirmation time; customers can read but never write payments.
+4. ✅ **Engagement:** `reviews`, `wishlists`, `addresses`, `newsletter_subscribers`.
+5. ✅ **Salon:** `services`, `specialists`, `specialist_services`, `availability`, `blocks`, `appointments`,
+   `appointment_events`.
+6. ✅ **Content:** `site_content`, `faqs`, `policies`, `announcements`, `testimonials`, `media`, `social_links`,
+   `settings`, `email_templates`.
+7. ✅ **Operations:** `notifications`, `audit_logs`.
+8. ✅ Migrations generated into `supabase/migrations` and applied locally (46 tables, all with RLS).
+9. ✅ **Access:** RLS policies plus explicit Data API grants (`…_api_grants.sql`), so local and hosted behave
+   the same.
+   - pgTAP tests (`pnpm db:test`, 22 checks) pass on an empty and a seeded database.
+   - Checked end to end through the API: visitors can't read orders, and customers see only their own orders and
+     can't confirm payments or change their account status.
+10. ✅ Seed script (`pnpm db:seed`) loads all prototype data (42 products, 33 orders, 42 appointments,
+    25 customers, 2 admins, 11 reviews). Local by default; `--remote` for the dev project only.
+11. ✅ Schema, access rules and workflow documented in `docs/database/README.md`.
+12. ⏳ **Apply the migrations to `luxichic-dev` and `luxichic-prod`** (`supabase link` + `supabase db push`), and
+    seed `luxichic-dev`. This needs your Supabase login and each project's database password.
+13. ⏳ **Later:** run `pnpm db:test` in CI (needs Docker in GitHub Actions). Scheduled with Phase 10.
 
 ## Phase 2: Authentication
 
