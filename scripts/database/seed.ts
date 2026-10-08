@@ -23,15 +23,9 @@ import postgres from 'postgres';
 import * as s from '../../apps/web/db/schema';
 import { buildInitialDb } from '../../apps/web/lib/mock-db/db';
 import { seedAppointments, seedOrders, seedReviews, seedUsers } from '../../apps/web/data/seed';
-import {
-  generatedAppointments,
-  generatedOrders,
-  generatedReviews,
-  permissionGroups,
-  rolePresets,
-  seedCustomers,
-} from '../../apps/web/data/adminSeed';
+import { generatedAppointments, generatedOrders, generatedReviews, seedCustomers } from '../../apps/web/data/adminSeed';
 import type { PaymentStatus } from '../../apps/web/types/order';
+import { allPermissionKeys, syncReferenceData } from './reference-data';
 
 /* ------------------------------------------------------------------ */
 /* Connection and safety checks                                        */
@@ -168,20 +162,7 @@ async function main() {
   await wipe([...customers.map((c) => c.email), ...store.admins.map((a) => a.email)]);
 
   /* Permissions and roles */
-  await db
-    .insert(s.permissions)
-    .values(
-      permissionGroups.flatMap((g, gi) =>
-        g.items.map((p, i) => ({ key: p.key, label: p.label, groupLabel: g.label, sortOrder: gi * 100 + i })),
-      ),
-    );
-  const roleIds = new Map<string, string>();
-  for (const [name, perms] of Object.entries(rolePresets)) {
-    const [role] = await db.insert(s.roles).values({ name, isSystem: true }).returning({ id: s.roles.id });
-    roleIds.set(name, role.id);
-    if (perms.length)
-      await db.insert(s.rolePermissions).values(perms.map((p) => ({ roleId: role.id, permissionKey: p })));
-  }
+  const roleIds = await syncReferenceData(db);
 
   /* Admins */
   const adminIds = new Map<string, string>();
@@ -201,7 +182,7 @@ async function main() {
       lastLoginAt: ts(a.lastLoginAt),
       createdAt: new Date(a.createdAt),
     });
-    const perms = a.isOwner ? permissionGroups.flatMap((g) => g.items.map((i) => i.key)) : a.permissions;
+    const perms = a.isOwner ? allPermissionKeys : a.permissions;
     if (perms.length) await db.insert(s.adminPermissions).values(perms.map((p) => ({ adminId: id, permissionKey: p })));
   }
   const adminRef = (legacyIdOrName?: string) =>
