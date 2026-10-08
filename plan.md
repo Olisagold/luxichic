@@ -20,6 +20,7 @@ From the current prototype to a production launch on Next.js + Supabase.
 | Database            | Supabase Postgres                                                                                                      |
 | Data access         | Drizzle ORM (schema in `apps/web/db/schema`, migrations in `supabase/migrations`)                                      |
 | Auth                | Supabase Auth: email + password, and Google sign-in                                                                    |
+| Admin sign-in       | Email + password only (no Google). First owner admin on prod: olisaejezie@gmail.com                                    |
 | File storage        | Supabase Storage (product, service and media-library images)                                                           |
 | Payments            | Manual only: bank transfer (admin verifies) and pay on delivery. No payment gateway                                    |
 | Transactional email | Resend                                                                                                                 |
@@ -171,7 +172,9 @@ Status: done locally. Applying to the hosted projects is the remaining step. See
    (`(storefront)/(auth)/*` pages keep their UI).
 2. Google sign-in: Google Cloud OAuth client, configured in the Supabase dashboard, plus a callback route.
 3. A database trigger creates a `profiles` row for every new user.
-4. Configure Supabase Auth to send its emails through Resend SMTP, with LUXICHIC-branded templates.
+4. **Deferred to Phase 11** (no domain yet, decided 2026-10-08): Supabase Auth emails through Resend SMTP, with
+   LUXICHIC-branded templates. Until then "Confirm email" stays off on the hosted projects so sign-up works, and
+   the built-in mailer only reaches the Supabase team's own address (about 2 emails an hour).
 5. Re-enable the session refresh in `middleware.ts` (it is skipped today when Supabase env vars are missing).
 6. Server-side route protection for `/account/*` (redirect in the layout), replacing the client-only guard.
 7. Admin auth: admins sign in with Supabase Auth and must have an active `admins` row.
