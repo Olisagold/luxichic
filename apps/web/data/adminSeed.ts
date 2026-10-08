@@ -18,12 +18,10 @@ import { images } from '@/data/images';
 
 /**
  * PROTOTYPE SEED DATA for the admin dashboard. Everything here is demonstration content.
- * Demo administrator: demoadmin@luxichic.com / Luxichic123 (frontend demo only).
+ * No passwords here: sign-in is checked by Supabase Auth, and the seed script creates dev logins.
  */
 export const DEMO_ADMIN_EMAIL = 'demoadmin@luxichic.com';
-export const DEMO_ADMIN_PASSWORD = 'Luxichic123';
 export const DEMO_SUBADMIN_EMAIL = 'orders@luxichic.com';
-export const DEMO_SUBADMIN_PASSWORD = 'Orders123';
 
 /* deterministic PRNG so seeds look the same on every load */
 function rng(seed: number) {
@@ -196,7 +194,6 @@ export const seedAdmins: AdminUser[] = [
     fullName: 'LUXICHIC Admin',
     email: DEMO_ADMIN_EMAIL,
     username: 'demoadmin',
-    password: DEMO_ADMIN_PASSWORD,
     role: 'Super Admin',
     isOwner: true,
     status: 'active',
@@ -209,7 +206,6 @@ export const seedAdmins: AdminUser[] = [
     fullName: 'Order Desk (demo)',
     email: DEMO_SUBADMIN_EMAIL,
     username: 'orderdesk',
-    password: DEMO_SUBADMIN_PASSWORD,
     role: 'Order Manager',
     isOwner: false,
     status: 'active',
@@ -362,7 +358,6 @@ export const seedCustomers: User[] = firstNames.map((f, i) => {
     fullName: `${f} ${l}`,
     email: `${f.toLowerCase()}.${l.toLowerCase()}@example.com`,
     phone: `080${digits(8)}`,
-    password: 'Customer123',
     addresses: [
       {
         id: `addr_c${i + 1}`,

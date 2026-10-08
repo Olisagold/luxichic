@@ -4,9 +4,8 @@ import { getDb, logActivity, updateDb } from '@/lib/mock-db/db';
 import { generateId } from '@/lib/utils/references';
 
 /**
- * Admin users service. The main administrator sets sub-admin credentials.
- * PROTOTYPE: passwords live in the mock store; production must hash them server-side
- * and never return them to the browser.
+ * Admin users service (prototype store). Passwords are never stored here: the forms still collect them, and
+ * Phase 8 sends them to Supabase Auth from a server action.
  */
 
 export function createAdmin(
@@ -31,7 +30,6 @@ export function createAdmin(
       fullName: data.fullName.trim(),
       email: data.email.trim(),
       username: data.username?.trim() || undefined,
-      password: data.password,
       role: data.role,
       isOwner: false,
       status: data.status,
@@ -63,11 +61,10 @@ export function updateAdmin(
   });
 }
 
-export function resetAdminPassword(actor: AdminUser, id: string, password: string) {
+export function resetAdminPassword(actor: AdminUser, id: string, _password: string) {
   updateDb((d) => {
     const a = d.admins.find((x) => x.id === id);
     if (!a || a.isOwner) return;
-    a.password = password;
     logActivity(d, actor, 'Admin Users', 'Reset sub-admin password', a.fullName);
   });
 }

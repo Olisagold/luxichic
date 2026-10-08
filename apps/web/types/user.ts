@@ -5,8 +5,6 @@ export interface User {
   fullName: string;
   email: string;
   phone: string;
-  /** PROTOTYPE ONLY — passwords are never stored client-side in production. */
-  password: string;
   addresses: Address[];
   createdAt: string;
   status?: 'active' | 'blocked';

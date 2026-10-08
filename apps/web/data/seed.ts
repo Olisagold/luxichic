@@ -3,9 +3,8 @@ import type { Appointment } from '@/types/salon';
 import type { Review, User } from '@/types/user';
 import { images } from '@/data/images';
 
-/** Demo account: demo@luxichic.com / Luxichic123 */
+/** Demo customer email. Sign-in passwords live only in Supabase Auth (see scripts/database/seed.ts). */
 export const DEMO_EMAIL = 'demo@luxichic.com';
-export const DEMO_PASSWORD = 'Luxichic123';
 
 const demoAddress = {
   id: 'addr_demo1',
@@ -27,7 +26,6 @@ export const seedUsers: User[] = [
     fullName: demoCustomer.fullName,
     email: DEMO_EMAIL,
     phone: demoCustomer.phone,
-    password: DEMO_PASSWORD,
     addresses: [demoAddress],
     createdAt: '2026-01-12T10:00:00.000Z',
   },

@@ -82,8 +82,6 @@ export interface AdminUser {
   fullName: string;
   email: string;
   username?: string;
-  /** PROTOTYPE ONLY — never rendered. In production the backend stores a salted hash. */
-  password: string;
   role: AdminRole;
   isOwner: boolean;
   status: 'active' | 'suspended';
