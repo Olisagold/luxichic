@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Navigate } from '@/components/ui/Navigate';
 import { motion, useReducedMotion } from 'framer-motion';
-import { toast, Toaster } from 'sonner';
-import { AlertCircleIcon, EyeIcon, EyeOffIcon, Loader2Icon, MailIcon } from 'lucide-react';
+import { Toaster } from 'sonner';
+import { AlertCircleIcon, EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Logo } from '@/components/ui/Logo';
 import { isValidEmail } from '@/lib/utils/validation';
@@ -43,11 +43,6 @@ export function AdminLogin() {
     setLoading(false);
     if (!res.ok) return setError(res.error ?? 'Unable to sign in.');
     setPassword('');
-    toast('Login alert email would be sent', {
-      description: `Prototype: “Your LUXICHIC administrator account was just logged in” would go to ${email.trim()}. Nothing has been sent.`,
-      icon: <MailIcon className="h-4 w-4" />,
-      duration: 6000,
-    });
     router.replace(safeNext(params.get('next')));
   };
 

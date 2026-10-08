@@ -1,130 +1,42 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useRouter } from 'next/navigation';
 import type { AdminUser, Permission } from '@/types/admin';
 import type { Result } from '@/types/user';
-import { findAdmin, getDb, logActivity, updateDb, useDb } from '@/lib/mock-db/db';
-import { generateId } from '@/lib/utils/references';
-import { wait } from '@/lib/utils/validation';
+import { adminChangePassword, adminSignIn, adminSignOut } from '@/lib/auth/admin-actions';
 
 /**
- * PROTOTYPE ADMIN AUTH
- * Credentials are checked in the browser against the mock store so the dashboard can be reviewed.
- * In production: replace `login` with a call to the backend auth endpoint (HTTP-only session cookie),
- * and enforce every permission server-side — hiding UI is not security.
+ * The signed-in administrator, read on the server by the admin layouts (Supabase session + `admins` row) and
+ * passed in here. `can()` only shapes the UI: every admin server action checks permissions again with
+ * `requirePermission()`.
  */
 interface AdminAuthValue {
   admin: AdminUser | null;
-  /** False until the stored session has been read on the client. */
+  /** Always true: the server has already resolved the session before rendering. */
   ready: boolean;
   login: (email: string, password: string, remember: boolean) => Promise<Result>;
-  logout: () => void;
+  logout: () => Promise<void>;
   can: (p: Permission) => boolean;
   changePassword: (current: string, next: string) => Promise<Result>;
 }
 
 const AdminAuthContext = createContext<AdminAuthValue | null>(null);
-const KEY = 'lx_admin_session';
 
-function readSession() {
-  return window.localStorage.getItem(KEY) ?? window.sessionStorage.getItem(KEY);
-}
+export function AdminAuthProvider({ admin, children }: { admin: AdminUser | null; children: React.ReactNode }) {
+  const router = useRouter();
 
-function describeDevice() {
-  const ua = navigator.userAgent;
-  const browser = /Edg\//.test(ua)
-    ? 'Edge'
-    : /Chrome\//.test(ua)
-      ? 'Chrome'
-      : /Safari\//.test(ua)
-        ? 'Safari'
-        : /Firefox\//.test(ua)
-          ? 'Firefox'
-          : 'Browser';
-  const os = /Windows/.test(ua)
-    ? 'Windows'
-    : /Mac OS/.test(ua)
-      ? 'macOS'
-      : /Android/.test(ua)
-        ? 'Android'
-        : /iPhone|iPad/.test(ua)
-          ? 'iOS'
-          : /Linux/.test(ua)
-            ? 'Linux'
-            : 'Unknown OS';
-  const kind = /Mobi|iPhone|Android/.test(ua) ? 'Mobile' : 'Desktop';
-  return { browser, device: `${os} · ${kind}` };
-}
-
-export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setSessionId(readSession());
-    setReady(true);
-  }, []);
-  const admins = useDb((s) => s.admins);
-  const admin = admins.find((a) => a.id === sessionId && a.status === 'active') ?? null;
-
-  const login: AdminAuthValue['login'] = async (email, password, remember) => {
-    await wait(900);
-    const match = findAdmin(email);
-    if (!match || match.password !== password) return { ok: false, error: 'Incorrect email or password.' };
-    if (match.status !== 'active')
-      return { ok: false, error: 'This administrator account is suspended. Contact the main administrator.' };
-    const now = new Date().toISOString();
-    const { browser, device } = describeDevice();
-    updateDb((d) => {
-      const a = d.admins.find((x) => x.id === match.id);
-      if (a) a.lastLoginAt = now;
-      d.loginHistory = [
-        {
-          id: generateId('login'),
-          adminId: match.id,
-          adminName: match.fullName,
-          email: match.email,
-          at: now,
-          browser,
-          device,
-          location: 'Location provided by backend',
-          current: true,
-        },
-        ...d.loginHistory.map((l) => ({ ...l, current: false })),
-      ].slice(0, 100);
-      logActivity(d, match, 'Security', 'Signed in', `${browser} · ${device}`);
-    });
-    window.localStorage.removeItem(KEY);
-    window.sessionStorage.removeItem(KEY);
-    (remember ? window.localStorage : window.sessionStorage).setItem(KEY, match.id);
-    setSessionId(match.id);
-    return { ok: true };
-  };
-
-  const logout = () => {
-    if (admin) updateDb((d) => logActivity(d, admin, 'Security', 'Signed out'));
-    window.localStorage.removeItem(KEY);
-    window.sessionStorage.removeItem(KEY);
-    setSessionId(null);
+  const logout = async () => {
+    await adminSignOut();
+    router.refresh();
   };
 
   const can = (p: Permission) => !!admin && (admin.isOwner || admin.permissions.includes(p));
 
-  const changePassword: AdminAuthValue['changePassword'] = async (current, next) => {
-    await wait(700);
-    const a = getDb().admins.find((x) => x.id === admin?.id);
-    if (!a) return { ok: false, error: 'Not signed in.' };
-    if (a.password !== current) return { ok: false, error: 'Your current password is incorrect.' };
-    updateDb((d) => {
-      const target = d.admins.find((x) => x.id === a.id);
-      if (target) target.password = next;
-      logActivity(d, a, 'Security', 'Changed password');
-    });
-    return { ok: true };
-  };
-
   return (
-    <AdminAuthContext.Provider value={{ admin, ready, login, logout, can, changePassword }}>
+    <AdminAuthContext.Provider
+      value={{ admin, ready: true, login: adminSignIn, logout, can, changePassword: adminChangePassword }}
+    >
       {children}
     </AdminAuthContext.Provider>
   );

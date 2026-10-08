@@ -231,9 +231,9 @@ export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }:
                   <ShieldCheckIcon className="h-4 w-4 text-subtle" aria-hidden /> Security & sessions
                 </Link>
                 <button
-                  onClick={() => {
-                    logout();
-                    router.push('/admin/login');
+                  onClick={async () => {
+                    await logout();
+                    router.replace('/admin/login');
                   }}
                   className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-red-700 hover:bg-red-50"
                 >

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Fragment, useEffect, useState } from 'react';
-import { AdminAuthProvider } from '@/contexts/AdminAuthContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
@@ -27,9 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <CartProvider>
               <WishlistProvider>
                 <UIProvider>
-                  <AdminAuthProvider>
-                    <Fragment key={dbKey}>{children}</Fragment>
-                  </AdminAuthProvider>
+                  <Fragment key={dbKey}>{children}</Fragment>
                 </UIProvider>
               </WishlistProvider>
             </CartProvider>
