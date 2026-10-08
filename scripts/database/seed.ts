@@ -9,7 +9,8 @@
  *   DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY
  *   SEED_PASSWORD  password for every seeded login (random and printed when unset)
  *
- * It WIPES all store data and the seeded logins, then re-inserts everything. Never run it on production.
+ * It WIPES all store data and the seeded logins, then re-inserts everything. --remote only accepts the
+ * projects in SEEDABLE_PROJECT_REFS, so production can never be seeded.
  */
 import { execSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -66,9 +67,14 @@ if (remote) {
   databaseUrl = process.env.DATABASE_URL ?? '';
   supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
   secretKey = process.env.SUPABASE_SECRET_KEY ?? '';
-  if (!databaseUrl || !supabaseUrl || !secretKey) {
-    throw new Error('--remote needs DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY.');
-  }
+  const missing = Object.entries({
+    DATABASE_URL: databaseUrl,
+    NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
+    SUPABASE_SECRET_KEY: secretKey,
+  })
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+  if (missing.length) throw new Error(`--remote needs ${missing.join(', ')} (set in apps/web/.env.local).`);
 } else {
   const local = localSupabaseEnv();
   databaseUrl = local.DB_URL;
@@ -77,10 +83,14 @@ if (remote) {
   if (!databaseUrl || !supabaseUrl || !secretKey) throw new Error('Local Supabase is not running. Run: pnpm db:start');
 }
 
+// Hosted projects that may be seeded. Production is deliberately not listed.
+const SEEDABLE_PROJECT_REFS = ['ldpdudssjlvyafyvemhm']; // luxichic-dev
+
 const isLocalHost = /@(127\.0\.0\.1|localhost)[:/]/.test(databaseUrl);
 if (!remote && !isLocalHost) throw new Error(`Refusing to seed a non-local database without --remote.`);
-if (/prod/i.test(databaseUrl) || /prod/i.test(supabaseUrl))
-  throw new Error('Refusing to seed what looks like production.');
+if (remote && !SEEDABLE_PROJECT_REFS.some((ref) => databaseUrl.includes(ref) && supabaseUrl.includes(ref))) {
+  throw new Error('Refusing to seed: DATABASE_URL and NEXT_PUBLIC_SUPABASE_URL must both point at luxichic-dev.');
+}
 
 const password = process.env.SEED_PASSWORD ?? randomBytes(9).toString('base64url');
 
