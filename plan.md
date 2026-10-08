@@ -175,6 +175,12 @@ Translate the prototype types (`types/*.ts`, `lib/mock-db/db.ts`) into tables. F
    - Add a `requirePermission()` helper for server actions.
    - Record each sign-in in `login_history`.
 8. Replace `AuthContext` and `AdminAuthContext` internals with Supabase sessions; delete their localStorage logic.
+9. **Remove every demo credential from the code.** `DEMO_EMAIL`, `DEMO_PASSWORD`, `DEMO_ADMIN_*` and
+   `DEMO_SUBADMIN_*` in `data/seed.ts` and `data/adminSeed.ts`, plus the seeded users' `password` fields, ship in the
+   browser bundle today because the prototype checks logins in the browser.
+   - Dev/preview test accounts are created by the seed script in Supabase instead.
+   - Production gets no demo accounts.
+   - (The visible demo boxes on both sign-in pages were removed on 2026-10-08.)
 
 ## Phase 3: Catalog and content (read side)
 
