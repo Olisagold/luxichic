@@ -9,9 +9,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { TextField } from '@/components/ui/FormField';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { Button } from '@/components/ui/Button';
-import { PrototypeNote } from '@/components/ui/PrototypeNote';
 import { useAuth } from '@/contexts/AuthContext';
-import { DEMO_EMAIL, DEMO_PASSWORD } from '@/data/seed';
 import { isValidEmail } from '@/lib/utils/validation';
 
 export function safeRedirect(value: string | null, fallback = '/account'): string {
@@ -104,21 +102,6 @@ export function Login() {
           </Link>
         </p>
       </form>
-      <PrototypeNote title="Demo account" className="mt-8">
-        <p>
-          Email: <strong>{DEMO_EMAIL}</strong> · Password: <strong>{DEMO_PASSWORD}</strong>
-        </p>
-        <button
-          type="button"
-          className="mt-2 text-xs font-semibold text-pink-deep underline-offset-4 hover:underline"
-          onClick={() => {
-            setEmail(DEMO_EMAIL);
-            setPassword(DEMO_PASSWORD);
-          }}
-        >
-          Fill demo details
-        </button>
-      </PrototypeNote>
     </AuthLayout>
   );
 }

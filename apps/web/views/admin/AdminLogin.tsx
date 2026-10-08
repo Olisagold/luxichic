@@ -9,7 +9,6 @@ import { AlertCircleIcon, EyeIcon, EyeOffIcon, Loader2Icon, MailIcon } from 'luc
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Logo } from '@/components/ui/Logo';
 import { isValidEmail } from '@/lib/utils/validation';
-import { DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD } from '@/data/adminSeed';
 import { images } from '@/data/images';
 
 function safeNext(v: string | null) {
@@ -168,22 +167,6 @@ export function AdminLogin() {
               </button>
             </form>
           )}
-
-          <div className="mt-10 rounded-xl border border-dashed border-white/15 p-4 text-xs text-white/55">
-            <p className="font-semibold text-white/80">Prototype demo access</p>
-            <p className="mt-1">Frontend-only review account. Production sign-in will be handled by the backend.</p>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail(DEMO_ADMIN_EMAIL);
-                setPassword(DEMO_ADMIN_PASSWORD);
-                setError('');
-              }}
-              className="mt-3 rounded-md border border-white/20 px-3 py-1.5 font-semibold text-white hover:bg-white/10"
-            >
-              Fill demo admin
-            </button>
-          </div>
         </motion.div>
       </div>
       <Toaster position="bottom-right" />
