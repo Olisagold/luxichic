@@ -8,6 +8,13 @@
       "when": 1791466043991,
       "tag": "20261008132723_init_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791466092826,
+      "tag": "20261008132812_api_grants",
+      "breakpoints": true
     }
   ]
 }
