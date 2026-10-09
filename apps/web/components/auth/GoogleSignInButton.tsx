@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
-import { isSupabaseConfigured } from '@/lib/env';
+import { env, isSupabaseConfigured } from '@/lib/env';
 import { createClient } from '@/lib/supabase/client';
 
 function GoogleMark() {
@@ -29,22 +29,40 @@ function GoogleMark() {
   );
 }
 
+/** Whether Google is switched on in this Supabase project (its public Auth settings). */
+async function googleEnabled(): Promise<boolean> {
+  try {
+    const res = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+      headers: { apikey: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY! },
+    });
+    if (!res.ok) return true; // Can't tell; let Supabase decide.
+    const settings = (await res.json()) as { external?: Record<string, boolean> };
+    return settings.external?.google === true;
+  } catch {
+    return true;
+  }
+}
+
 /** Customer sign-in with Google. Supabase redirects back to /auth/callback, which finishes the sign-in. */
 export function GoogleSignInButton({ next = '/account' }: { next?: string }) {
   const [loading, setLoading] = useState(false);
 
+  const unavailable = () => {
+    setLoading(false);
+    toast.error('Google sign-in is not available right now. Please use your email and password.');
+  };
+
   const start = async () => {
-    if (!isSupabaseConfigured) return toast.error('Google sign-in is not available right now.');
+    if (!isSupabaseConfigured) return unavailable();
     setLoading(true);
+    // Supabase only reports a disabled provider after redirecting, on a bare error page, so ask first.
+    if (!(await googleEnabled())) return unavailable();
     const { error } = await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     // On success the browser is already leaving for Google.
-    if (error) {
-      setLoading(false);
-      toast.error('Google sign-in is not available right now. Please use your email and password.');
-    }
+    if (error) unavailable();
   };
 
   return (
