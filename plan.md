@@ -168,13 +168,12 @@ Status: done locally. Applying to the hosted projects is the remaining step. See
 
 ## Phase 2: Authentication
 
-Code done and tested locally on 2026-10-09; going live needs the dashboard steps in step 10. How it works and
-the setup checklist: `docs/auth/README.md`.
+✅ **Done and live on 2026-10-10.** How it works and the setup checklist: `docs/auth/README.md`.
 
 1. ✅ Supabase Auth email + password: sign up, sign in, sign out, forgot and reset password. The pages keep their
    UI; login and register gain a **Continue with Google** button.
-2. ✅ Google sign-in in code (button + `/auth/callback`). ⏳ Needs a Google Cloud OAuth client, enabled in both
-   Supabase projects.
+2. ✅ Google sign-in (button + `/auth/callback`); Google Cloud OAuth client enabled in both Supabase projects.
+   ⏳ The Google consent screen gets a final check at launch, with the custom domain (Phase 11).
 3. ✅ Database triggers: a `profiles` row for every new login; confirmed email changes copied over; adding an
    admin removes their customer profile. pgTAP tests (29 checks in total) pass.
 4. **Deferred to Phase 11** (no domain yet, decided 2026-10-08): Supabase Auth emails through Resend SMTP, with
@@ -193,12 +192,12 @@ the setup checklist: `docs/auth/README.md`.
    data until Phase 8.
 9. ✅ Demo credentials removed from the code and the `User`/`AdminUser` types; verified no demo password appears
    in any script the browser loads. Dev logins come from the seed script; production gets none.
-10. ⏳ **Go live** (dashboard steps, in this order):
-    1. Apply the new migration (`…_auth_profiles.sql`) to `luxichic-dev` and `luxichic-prod` (`supabase db push`).
-    2. Supabase Auth settings on both projects: URL configuration, "Confirm email" off, password rules.
-    3. Create the owner on prod: `pnpm db:create-owner` for olisaejezie@gmail.com.
-    4. Vercel env vars: prod keys for Production, dev keys for Preview; redeploy.
-    5. Google Cloud OAuth client, then enable Google in both projects.
+10. ✅ Live (2026-10-09/10):
+    - Auth migration applied to both projects.
+    - Auth settings set on both: URLs, "Confirm email" off, passwords of 8+ characters.
+    - Owner admin created on prod; the temporary password has been changed.
+    - Vercel env vars set (prod for Production, dev for Preview) and redeployed.
+    - Google enabled.
 
 Tested end to end in a browser against local Supabase (33 checks): redirects, sign-in, wrong password,
 "Remember me", registration and duplicate emails, reset by real email (Mailpit) including used links, suspended
