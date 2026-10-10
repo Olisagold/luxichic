@@ -206,6 +206,10 @@ passwords in the bundle.
 
 ## Phase 3: Catalog and content (read side)
 
+**Decided 2026-10-10:** prod starts with a copy of the prototype's catalog: products, categories, salon
+services, specialists and site content. No customers, orders, reviews or logins. The live shop looks the same
+when it switches to the database, and the admin replaces items in Phase 8.
+
 1. Query functions in `db/queries/` for products, categories, services, specialists and site content.
 2. Storefront pages fetch data in server components, and pass it to the existing views as props
    (no more mutating module-level arrays).
