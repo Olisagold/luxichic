@@ -21,10 +21,11 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as s from '../../apps/web/db/schema';
-import { buildInitialDb } from '../../apps/web/lib/mock-db/db';
+import { buildInitialDb } from '../../apps/web/lib/mock-db/initial';
 import { seedAppointments, seedOrders, seedReviews, seedUsers } from '../../apps/web/data/seed';
 import { generatedAppointments, generatedOrders, generatedReviews, seedCustomers } from '../../apps/web/data/adminSeed';
 import type { PaymentStatus } from '../../apps/web/types/order';
+import { loadCatalog, snake } from './catalog';
 import { allPermissionKeys, syncReferenceData } from './reference-data';
 
 /* ------------------------------------------------------------------ */
@@ -96,7 +97,6 @@ const supabase = createClient(supabaseUrl, secretKey, { auth: { autoRefreshToken
 /* Mappings from prototype values to database values                   */
 /* ------------------------------------------------------------------ */
 
-const snake = (v: string) => v.toLowerCase().replace(/[\s-]+/g, '_');
 const paymentStatusMap: Record<PaymentStatus, (typeof s.paymentStatus.enumValues)[number]> = {
   'Pending Verification': 'pending_verification',
   'Payment Confirmed': 'payment_confirmed',
@@ -120,15 +120,20 @@ const ts = (v?: string | null) => (v ? new Date(v) : undefined);
 // Admin logins are marked with app_metadata.kind = 'admin'; inserting their admins row removes the
 // customer profile the auth trigger created.
 async function createLogin(email: string, fullName: string, kind: 'customer' | 'admin'): Promise<string> {
-  const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: fullName },
-    app_metadata: kind === 'admin' ? { kind } : {},
-  });
-  if (error || !data.user) throw new Error(`Could not create login for ${email}: ${error?.message}`);
-  return data.user.id;
+  // Retry dropped connections (flaky networks); a real error such as a duplicate email fails straight away.
+  for (let attempt = 1; ; attempt++) {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+      app_metadata: kind === 'admin' ? { kind } : {},
+    });
+    if (data.user) return data.user.id;
+    const network = error?.name === 'AuthRetryableFetchError' || /fetch failed/i.test(error?.message ?? '');
+    if (!network || attempt === 3) throw new Error(`Could not create login for ${email}: ${error?.message}`);
+    await new Promise((r) => setTimeout(r, 1000 * attempt));
+  }
 }
 
 async function wipe(emails: string[]) {
@@ -240,104 +245,8 @@ async function main() {
   }
   const userRef = (email?: string) => (email ? (userIdByEmail.get(email.toLowerCase()) ?? null) : null);
 
-  /* Categories */
-  const categoryIds = new Map<string, string>(); // `${division}:${slug}` → id
-  for (const [divisionName, list] of Object.entries(store.categories) as [
-    'hairs' | 'tools',
-    typeof store.categories.hairs,
-  ][]) {
-    for (const [i, c] of list.entries()) {
-      const [row] = await db
-        .insert(s.categories)
-        .values({
-          division: divisionName,
-          slug: c.slug,
-          name: c.name,
-          description: c.description,
-          groupName: c.group,
-          imageUrl: c.image,
-          sortOrder: i,
-        })
-        .returning({ id: s.categories.id });
-      categoryIds.set(`${divisionName}:${c.slug}`, row.id);
-    }
-  }
-
-  /* Products */
-  const productIds = new Map<string, string>(); // prototype id → uuid
-  for (const p of store.products) {
-    const [row] = await db
-      .insert(s.products)
-      .values({
-        division: p.division,
-        slug: p.slug,
-        sku: p.sku,
-        name: p.name,
-        shortDescription: p.shortDescription,
-        description: p.description,
-        price: p.price,
-        compareAtPrice: p.originalPrice ?? null,
-        status: p.status,
-        discountMode: p.discountMode,
-        discountPercent: p.discountPercent ?? null,
-        discountStartsOn: p.discountStart ?? null,
-        discountEndsOn: p.discountEnd ?? null,
-        attributes: p.attributes,
-        specs: p.specs,
-        usage: p.usage,
-        benefits: p.benefits,
-        care: p.care,
-        shipping: p.shipping,
-        isFeatured: p.isFeatured,
-        featuredRank: p.featuredRank,
-        isBestseller: p.isBestseller ?? false,
-        isNew: p.isNew ?? false,
-        rating: p.rating,
-        reviewCount: p.reviewCount,
-        salesCount: p.salesCount,
-        createdAt: new Date(p.createdAt),
-      })
-      .returning({ id: s.products.id });
-    productIds.set(p.id, row.id);
-
-    await db.insert(s.inventory).values({
-      productId: row.id,
-      stock: p.stock,
-      lowStockThreshold: p.lowStockThreshold,
-      trackInventory: p.trackInventory,
-      outOfStockBehaviour: p.outOfStockBehaviour === 'hide' ? 'hide' : 'show_sold_out',
-    });
-    if (p.images.length) {
-      await db.insert(s.productImages).values(p.images.map((url, i) => ({ productId: row.id, url, sortOrder: i })));
-    }
-    const cats = p.categories.map((slug) => categoryIds.get(`${p.division}:${slug}`)).filter((x): x is string => !!x);
-    if (cats.length)
-      await db.insert(s.productCategories).values(cats.map((categoryId) => ({ productId: row.id, categoryId })));
-
-    for (const [gi, g] of p.variants.entries()) {
-      const [opt] = await db
-        .insert(s.productOptions)
-        .values({ productId: row.id, key: g.key, name: g.name, sortOrder: gi })
-        .returning({ id: s.productOptions.id });
-      if (g.values.length) {
-        await db.insert(s.productOptionValues).values(
-          g.values.map((v, vi) => {
-            const meta = p.variantMeta[`${g.key}::${v.label}`];
-            return {
-              optionId: opt.id,
-              productId: row.id,
-              label: v.label,
-              priceDelta: v.priceDelta ?? 0,
-              stock: v.stock ?? null,
-              sku: meta?.sku ?? null,
-              enabled: meta?.enabled ?? true,
-              sortOrder: vi,
-            };
-          }),
-        );
-      }
-    }
-  }
+  /* Catalog and content (shared with pnpm db:load-catalog) */
+  const { productIds, serviceIds, specialistIds } = await loadCatalog(db, store);
   const productRef = (legacyId: string) => productIds.get(legacyId) ?? null;
 
   if (store.stockMoves.length) {
@@ -373,66 +282,7 @@ async function main() {
       })),
     );
   }
-  await db
-    .insert(s.deliveryRates)
-    .values(
-      store.settings.delivery.rates.map((r) => ({ state: r.state, fee: r.fee, isFree: r.free, enabled: r.enabled })),
-    );
-
-  /* Salon */
-  const serviceIds = new Map<string, string>(); // slug → uuid
-  for (const [i, sv] of store.services.entries()) {
-    const [row] = await db
-      .insert(s.services)
-      .values({
-        slug: sv.slug,
-        name: sv.name,
-        category: sv.category,
-        shortDescription: sv.shortDescription,
-        description: sv.description,
-        includes: sv.includes,
-        startingPrice: sv.startingPrice,
-        durationLabel: sv.duration,
-        durationMinutes: sv.durationMinutes,
-        imageUrl: sv.image,
-        whatsapp: sv.whatsapp,
-        status: sv.status,
-        bookable: sv.bookable,
-        sortOrder: i,
-      })
-      .returning({ id: s.services.id });
-    serviceIds.set(sv.slug, row.id);
-  }
-
-  const specialistIds = new Map<string, string>(); // prototype id → uuid
-  for (const sp of store.specialists) {
-    const [row] = await db
-      .insert(s.specialists)
-      .values({
-        name: sp.name,
-        title: sp.title,
-        imageUrl: sp.image,
-        bio: sp.bio,
-        specialties: sp.specialties,
-        status: snake(sp.status) as (typeof s.specialistStatus.enumValues)[number],
-      })
-      .returning({ id: s.specialists.id });
-    specialistIds.set(sp.id, row.id);
-    const links = sp.serviceSlugs.map((slug) => serviceIds.get(slug)).filter((x): x is string => !!x);
-    if (links.length)
-      await db.insert(s.specialistServices).values(links.map((serviceId) => ({ specialistId: row.id, serviceId })));
-    if (sp.workingDays.length) {
-      await db.insert(s.availability).values(
-        sp.workingDays.map((weekday) => ({
-          specialistId: row.id,
-          weekday,
-          startTime: sp.hours.start,
-          endTime: sp.hours.end,
-        })),
-      );
-    }
-  }
-
+  /* Salon (demo closed days) */
   if (store.blocks.length) {
     await db.insert(s.blocks).values(
       store.blocks.map((b) => ({
@@ -570,54 +420,7 @@ async function main() {
     }));
   if (reviewRows.length) await db.insert(s.reviews).values(reviewRows);
 
-  /* Content */
-  const c = store.content;
-  await db.insert(s.siteContent).values([
-    { key: 'sections', value: c.sections },
-    { key: 'hero', value: c.hero },
-    { key: 'intro', value: c.intro },
-    { key: 'divisions', value: c.divisions },
-    {
-      key: 'featured',
-      value: {
-        collectionSlugs: c.featuredCollectionSlugs,
-        productIds: c.featuredProductIds.map(productRef).filter(Boolean),
-        serviceSlugs: c.featuredServiceSlugs,
-      },
-    },
-    { key: 'salon_section', value: c.salonSection },
-    { key: 'why', value: c.why },
-    { key: 'about', value: c.about },
-    { key: 'contact', value: c.contact },
-  ]);
-  await db
-    .insert(s.faqs)
-    .values(
-      c.faqs.flatMap((group, gi) =>
-        group.items.map((f, i) => ({ category: group.category, question: f.q, answer: f.a, sortOrder: gi * 100 + i })),
-      ),
-    );
-  await db
-    .insert(s.policies)
-    .values(Object.entries(c.policies).map(([slug, p]) => ({ slug, title: p.title, sections: p.sections })));
-  if (c.announcements.length) {
-    await db
-      .insert(s.announcements)
-      .values(c.announcements.map((a, i) => ({ text: a.text, enabled: a.enabled, sortOrder: i })));
-  }
-  if (c.testimonials.length) {
-    await db.insert(s.testimonials).values(
-      c.testimonials.map((t, i) => ({
-        name: t.name,
-        initials: t.initials,
-        rating: t.rating,
-        item: t.item,
-        text: t.text,
-        status: t.status,
-        sortOrder: i,
-      })),
-    );
-  }
+  /* Media library */
   if (store.media.length) {
     await db.insert(s.media).values(
       store.media.map((m) => ({
@@ -631,46 +434,14 @@ async function main() {
       })),
     );
   }
-  const links = store.settings.socialLinks ?? [];
-  if (links.length) {
-    await db.insert(s.socialLinks).values(
-      links.map((l, i) => ({
-        platform: l.platform,
-        division: l.division,
-        handle: l.handle,
-        url: l.url,
-        enabled: l.enabled,
-        sortOrder: i,
-      })),
-    );
-  }
-
-  /* Settings (no secrets: the prototype only stores "is set" flags) */
+  /* Demo-only settings: the prototype's bank account and notification/security toggles */
   const st = store.settings;
   await db.insert(s.settings).values([
-    { key: 'business', value: st.business },
-    { key: 'instagram', value: { urls: st.instagram, handles: st.instagramHandles } },
-    { key: 'tiktok', value: st.tiktok ?? null },
-    { key: 'pay_on_delivery', value: { enabled: st.payOnDeliveryEnabled } },
     { key: 'bank', value: st.bank },
-    { key: 'delivery_estimate', value: { text: st.delivery.estimate } },
-    { key: 'whatsapp', value: st.whatsapp },
     { key: 'email', value: st.smtp },
     { key: 'notifications', value: st.notifications },
     { key: 'security', value: st.security },
   ]);
-  if (store.emailTemplates.length) {
-    await db.insert(s.emailTemplates).values(
-      store.emailTemplates.map((t) => ({
-        key: t.id,
-        name: t.name,
-        subject: t.subject,
-        body: t.body,
-        variables: t.variables,
-        enabled: t.enabled,
-      })),
-    );
-  }
 
   /* Operations */
   if (store.notifications.length) {

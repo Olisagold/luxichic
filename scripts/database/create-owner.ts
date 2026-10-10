@@ -10,71 +10,22 @@
  * A temporary password is printed once. Sign in at /admin/login and change it under Settings → Security.
  * Refuses if the database already has an owner, or if the email already belongs to a login.
  */
-import { execSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as s from '../../apps/web/db/schema';
+import { arg, resolveTarget } from './connect';
 import { allPermissionKeys, syncReferenceData } from './reference-data';
-
-function arg(name: string): string | undefined {
-  const i = process.argv.indexOf(`--${name}`);
-  return i > -1 ? process.argv[i + 1] : undefined;
-}
 
 const email = arg('email')?.trim().toLowerCase();
 const fullName = arg('name')?.trim();
-const envFile = arg('env-file');
 if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !fullName) {
   throw new Error('Usage: pnpm db:create-owner -- --email <email> --name "<full name>" [--env-file <path>]');
 }
 
-function readEnvFile(path: string): Record<string, string> {
-  const full = resolve(process.cwd(), path);
-  if (!existsSync(full)) throw new Error(`Env file not found: ${full}`);
-  const out: Record<string, string> = {};
-  for (const line of readFileSync(full, 'utf8').split('\n')) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m) out[m[1]] = m[2].replace(/^["']|["']$/g, '');
-  }
-  return out;
-}
-
-let databaseUrl: string;
-let supabaseUrl: string;
-let secretKey: string;
-if (envFile) {
-  const e = readEnvFile(envFile);
-  databaseUrl = e.DATABASE_URL ?? '';
-  supabaseUrl = e.NEXT_PUBLIC_SUPABASE_URL ?? '';
-  secretKey = e.SUPABASE_SECRET_KEY ?? '';
-  const missing = Object.entries({
-    DATABASE_URL: databaseUrl,
-    NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
-    SUPABASE_SECRET_KEY: secretKey,
-  })
-    .filter(([, v]) => !v)
-    .map(([k]) => k);
-  if (missing.length) throw new Error(`${envFile} is missing ${missing.join(', ')}.`);
-} else {
-  const out = execSync('supabase status -o env', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-  const local = Object.fromEntries(
-    out
-      .split('\n')
-      .map((l) => l.match(/^([A-Z_]+)="?(.*?)"?$/))
-      .filter((m): m is RegExpMatchArray => !!m)
-      .map((m) => [m[1], m[2]]),
-  );
-  databaseUrl = local.DB_URL;
-  supabaseUrl = local.API_URL;
-  secretKey = local.SECRET_KEY ?? local.SERVICE_ROLE_KEY;
-  if (!databaseUrl) throw new Error('Local Supabase is not running. Run: pnpm db:start');
-}
-
+const { databaseUrl, supabaseUrl, secretKey } = resolveTarget();
 const client = postgres(databaseUrl, { prepare: false, max: 1 });
 const db = drizzle(client, { schema: s });
 const supabase = createClient(supabaseUrl, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });

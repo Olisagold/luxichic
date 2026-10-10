@@ -4,11 +4,13 @@
  * refreshes labels.
  */
 import { sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type { PgDatabase } from 'drizzle-orm/pg-core';
+import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import * as s from '../../apps/web/db/schema';
 import { permissionGroups, rolePresets } from '../../apps/web/data/adminSeed';
 
-type Db = PostgresJsDatabase<typeof s>;
+/** The database or a transaction on it. */
+type Db = PgDatabase<PostgresJsQueryResultHKT, typeof s>;
 
 export const allPermissionKeys = permissionGroups.flatMap((g) => g.items.map((i) => i.key));
 

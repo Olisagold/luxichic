@@ -15,7 +15,8 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:seed": "tsx --tsconfig apps/web/tsconfig.json scripts/database/seed.ts",
-    "db:create-owner": "tsx --tsconfig apps/web/tsconfig.json scripts/database/create-owner.ts"
+    "db:create-owner": "tsx --tsconfig apps/web/tsconfig.json scripts/database/create-owner.ts",
+    "db:load-catalog": "tsx --tsconfig apps/web/tsconfig.json scripts/database/load-catalog.ts"
   },
   "devDependencies": {
     "prettier": "^3",

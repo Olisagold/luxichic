@@ -298,6 +298,8 @@ export interface SiteContent {
   testimonials: Testimonial[];
   about: {
     title: string;
+    /** Italic second half of the heading, e.g. "Three specialities." */
+    accent?: string;
     intro: string;
     description: string;
     mission: string;
