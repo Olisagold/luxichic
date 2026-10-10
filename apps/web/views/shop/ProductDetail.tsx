@@ -17,13 +17,15 @@ import { ProductTabs } from '@/components/product/ProductTabs';
 import { ProductRail } from '@/components/store/ProductRail';
 import { useAddToCart, toCartItem } from '@/hooks/useAddToCart';
 import { useCart } from '@/contexts/CartContext';
-import { defaultSelection, divisionLabel, findProduct, priceForSelection, relatedProducts } from '@/lib/utils/products';
+import { defaultSelection, divisionLabel, priceForSelection } from '@/lib/utils/products';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { discountPercent } from '@/lib/utils/currency';
 import { businessConfig } from '@/data/config';
 import { NotFound } from '@/views/info/NotFound';
 
 export function ProductDetail({ division }: { division: Division }) {
   const { slug } = useParams<{ slug: string }>();
+  const { findProduct, relatedProducts } = useCatalog();
   const product = findProduct(slug);
   const [selection, setSelection] = useState<Record<string, string>>({});
   const [qty, setQty] = useState(1);

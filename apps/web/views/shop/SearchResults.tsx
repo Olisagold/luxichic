@@ -9,7 +9,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { searchScopes, type SearchScope } from '@/components/layout/SearchOverlay';
 import { useUI } from '@/contexts/UIContext';
-import { allProducts, productsFor, searchProducts, sortProducts } from '@/lib/utils/products';
+import { sortProducts } from '@/lib/utils/products';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { cn } from '@/lib/utils/cn';
 
 export function SearchResults() {
@@ -20,13 +21,14 @@ export function SearchResults() {
   const [sort, setSort] = useState<SortOption>('featured');
   const { addRecentSearch } = useUI();
   const router = useRouter();
+  const { products, productsFor, searchProducts } = useCatalog();
 
   useEffect(() => setInput(q), [q]);
 
   const results = useMemo(() => {
-    const pool = scope === 'hairs' || scope === 'tools' ? productsFor(scope) : allProducts;
+    const pool = scope === 'hairs' || scope === 'tools' ? productsFor(scope) : products;
     return sortProducts(searchProducts(pool, q), sort);
-  }, [q, scope, sort]);
+  }, [q, scope, sort, products, productsFor, searchProducts]);
 
   const update = (next: { q?: string; scope?: string }) => {
     const p = new URLSearchParams(params);

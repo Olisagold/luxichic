@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRightIcon } from 'lucide-react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { hairCategories } from '@/data/categories';
-import { productInCategory, productsFor } from '@/lib/utils/products';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
+import { productInCategory } from '@/lib/utils/products';
 import { cn } from '@/lib/utils/cn';
 
 const featuredSlugs = [
@@ -21,8 +21,9 @@ const featuredSlugs = [
 ];
 
 export function FeaturedCollections() {
+  const { categoriesFor, productsFor } = useCatalog();
   const collections = featuredSlugs
-    .map((s) => hairCategories.find((c) => c.slug === s))
+    .map((s) => categoriesFor('hairs').find((c) => c.slug === s))
     .filter((c): c is NonNullable<typeof c> => !!c);
   const [active, setActive] = useState(0);
   const hair = productsFor('hairs');

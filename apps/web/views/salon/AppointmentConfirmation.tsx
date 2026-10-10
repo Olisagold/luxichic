@@ -11,8 +11,7 @@ import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { PrototypeNote } from '@/components/ui/PrototypeNote';
-import { findService } from '@/data/services';
-import { businessConfig } from '@/data/config';
+import { useCatalog, useStorefront } from '@/components/storefront/StorefrontProvider';
 import { formatLongDate, formatSlot } from '@/lib/utils/dates';
 import { appointmentMessage } from '@/lib/utils/whatsapp';
 
@@ -21,6 +20,8 @@ export function AppointmentConfirmation() {
   const { getAppointment, ready } = useOrders();
   const { user } = useAuth();
   const reduce = useReducedMotion();
+  const { findService } = useCatalog();
+  const { whatsapp } = useStorefront().business;
   const appt = getAppointment(reference);
 
   if (!ready) return <div className="min-h-[60vh]" aria-busy="true" />;
@@ -83,7 +84,7 @@ export function AppointmentConfirmation() {
           ))}
         </dl>
         <WhatsAppButton
-          number={service?.whatsapp ?? businessConfig.whatsapp.general}
+          number={service?.whatsapp ?? whatsapp.general}
           message={appointmentMessage(appt)}
           label="Message the salon on WhatsApp"
           fullWidth

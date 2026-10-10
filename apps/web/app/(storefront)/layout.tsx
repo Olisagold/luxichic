@@ -1,5 +1,5 @@
-import { SiteLayout } from '@/components/layout/SiteLayout';
+import { StorefrontShell } from '@/components/storefront/StorefrontShell';
 
 export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
-  return <SiteLayout>{children}</SiteLayout>;
+  return <StorefrontShell>{children}</StorefrontShell>;
 }

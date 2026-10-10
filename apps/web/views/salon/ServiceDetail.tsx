@@ -7,12 +7,13 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { ServiceCard, servicePriceLabel } from '@/components/salon/ServiceCard';
 import { AppointmentBookingForm } from '@/components/salon/AppointmentBookingForm';
-import { findService, salonServices } from '@/data/services';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { serviceEnquiryMessage } from '@/lib/utils/whatsapp';
 import { NotFound } from '@/views/info/NotFound';
 
 export function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const { findService, services: salonServices } = useCatalog();
   const service = findService(slug);
   if (!service) return <NotFound />;
 

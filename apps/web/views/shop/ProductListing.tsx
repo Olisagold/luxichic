@@ -13,7 +13,8 @@ import { ProductFilters } from '@/components/product/ProductFilters';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { Pagination } from '@/components/product/Pagination';
 import { useProductListing } from '@/hooks/useProductListing';
-import { categoriesFor, divisionLabel, findCategory } from '@/lib/utils/products';
+import { divisionLabel } from '@/lib/utils/products';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { NotFound } from '@/views/info/NotFound';
 
 const sortOptions: { value: SortOption; label: string }[] = [
@@ -27,6 +28,7 @@ const sortOptions: { value: SortOption; label: string }[] = [
 
 export function ProductListing({ division }: { division: Division }) {
   const { category: slug } = useParams<{ category: string }>();
+  const { categoriesFor, findCategory } = useCatalog();
   const category = findCategory(division, slug);
   const listing = useProductListing(division, category);
   const [drawer, setDrawer] = useState(false);

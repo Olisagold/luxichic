@@ -12,12 +12,13 @@ import { Modal } from '@/components/ui/Modal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { ReviewForm } from '@/components/product/ReviewForm';
-import { findProductById } from '@/lib/utils/products';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { formatDate } from '@/lib/utils/dates';
 
 export function AccountReviews() {
   const { user } = useAuth();
   const { byAuthor, updateReview, deleteReview } = useReviews();
+  const { findProductById } = useCatalog();
   const [editing, setEditing] = useState<Review | null>(null);
   if (!user) return null;
   const reviews = byAuthor(user.email);

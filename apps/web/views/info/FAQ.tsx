@@ -4,10 +4,11 @@ import React from 'react';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Accordion } from '@/components/ui/Accordion';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
-import { faqs } from '@/data/content';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 
 export function FAQ() {
+  const { content, business } = useStorefront();
+  const { faqs } = content;
   return (
     <div className="mx-auto max-w-site px-5 pb-24 pt-10 lg:px-8">
       <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'FAQs' }]} />
@@ -27,7 +28,7 @@ export function FAQ() {
           </nav>
           <p className="mt-8 text-sm text-subtle">Still have questions?</p>
           <WhatsAppButton
-            number={businessConfig.whatsapp.general}
+            number={business.whatsapp.general}
             message="Hello LUXICHIC, I have a question."
             size="sm"
             className="mt-3"

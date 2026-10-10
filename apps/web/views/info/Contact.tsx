@@ -6,7 +6,7 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { SelectField, TextAreaField, TextField } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/Button';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { isValidEmail, isValidPhone, wait } from '@/lib/utils/validation';
 
 const subjects = ['Order enquiry', 'Product question', 'Salon appointment', 'Wholesale / business', 'Other'];
@@ -16,7 +16,7 @@ export function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const { contact, instagram, whatsapp } = businessConfig;
+  const { contact, instagram, whatsapp } = useStorefront().business;
   const set =
     (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm({ ...form, [k]: e.target.value });

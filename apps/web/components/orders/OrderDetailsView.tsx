@@ -6,7 +6,7 @@ import { OrderItemsList } from '@/components/checkout/OrderItemsList';
 import { OrderTotals } from '@/components/checkout/OrderTotals';
 import { BankTransferInstructions } from '@/components/checkout/BankTransferInstructions';
 import { OrderTimeline } from '@/components/orders/OrderTimeline';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { formatDateTime } from '@/lib/utils/dates';
 import { orderEnquiryMessage, receiptMessage } from '@/lib/utils/whatsapp';
 
@@ -22,6 +22,7 @@ export function formatAddress(a: Order['address']): string[] {
 }
 
 export function OrderDetailsView({ order, showPaymentActions = true }: { order: Order; showPaymentActions?: boolean }) {
+  const { whatsapp } = useStorefront().business;
   const awaitingTransfer =
     order.paymentMethod === 'bank_transfer' &&
     order.paymentStatus === 'Pending Verification' &&
@@ -58,7 +59,7 @@ export function OrderDetailsView({ order, showPaymentActions = true }: { order: 
               <BankTransferInstructions amount={order.total} reference={order.reference} />
             </div>
             <WhatsAppButton
-              number={businessConfig.whatsapp.orders}
+              number={whatsapp.orders}
               message={receiptMessage(order)}
               label="Send Payment Receipt on WhatsApp"
               fullWidth
@@ -112,7 +113,7 @@ export function OrderDetailsView({ order, showPaymentActions = true }: { order: 
           )}
         </div>
         <WhatsAppButton
-          number={businessConfig.whatsapp.orders}
+          number={whatsapp.orders}
           message={orderEnquiryMessage(order)}
           label="Ask about this order"
           fullWidth

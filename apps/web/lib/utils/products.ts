@@ -1,29 +1,4 @@
 import type { Category, Division, Product, ProductFilterState, SortOption } from '@/types/product';
-import { hairProducts } from '@/data/hairProducts';
-import { toolProducts } from '@/data/toolProducts';
-import { hairCategories, toolCategories } from '@/data/categories';
-
-export const allProducts: Product[] = [...hairProducts, ...toolProducts];
-
-export function productsFor(division: Division): Product[] {
-  return division === 'hairs' ? hairProducts : toolProducts;
-}
-
-export function categoriesFor(division: Division): Category[] {
-  return division === 'hairs' ? hairCategories : toolCategories;
-}
-
-export function findCategory(division: Division, slug = 'all'): Category | undefined {
-  return categoriesFor(division).find((c) => c.slug === slug);
-}
-
-export function findProduct(slug: string): Product | undefined {
-  return allProducts.find((p) => p.slug === slug);
-}
-
-export function findProductById(id: string): Product | undefined {
-  return allProducts.find((p) => p.id === id);
-}
 
 export function divisionLabel(d: Division): string {
   return d === 'hairs' ? 'LUXICHIC Hairs' : 'Hair Tools & Essentials';
@@ -126,13 +101,11 @@ export function sortProducts(list: Product[], sort: SortOption): Product[] {
 }
 
 /** Searches name, categories, texture, lengths, description and specifications. */
-export function searchProducts(list: Product[], query: string): Product[] {
+export function searchProducts(list: Product[], query: string, categories: Record<Division, Category[]>): Product[] {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!terms.length) return list;
   return list.filter((p) => {
-    const cats = categoriesFor(p.division)
-      .filter((c) => p.categories.includes(c.slug))
-      .map((c) => c.name);
+    const cats = categories[p.division].filter((c) => p.categories.includes(c.slug)).map((c) => c.name);
     const haystack = [
       p.name,
       p.shortDescription,
@@ -179,15 +152,6 @@ export function priceForSelection(p: Product, selection: Record<string, string>)
     if (v.stock !== undefined) stock = Math.min(stock, v.stock);
   });
   return { price: p.price + delta, original: p.originalPrice ? p.originalPrice + delta : undefined, stock };
-}
-
-export function relatedProducts(p: Product, limit = 8): Product[] {
-  return productsFor(p.division)
-    .filter((x) => x.id !== p.id)
-    .map((x) => ({ x, score: x.categories.filter((c) => p.categories.includes(c)).length }))
-    .sort((a, b) => b.score - a.score || a.x.featuredRank - b.x.featuredRank)
-    .slice(0, limit)
-    .map(({ x }) => x);
 }
 
 export function uniqueValues(

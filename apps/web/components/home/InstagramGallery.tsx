@@ -1,11 +1,12 @@
 import React from 'react';
 import { InstagramIcon } from 'lucide-react';
 import { instagramGalleries } from '@/data/content';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Reveal } from '@/components/ui/Reveal';
 
 export function InstagramGallery() {
+  const { instagram } = useStorefront().business;
   return (
     <section className="bg-white py-20 md:py-28">
       <div className="mx-auto max-w-site px-5 lg:px-8">
@@ -15,7 +16,7 @@ export function InstagramGallery() {
         />
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-6">
           {instagramGalleries.map((g, gi) => {
-            const ig = businessConfig.instagram[g.id];
+            const ig = instagram[g.id];
             return (
               <Reveal key={g.id} delay={gi * 0.06}>
                 <div className="grid grid-cols-2 gap-2">

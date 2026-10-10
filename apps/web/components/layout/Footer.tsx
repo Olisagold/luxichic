@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { MailIcon, MapPinIcon, PhoneIcon } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { FooterSocials } from '@/components/layout/FooterSocials';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 
 const columns = [
   {
@@ -56,7 +56,7 @@ const policies = [
 ];
 
 export function Footer() {
-  const { contact } = businessConfig;
+  const { contact } = useStorefront().business;
   return (
     <footer className="bg-ink text-white">
       <div className="mx-auto max-w-site px-5 pb-10 pt-20 lg:px-8">

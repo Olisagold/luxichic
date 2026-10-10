@@ -9,9 +9,7 @@ import { ProductRail } from '@/components/store/ProductRail';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { Button } from '@/components/ui/Button';
-import { hairCategories } from '@/data/categories';
-import { hairProducts } from '@/data/hairProducts';
-import { salonServices } from '@/data/services';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
 import { sortProducts } from '@/lib/utils/products';
 
@@ -37,6 +35,9 @@ const textureSlugs = [
 const serviceSlugs = ['wig-installation', 'wig-revamping', 'wig-maintenance'];
 
 export function HairsHome() {
+  const { productsFor, categoriesFor, findService } = useCatalog();
+  const hairProducts = productsFor('hairs');
+  const hairCategories = categoriesFor('hairs');
   const pick = (slugs: string[]) =>
     slugs.map((s) => hairCategories.find((c) => c.slug === s)).filter((c): c is NonNullable<typeof c> => !!c);
   const newArrivals = sortProducts(
@@ -47,9 +48,7 @@ export function HairsHome() {
     hairProducts.filter((p) => p.isBestseller),
     'featured',
   );
-  const services = serviceSlugs
-    .map((s) => salonServices.find((x) => x.slug === s))
-    .filter((s): s is NonNullable<typeof s> => !!s);
+  const services = serviceSlugs.map((s) => findService(s)).filter((s): s is NonNullable<typeof s> => !!s);
 
   return (
     <>

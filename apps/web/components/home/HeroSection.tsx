@@ -14,7 +14,7 @@ import {
 import { ArrowUpRightIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { images } from '@/data/images';
-import { siteContent } from '@/data/content';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 
 const rotating = [
   { image: images.nails, label: 'Nail Services', division: 'Beauty Salon & Spa', to: '/salon/services/nail-services' },
@@ -102,7 +102,7 @@ export function HeroSection() {
   };
 
   const current = rotating[slide];
-  const hero = siteContent.hero;
+  const hero = useStorefront().content.hero;
   const lines = [hero.line1, hero.line2].filter(Boolean);
 
   const lineMotion = (i: number) =>

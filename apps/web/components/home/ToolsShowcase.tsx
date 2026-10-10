@@ -5,10 +5,19 @@ import { Reveal } from '@/components/ui/Reveal';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { ProductCarousel } from '@/components/product/ProductCarousel';
-import { toolProducts } from '@/data/toolProducts';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
 
-const showcaseIds = ['t1', 't9', 't2', 't14', 't13', 't16', 't20', 't4'];
+const showcaseSlugs = [
+  'professional-ionic-hair-dryer',
+  'wig-making-canvas-block-head',
+  'ceramic-flat-iron-straightener',
+  'lace-glue-pro-hold',
+  'wig-comb-parting-set',
+  'pre-stretched-braiding-hair-6-pack',
+  'deep-hydration-hair-mask',
+  'professional-cordless-hair-clipper',
+];
 
 const quickCats = [
   { label: 'Styling Tools', to: '/tools/shop/styling-tools' },
@@ -18,9 +27,8 @@ const quickCats = [
 ];
 
 export function ToolsShowcase() {
-  const products = showcaseIds
-    .map((id) => toolProducts.find((p) => p.id === id))
-    .filter((p): p is NonNullable<typeof p> => !!p);
+  const { findProduct } = useCatalog();
+  const products = showcaseSlugs.map((slug) => findProduct(slug)).filter((p): p is NonNullable<typeof p> => !!p);
 
   return (
     <section className="bg-blush/60 py-20 md:py-28">

@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/Button';
 import { PriceTag } from '@/components/product/PriceTag';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useAddToCart } from '@/hooks/useAddToCart';
-import { divisionLabel, findProductById } from '@/lib/utils/products';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
+import { divisionLabel } from '@/lib/utils/products';
 import type { Product } from '@/types/product';
 
 export function WishlistGrid() {
   const { ids, remove } = useWishlist();
   const addToCart = useAddToCart();
+  const { findProductById } = useCatalog();
   const products = ids.map(findProductById).filter((p): p is Product => !!p);
 
   if (!products.length) {

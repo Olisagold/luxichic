@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronDownIcon } from 'lucide-react';
 import type { Division, Product, ProductFilterState } from '@/types/product';
-import { toolCategories } from '@/data/categories';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { uniqueValues } from '@/lib/utils/products';
 import { cn } from '@/lib/utils/cn';
 
@@ -33,6 +33,7 @@ const priceRanges: Record<Division, { label: string; min: number | null; max: nu
 };
 
 export function ProductFilters({ division, products, filters, onChange }: ProductFiltersProps) {
+  const toolCategories = useCatalog().categoriesFor('tools');
   const toolCatNames = new Map(toolCategories.map((c) => [c.slug, c.name]));
   const toolSubs = new Set(toolCategories.filter((c) => !['Shop', 'Departments'].includes(c.group)).map((c) => c.slug));
 

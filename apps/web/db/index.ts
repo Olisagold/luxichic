@@ -17,6 +17,10 @@ function connect(): Database {
 
 /**
  * Server-only database access. Bypasses RLS, so callers must check permissions first.
+ *
+ * Run queries one after another (`await` each), not with `Promise.all`. Concurrent queries make postgres.js
+ * pipeline several statements on one connection, and Supabase's transaction pooler stalls on that (tested
+ * 2026-10-10: 18 parallel reads hung with 1–3 connections; sequential reads never did).
  * Connects on first use, so importing this module never needs DATABASE_URL (e.g. during a CI build).
  */
 export const db = new Proxy({} as Database, {

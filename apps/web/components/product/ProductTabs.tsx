@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Product } from '@/types/product';
 import { ReviewsSection } from '@/components/product/ReviewsSection';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { cn } from '@/lib/utils/cn';
 
 export function ProductTabs({ product }: { product: Product }) {
@@ -19,6 +19,7 @@ export function ProductTabs({ product }: { product: Product }) {
   ];
 
   const [active, setActive] = useState('description');
+  const { deliveryEstimate } = useStorefront().business;
 
   const onKey = (e: React.KeyboardEvent, i: number) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
@@ -78,7 +79,7 @@ export function ProductTabs({ product }: { product: Product }) {
         {active === 'shipping' && (
           <div className="max-w-3xl space-y-3 text-[15px] leading-relaxed text-charcoal">
             <p>We deliver across Nigeria. Your delivery fee is calculated at checkout based on your state.</p>
-            <p className="text-subtle">{businessConfig.delivery.estimate}</p>
+            <p className="text-subtle">{deliveryEstimate}</p>
             <Link
               href="/policies/shipping"
               className="inline-block text-sm font-semibold text-pink-deep underline-offset-4 hover:underline"

@@ -7,8 +7,7 @@ import { ProductRail } from '@/components/store/ProductRail';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { ProductCarousel } from '@/components/product/ProductCarousel';
 import { ProductGrid } from '@/components/product/ProductGrid';
-import { toolCategories } from '@/data/categories';
-import { toolProducts } from '@/data/toolProducts';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
 import { isDiscounted, sortProducts } from '@/lib/utils/products';
 import { cn } from '@/lib/utils/cn';
@@ -22,6 +21,9 @@ const departments = [
 ];
 
 export function ToolsHome() {
+  const { productsFor, categoriesFor } = useCatalog();
+  const toolProducts = productsFor('tools');
+  const toolCategories = categoriesFor('tools');
   const [dept, setDept] = useState(departments[0].slug);
   const deptCats = toolCategories.filter((c) => c.group === 'Departments');
   const featured = sortProducts(toolProducts, 'featured').slice(0, 8);

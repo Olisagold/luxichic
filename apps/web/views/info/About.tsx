@@ -6,7 +6,7 @@ import { ArrowRightIcon } from 'lucide-react';
 import { Reveal } from '@/components/ui/Reveal';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
-import { brandValues, siteContent } from '@/data/content';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
 
 const divisions = [
@@ -34,7 +34,8 @@ const divisions = [
 ];
 
 export function About() {
-  const about = siteContent.about;
+  const about = useStorefront().content.about;
+  const brandValues = about.values;
   return (
     <>
       <section className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 py-16 md:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8">

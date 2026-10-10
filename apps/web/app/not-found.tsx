@@ -1,10 +1,10 @@
-import { SiteLayout } from '@/components/layout/SiteLayout';
+import { StorefrontShell } from '@/components/storefront/StorefrontShell';
 import { NotFound } from '@/views/info/NotFound';
 
 export default function NotFoundPage() {
   return (
-    <SiteLayout>
+    <StorefrontShell>
       <NotFound />
-    </SiteLayout>
+    </StorefrontShell>
   );
 }

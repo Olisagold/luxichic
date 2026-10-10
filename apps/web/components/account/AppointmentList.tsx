@@ -5,12 +5,13 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
-import { findService } from '@/data/services';
-import { businessConfig } from '@/data/config';
+import { useCatalog, useStorefront } from '@/components/storefront/StorefrontProvider';
 import { formatLongDate, formatSlot } from '@/lib/utils/dates';
 import { appointmentMessage } from '@/lib/utils/whatsapp';
 
 export function AppointmentList({ appointments, compact }: { appointments: Appointment[]; compact?: boolean }) {
+  const { findService } = useCatalog();
+  const { whatsapp } = useStorefront().business;
   if (!appointments.length) {
     return (
       <EmptyState
@@ -44,7 +45,7 @@ export function AppointmentList({ appointments, compact }: { appointments: Appoi
             </div>
             {!compact && (
               <WhatsAppButton
-                number={service?.whatsapp ?? businessConfig.whatsapp.general}
+                number={service?.whatsapp ?? whatsapp.general}
                 message={appointmentMessage(a)}
                 label="WhatsApp"
                 size="sm"

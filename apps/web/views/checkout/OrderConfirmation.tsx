@@ -13,7 +13,7 @@ import { OrderEmailSimulator } from '@/components/orders/OrderEmailSimulator';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { receiptMessage } from '@/lib/utils/whatsapp';
 
 export function OrderConfirmation() {
@@ -21,6 +21,7 @@ export function OrderConfirmation() {
   const { getOrder, ready } = useOrders();
   const { user } = useAuth();
   const reduce = useReducedMotion();
+  const { whatsapp } = useStorefront().business;
   const order = getOrder(orderNumber);
 
   if (!ready) return <div className="min-h-[60vh]" aria-busy="true" />;
@@ -81,7 +82,7 @@ export function OrderConfirmation() {
               <BankTransferInstructions amount={order.total} reference={order.reference} />
             </div>
             <WhatsAppButton
-              number={businessConfig.whatsapp.orders}
+              number={whatsapp.orders}
               message={receiptMessage(order)}
               label="Send Payment Receipt on WhatsApp"
               size="lg"

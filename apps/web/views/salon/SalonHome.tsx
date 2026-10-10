@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { ServiceCard } from '@/components/salon/ServiceCard';
 import { Reveal } from '@/components/ui/Reveal';
-import { salonServices } from '@/data/services';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
 
 const how = [
@@ -29,6 +29,7 @@ const how = [
 ];
 
 export function SalonHome() {
+  const { services: salonServices } = useCatalog();
   const reduce = useReducedMotion();
   return (
     <>

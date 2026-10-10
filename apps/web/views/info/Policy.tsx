@@ -4,12 +4,13 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
-import { policies } from '@/data/content';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { cn } from '@/lib/utils/cn';
 import { NotFound } from '@/views/info/NotFound';
 
 export function Policy() {
   const { slug } = useParams<{ slug: string }>();
+  const { policies } = useStorefront().content;
   const policy = policies[slug];
   if (!policy) return <NotFound />;
 

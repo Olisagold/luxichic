@@ -2,18 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { announcements, siteContent } from '@/data/content';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 
 export function AnnouncementBar() {
+  const { announcements, sections } = useStorefront().content;
   const [i, setI] = useState(0);
   const reduce = useReducedMotion();
 
   useEffect(() => {
     const id = setInterval(() => setI((x) => (x + 1) % Math.max(1, announcements.length)), 4500);
     return () => clearInterval(id);
-  }, []);
+  }, [announcements.length]);
 
-  if (!siteContent.sections.includes('announcement') || announcements.length === 0) return null;
+  if (!sections.includes('announcement') || announcements.length === 0) return null;
 
   return (
     <div className="bg-blush text-ink" role="region" aria-label="Announcements">

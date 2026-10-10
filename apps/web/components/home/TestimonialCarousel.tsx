@@ -3,22 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
-import { testimonials } from '@/data/content';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { Stars } from '@/components/ui/Stars';
 import { cn } from '@/lib/utils/cn';
 
 export function TestimonialCarousel() {
+  const { testimonials } = useStorefront().content;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const t = testimonials[index];
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || !testimonials.length) return;
     const id = setInterval(() => setIndex((i) => (i + 1) % testimonials.length), 6500);
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, testimonials.length]);
 
   const go = (d: number) => setIndex((i) => (i + d + testimonials.length) % testimonials.length);
+  if (!t) return null;
+
   const arrow =
     'flex h-12 w-12 items-center justify-center rounded-full border border-white/25 transition-colors duration-150 hover:bg-white hover:text-ink';
 

@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { useDb } from '@/lib/mock-db/db';
-import { defaultSocialLinks, socialDivisions, socialPlatforms } from '@/data/socialLinks';
+import { socialDivisions, socialPlatforms } from '@/data/socialLinks';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { SocialIcon, socialHref } from '@/components/ui/SocialIcon';
 
 /** Social icons grouped by division. Fully managed from Admin → Settings → Social media. */
 export function FooterSocials() {
-  const links = useDb((s) => s.settings.socialLinks) ?? defaultSocialLinks;
+  const links = useStorefront().business.socialLinks;
   const groups = socialDivisions
     .map((d) => ({ ...d, links: links.filter((l) => l.enabled && l.division === d.key && l.url.trim()) }))
     .filter((g) => g.links.length > 0);

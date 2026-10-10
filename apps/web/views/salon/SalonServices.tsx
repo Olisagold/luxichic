@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { ServiceCard } from '@/components/salon/ServiceCard';
-import { salonServices } from '@/data/services';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { cn } from '@/lib/utils/cn';
 
 export function SalonServices() {
+  const { services: salonServices } = useCatalog();
   const categories = ['All', ...Array.from(new Set(salonServices.map((s) => s.category)))];
   const [cat, setCat] = useState('All');
   const list = cat === 'All' ? salonServices : salonServices.filter((s) => s.category === cat);

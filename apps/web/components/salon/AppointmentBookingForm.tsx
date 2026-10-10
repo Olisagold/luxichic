@@ -7,7 +7,7 @@ import { AppointmentCalendar } from '@/components/salon/AppointmentCalendar';
 import { Button } from '@/components/ui/Button';
 import { SelectField, TextAreaField, TextField } from '@/components/ui/FormField';
 import { useAppointmentBooking } from '@/hooks/useAppointmentBooking';
-import { salonServices } from '@/data/services';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { formatLongDate, formatSlot } from '@/lib/utils/dates';
 import { cn } from '@/lib/utils/cn';
 
@@ -28,6 +28,7 @@ function StepLabel({ n, children }: { n: number; children: React.ReactNode }) {
 
 export function AppointmentBookingForm({ initialService, lockService }: AppointmentBookingFormProps) {
   const b = useAppointmentBooking(initialService);
+  const { services: salonServices } = useCatalog();
   let n = 0;
 
   return (

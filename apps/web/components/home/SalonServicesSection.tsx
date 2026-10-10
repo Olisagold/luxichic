@@ -6,7 +6,7 @@ import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Reveal } from '@/components/ui/Reveal';
 import { ServiceCard } from '@/components/salon/ServiceCard';
-import { salonServices } from '@/data/services';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 
 const homeSlugs = [
   'manicure',
@@ -21,9 +21,8 @@ const homeSlugs = [
 
 export function SalonServicesSection() {
   const reduce = useReducedMotion();
-  const services = homeSlugs
-    .map((s) => salonServices.find((x) => x.slug === s))
-    .filter((s): s is NonNullable<typeof s> => !!s);
+  const { findService } = useCatalog();
+  const services = homeSlugs.map((s) => findService(s)).filter((s): s is NonNullable<typeof s> => !!s);
 
   return (
     <section className="bg-white py-20 md:py-28">

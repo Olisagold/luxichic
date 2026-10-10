@@ -1,22 +1,23 @@
 import React from 'react';
 import { Reveal } from '@/components/ui/Reveal';
 import { images } from '@/data/images';
-import { siteContent } from '@/data/content';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 
 export function IntroSection() {
+  const { intro } = useStorefront().content;
   return (
     <section className="bg-white py-20 md:py-28">
       <div className="mx-auto grid grid-cols-1 max-w-site items-center gap-14 px-5 lg:grid-cols-2 lg:px-8">
         <Reveal>
           <h2 className="font-display text-5xl uppercase leading-[0.95] text-ink md:text-7xl">
-            {siteContent.intro.heading}
+            {intro.heading}
             <span className="mx-3 inline-block h-[0.75em] w-[1.6em] overflow-hidden rounded-full align-middle">
               <img src={images.nails} alt="" className="h-full w-full object-cover" />
             </span>
             <br />
-            <span className="italic normal-case text-pink-deep">{siteContent.intro.accent}</span>
+            <span className="italic normal-case text-pink-deep">{intro.accent}</span>
           </h2>
-          <p className="mt-8 max-w-lg text-[17px] leading-relaxed text-charcoal">{siteContent.intro.text}</p>
+          <p className="mt-8 max-w-lg text-[17px] leading-relaxed text-charcoal">{intro.text}</p>
           <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-6">
             {[
               ['Hair', 'Wigs, bundles & frontals'],

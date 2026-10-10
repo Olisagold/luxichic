@@ -12,13 +12,13 @@ import { TestimonialCarousel } from '@/components/home/TestimonialCarousel';
 import { InstagramGallery } from '@/components/home/InstagramGallery';
 import { NewsletterSection } from '@/components/home/NewsletterSection';
 import { ProductRail } from '@/components/store/ProductRail';
-import { hairProducts } from '@/data/hairProducts';
-import { siteContent } from '@/data/content';
-import { useDb } from '@/lib/mock-db/db';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 
 /** Homepage sections are ordered and toggled from Admin → Website → Homepage. */
 export function Home() {
-  const featuredIds = useDb((s) => s.content.featuredProductIds);
+  const { data, productsFor } = useCatalog();
+  const hairProducts = productsFor('hairs');
+  const featuredIds = data.content.featuredProductIds;
   const featured = featuredIds
     .map((id) => hairProducts.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => !!p);
@@ -54,7 +54,7 @@ export function Home() {
 
   return (
     <>
-      {siteContent.sections.map((id) => (blocks[id] ? <React.Fragment key={id}>{blocks[id]}</React.Fragment> : null))}
+      {data.content.sections.map((id) => (blocks[id] ? <React.Fragment key={id}>{blocks[id]}</React.Fragment> : null))}
     </>
   );
 }

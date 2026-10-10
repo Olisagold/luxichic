@@ -3,13 +3,14 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CrownIcon, GemIcon, HeartHandshakeIcon, ShoppingBagIcon, SparklesIcon } from 'lucide-react';
-import { whyChoose } from '@/data/content';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { Reveal } from '@/components/ui/Reveal';
 
 const icons = [GemIcon, SparklesIcon, ShoppingBagIcon, HeartHandshakeIcon, CrownIcon];
 
 export function WhyChoose() {
   const reduce = useReducedMotion();
+  const whyChoose = useStorefront().content.why.items;
   return (
     <section className="bg-ivory py-20 md:py-28">
       <div className="mx-auto grid grid-cols-1 max-w-site gap-14 px-5 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">

@@ -2,7 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowUpRightIcon } from 'lucide-react';
 import type { Category, Division } from '@/types/product';
-import { productInCategory, productsFor } from '@/lib/utils/products';
+import { productInCategory } from '@/lib/utils/products';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { Reveal } from '@/components/ui/Reveal';
 import { cn } from '@/lib/utils/cn';
 
@@ -13,7 +14,7 @@ interface CategoryTilesProps {
 }
 
 export function CategoryTiles({ division, categories, columns = 3 }: CategoryTilesProps) {
-  const all = productsFor(division);
+  const all = useCatalog().productsFor(division);
   return (
     <ul
       className={cn(

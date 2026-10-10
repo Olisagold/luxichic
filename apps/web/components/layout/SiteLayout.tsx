@@ -12,7 +12,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import { SearchOverlay } from '@/components/layout/SearchOverlay';
 import { QuickViewModal } from '@/components/product/QuickViewModal';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { whatsappLink } from '@/lib/utils/whatsapp';
 
 /** Lightweight placeholder shown while a route's code loads. */
@@ -33,6 +33,7 @@ function PageFallback() {
 export function SiteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
+  const { whatsapp } = useStorefront().business;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -62,7 +63,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
       <Footer />
 
       <a
-        href={whatsappLink(businessConfig.whatsapp.general, 'Hello LUXICHIC, I would like some help please.')}
+        href={whatsappLink(whatsapp.general, 'Hello LUXICHIC, I would like some help please.')}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-whatsapp text-white shadow-lift transition-[background-color,transform] duration-200 ease-lux hover:bg-whatsapp-hover active:scale-95"

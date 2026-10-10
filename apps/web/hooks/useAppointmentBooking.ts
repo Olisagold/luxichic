@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrders } from '@/contexts/OrdersContext';
-import { findService } from '@/data/services';
+import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { slotsFor } from '@/lib/utils/availability';
 import { isValidEmail, isValidPhone } from '@/lib/utils/validation';
 
@@ -10,6 +10,7 @@ export function useAppointmentBooking(initialService?: string) {
   const { user, isBlockedEmail } = useAuth();
   const { bookAppointment } = useOrders();
   const router = useRouter();
+  const { findService } = useCatalog();
 
   const [serviceSlug, setServiceSlug] = useState(initialService ?? '');
   const [date, setDate] = useState<string | null>(null);
