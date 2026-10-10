@@ -210,14 +210,28 @@ passwords in the bundle.
 services, specialists and site content. No customers, orders, reviews or logins. The live shop looks the same
 when it switches to the database, and the admin replaces items in Phase 8.
 
-1. Query functions in `db/queries/` for products, categories, services, specialists and site content.
-2. Storefront pages fetch data in server components, and pass it to the existing views as props
-   (no more mutating module-level arrays).
-3. Cache with `unstable_cache` / tags, and revalidate when the admin edits something.
-4. SEO: `generateMetadata` for product, category, service and policy pages; `sitemap.ts`; `robots.ts`;
-   Open Graph images.
-5. Move the images from `public/images` into Supabase Storage. Use `next/image` with the Supabase domain allowed.
-6. Product search on Postgres full-text search, replacing in-memory filtering.
+1. ✅ Data layer in `lib/storefront/`: `source.ts` reads products, categories, services, specialists, content and
+   public settings; `derive.ts` turns them into what customers see; `data.ts` caches it. Checked field by field
+   against the prototype: identical.
+2. ✅ The storefront layout loads it on the server and hands it to `StorefrontProvider`; components use
+   `useStorefront()` / `useCatalog()`. No more module-level arrays in the shop. Checkout data (bank, promo codes,
+   delivery fees, pay on delivery) and salon booking rules stay on the prototype until Phases 5 and 6.
+3. ✅ Cached with `unstable_cache` under the `storefront` tag, refreshed hourly. Phase 8's admin actions call
+   `revalidateTag('storefront')` so edits show at once.
+4. ✅ SEO: metadata and share image per product, category, service and policy page (prebuilt from the
+   database), schema.org Product data, `sitemap.xml`, `robots.txt` (previews not indexed).
+5. ⏳ Move the images from `public/images` into Supabase Storage. Use `next/image` with the Supabase domain allowed.
+6. ⏳ Product search on Postgres full-text search, replacing in-memory filtering.
+
+Notes:
+
+- `pnpm db:load-catalog` loaded the catalog into prod on 2026-10-10 (42 products, 68 categories, 11 services,
+  6 specialists, content, FAQs, policies, delivery fees, email templates; no bank details: **enter the real bank
+  account in the admin before Phase 5 goes live**).
+- Database reads run one at a time: parallel queries stalled on Supabase's transaction pooler (see `db/index.ts`).
+- Unknown product/category/service slugs show the not-found page marked `noindex` (Next.js serves cached
+  not-found results with status 200); unknown routes return a real 404.
+- The ratings and review counts on products are prototype numbers. Phase 7 recalculates them from real reviews.
 
 ## Phase 4: Cart and wishlist
 
