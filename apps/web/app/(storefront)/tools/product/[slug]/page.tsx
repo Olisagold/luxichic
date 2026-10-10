@@ -1,5 +1,7 @@
-import { ProductDetail } from '@/views/shop/ProductDetail';
+import { productPage } from '@/lib/storefront/pages';
 
-export default function ToolsProductPage() {
-  return <ProductDetail division="tools" />;
-}
+const page = productPage('tools');
+
+export const generateStaticParams = page.generateStaticParams;
+export const generateMetadata = page.generateMetadata;
+export default page.Page;

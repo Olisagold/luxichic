@@ -1,5 +1,5 @@
-import { Policy } from '@/views/info/Policy';
+import { policyPage as page } from '@/lib/storefront/pages';
 
-export default function PolicyPage() {
-  return <Policy />;
-}
+export const generateStaticParams = page.generateStaticParams;
+export const generateMetadata = page.generateMetadata;
+export default page.Page;

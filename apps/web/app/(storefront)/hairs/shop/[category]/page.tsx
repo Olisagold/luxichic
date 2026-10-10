@@ -1,5 +1,7 @@
-import { ProductListing } from '@/views/shop/ProductListing';
+import { categoryPage } from '@/lib/storefront/pages';
 
-export default function HairsListingPage() {
-  return <ProductListing division="hairs" />;
-}
+const page = categoryPage('hairs');
+
+export const generateStaticParams = page.generateStaticParams;
+export const generateMetadata = page.generateMetadata;
+export default page.Page;
