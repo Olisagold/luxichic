@@ -32,7 +32,6 @@ const target = resolveTarget();
 const supabase = createClient(target.supabaseUrl, target.secretKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
-const client = postgres(target.databaseUrl, { prepare: false, max: 1 });
 
 async function retry<T>(what: string, fn: () => Promise<T>): Promise<T> {
   for (let attempt = 1; ; attempt++) {
@@ -106,43 +105,69 @@ async function hasFile(key: string, file: string): Promise<boolean> {
   return !!data?.some((f) => f.name === file);
 }
 
-/** Every text, text[] and jsonb column in the public schema. */
-async function urlColumns() {
-  return client<{ table_name: string; column_name: string; type: string }[]>`
+/**
+ * Runs inside the database as one statement (one round trip, all or nothing): for every text, text[] and jsonb
+ * column, swaps each `/images/<file>` for its uploaded URL in the rows that mention `/images/`. Thousands of
+ * small queries from here would hold a transaction open for minutes, which Supabase's pooler cuts off.
+ */
+const REWRITE = (urls: Record<string, string>) => `
+do $rewrite$
+declare
+  urls jsonb := '${JSON.stringify(urls).replace(/'/g, "''")}'::jsonb;
+  col record;
+  path text;
+  expr text;
+  n bigint;
+  total bigint := 0;
+begin
+  for col in
     select c.table_name, c.column_name,
            case when c.data_type = 'ARRAY' then 'text[]' else c.data_type end as type
     from information_schema.columns c
     join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name
     where c.table_schema = 'public' and t.table_type = 'BASE TABLE'
-      and (c.data_type in ('text', 'jsonb') or (c.data_type = 'ARRAY' and c.udt_name = '_text'))`;
-}
+      and (c.data_type in ('text', 'jsonb') or (c.data_type = 'ARRAY' and c.udt_name = '_text'))
+  loop
+    expr := format('%I::text', col.column_name);
+    for path in select jsonb_object_keys(urls) loop
+      expr := format('replace(%s, %L, %L)', expr, path, urls ->> path);
+    end loop;
+    execute format(
+      'update public.%I set %I = (%s)::%s where %I::text like %L and (%s) <> %I::text',
+      col.table_name, col.column_name, expr, col.type, col.column_name, '%/images/%', expr, col.column_name);
+    get diagnostics n = row_count;
+    if n > 0 then
+      raise notice '%.%: % rows', col.table_name, col.column_name, n;
+      total := total + n;
+    end if;
+  end loop;
+  raise notice 'total %', total;
+end
+$rewrite$`;
 
 async function rewrite(images: Uploaded[]) {
-  const columns = await urlColumns();
-  let changed = 0;
-  await client.begin(async (tx) => {
-    for (const { table_name, column_name, type } of columns) {
-      const t = `"${table_name.replace(/"/g, '""')}"`;
-      const c = `"${column_name.replace(/"/g, '""')}"`;
-      const query = `update ${t} set ${c} = replace(${c}::text, $1, $2)::${type} where strpos(${c}::text, $1) > 0`;
-      for (const img of images) {
-        const res = await tx.unsafe(query, [img.path, img.url]);
-        if (res.count) {
-          changed += res.count;
-          console.log(`  ${table_name}.${column_name}: ${res.count} × ${img.path}`);
-        }
-      }
-    }
-    for (const img of images) {
-      await tx`
-        update media set storage_path = ${img.original}, width = ${img.width}, height = ${img.height},
-                         size_kb = ${img.sizeKb}
-        where url = ${img.url} and storage_path is null`;
-    }
+  let total = 0;
+  const rewriteClient = postgres(target.databaseUrl, {
+    prepare: false,
+    max: 1,
+    onnotice: (n) => {
+      const m = n.message.match(/^total (\d+)$/);
+      if (m) total = Number(m[1]);
+      else console.log(`  ${n.message}`);
+    },
   });
-  console.log(
-    changed ? `${changed} database values now point at the bucket.` : 'No /images URLs left in the database.',
-  );
+  try {
+    await rewriteClient.unsafe(REWRITE(Object.fromEntries(images.map((i) => [i.path, i.url]))));
+    await rewriteClient`
+      update media m
+      set storage_path = i.original, width = i.width, height = i.height, size_kb = i."sizeKb"
+      from jsonb_to_recordset(${rewriteClient.json(images as never)})
+        as i(url text, original text, width int, height int, "sizeKb" int)
+      where m.url = i.url and m.storage_path is null`;
+  } finally {
+    await rewriteClient.end();
+  }
+  console.log(total ? `${total} database rows now point at the bucket.` : 'No /images URLs left in the database.');
 }
 
 async function main() {
@@ -154,9 +179,7 @@ async function main() {
   writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
-main()
-  .catch((e) => {
-    console.error(e instanceof Error ? e.message : e);
-    process.exitCode = 1;
-  })
-  .finally(() => client.end());
+main().catch((e) => {
+  console.error(e instanceof Error ? e.message : e);
+  process.exitCode = 1;
+});
