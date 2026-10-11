@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { useCatalog, useStorefront } from '@/components/storefront/StorefrontProvider';
 import { formatLongDate, formatSlot } from '@/lib/utils/dates';
 import { appointmentMessage } from '@/lib/utils/whatsapp';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function AppointmentList({ appointments, compact }: { appointments: Appointment[]; compact?: boolean }) {
   const { findService } = useCatalog();
@@ -29,7 +30,12 @@ export function AppointmentList({ appointments, compact }: { appointments: Appoi
         return (
           <li key={a.reference} className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center">
             {service && (
-              <img src={service.image} alt="" className="h-16 w-14 shrink-0 rounded-xl object-cover" loading="lazy" />
+              <SiteImage
+                sizes="56px"
+                src={service.image}
+                alt=""
+                className="h-16 w-14 shrink-0 rounded-xl object-cover"
+              />
             )}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">

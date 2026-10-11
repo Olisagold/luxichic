@@ -11,6 +11,7 @@ import { useAddToCart } from '@/hooks/useAddToCart';
 import { useUI } from '@/contexts/UIContext';
 import { discountPercent } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function ProductCard({ product, dark }: { product: Product; dark?: boolean }) {
   const addToCart = useAddToCart();
@@ -23,10 +24,10 @@ export function ProductCard({ product, dark }: { product: Product; dark?: boolea
     <article className="group flex h-full flex-col">
       <div className="relative overflow-hidden rounded-2xl bg-champagne/40">
         <Link href={url} tabIndex={-1} aria-hidden>
-          <img
+          <SiteImage
+            sizes="(min-width: 1024px) 25vw, 50vw"
             src={product.images[0]}
             alt=""
-            loading="lazy"
             className={cn(
               'aspect-[4/5] w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-[1.04]',
               soldOut && 'opacity-70',

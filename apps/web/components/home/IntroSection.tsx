@@ -2,6 +2,7 @@ import React from 'react';
 import { Reveal } from '@/components/ui/Reveal';
 import { images } from '@/data/images';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function IntroSection() {
   const { intro } = useStorefront().content;
@@ -12,7 +13,7 @@ export function IntroSection() {
           <h2 className="font-display text-5xl uppercase leading-[0.95] text-ink md:text-7xl">
             {intro.heading}
             <span className="mx-3 inline-block h-[0.75em] w-[1.6em] overflow-hidden rounded-full align-middle">
-              <img src={images.nails} alt="" className="h-full w-full object-cover" />
+              <SiteImage sizes="160px" src={images.nails} alt="" className="h-full w-full object-cover" />
             </span>
             <br />
             <span className="italic normal-case text-pink-deep">{intro.accent}</span>
@@ -33,14 +34,16 @@ export function IntroSection() {
         </Reveal>
         <div className="relative grid grid-cols-2 gap-5">
           <Reveal className="pt-16">
-            <img
+            <SiteImage
+              sizes="(min-width: 1024px) 25vw, 50vw"
               src={images.braids}
               alt="Long boho braids styled at LUXICHIC"
               className="aspect-[3/4] w-full rounded-[28px] object-cover"
             />
           </Reveal>
           <Reveal delay={0.08}>
-            <img
+            <SiteImage
+              sizes="(min-width: 1024px) 25vw, 50vw"
               src={images.bodyWaveWig}
               alt="Body wave wig from LUXICHIC Hairs"
               className="aspect-[3/4] w-full rounded-t-[999px] rounded-b-[28px] object-cover"

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
 import { sortProducts } from '@/lib/utils/products';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 const constructionSlugs = [
   'frontal-wigs',
@@ -110,7 +111,7 @@ export function HairsHome() {
                   href={`/hairs/shop/${c.slug}`}
                   className="group flex items-center gap-3 rounded-full border border-white/15 py-1.5 pl-1.5 pr-5 transition-colors duration-150 hover:border-pink"
                 >
-                  <img src={c.image} alt="" className="h-11 w-11 rounded-full object-cover" />
+                  <SiteImage sizes="44px" src={c.image} alt="" className="h-11 w-11 rounded-full object-cover" />
                   <span className="whitespace-nowrap font-display text-xl">{c.name}</span>
                 </Link>
               </li>
@@ -145,7 +146,7 @@ export function HairsHome() {
             {services.map((s) => (
               <li key={s.slug}>
                 <Link href={`/salon/services/${s.slug}`} className="group flex items-center gap-5 py-5">
-                  <img src={s.image} alt="" className="h-20 w-16 rounded-xl object-cover" />
+                  <SiteImage sizes="64px" src={s.image} alt="" className="h-20 w-16 rounded-xl object-cover" />
                   <span className="flex-1">
                     <span className="block font-display text-2xl text-ink">{s.name}</span>
                     <span className="block text-sm text-subtle">{s.shortDescription}</span>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { ProductCarousel } from '@/components/product/ProductCarousel';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 const showcaseSlugs = [
   'professional-ionic-hair-dryer',
@@ -34,7 +35,12 @@ export function ToolsShowcase() {
     <section className="bg-blush/60 py-20 md:py-28">
       <div className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 lg:grid-cols-[360px_1fr] lg:px-8">
         <Reveal className="flex flex-col overflow-hidden rounded-[28px] bg-ink text-white">
-          <img src={images.hotComb} alt="Sonar professional hot combs" className="h-64 w-full object-cover lg:h-72" />
+          <SiteImage
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            src={images.hotComb}
+            alt="Sonar professional hot combs"
+            className="h-64 w-full object-cover lg:h-72"
+          />
           <div className="flex flex-1 flex-col p-7">
             <Logo variant="tools" className="-ml-1 h-12" />
             <h2 className="mt-4 font-display text-4xl leading-tight">Tools the professionals trust.</h2>

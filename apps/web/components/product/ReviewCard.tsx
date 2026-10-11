@@ -5,6 +5,7 @@ import { BadgeCheckIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import type { Review } from '@/types/user';
 import { Stars } from '@/components/ui/Stars';
 import { formatDate } from '@/lib/utils/dates';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 interface ReviewCardProps {
   review: Review;
@@ -32,7 +33,13 @@ export function ReviewCard({ review, isOwn, onEdit, onDelete }: ReviewCardProps)
         {review.images && review.images.length > 0 && (
           <div className="mt-4 flex gap-2">
             {review.images.map((src, i) => (
-              <img key={i} src={src} alt={`Customer photo ${i + 1}`} className="h-20 w-20 rounded-xl object-cover" />
+              <SiteImage
+                sizes="80px"
+                key={i}
+                src={src}
+                alt={`Customer photo ${i + 1}`}
+                className="h-20 w-20 rounded-xl object-cover"
+              />
             ))}
           </div>
         )}

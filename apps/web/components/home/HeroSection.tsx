@@ -15,6 +15,7 @@ import { ArrowUpRightIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { images } from '@/data/images';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 const rotating = [
   { image: images.nails, label: 'Nail Services', division: 'Beauty Salon & Spa', to: '/salon/services/nail-services' },
@@ -212,7 +213,9 @@ export function HeroSection() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.15, ease }}
           >
-            <img
+            <SiteImage
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              priority
               src={hero.image}
               alt="LUXICHIC client holding pink LUXICHIC Hairs gift bags"
               className="aspect-[3/4.2] w-full object-cover object-[50%_30%]"
@@ -241,16 +244,16 @@ export function HeroSection() {
               >
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[16px] bg-champagne">
                   <AnimatePresence initial={false}>
-                    <motion.img
+                    <motion.div
                       key={current.image}
-                      src={current.image}
-                      alt=""
-                      className="absolute inset-0 h-full w-full object-cover"
+                      className="absolute inset-0"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                    />
+                    >
+                      <SiteImage src={current.image} alt="" sizes="240px" className="h-full w-full object-cover" />
+                    </motion.div>
                   </AnimatePresence>
                 </div>
                 <div className="px-2 pb-1.5 pt-3">

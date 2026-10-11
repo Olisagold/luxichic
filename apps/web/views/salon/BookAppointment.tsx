@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { AppointmentBookingForm } from '@/components/salon/AppointmentBookingForm';
 import { images } from '@/data/images';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function BookAppointment() {
   const params = useSearchParams();
@@ -31,7 +32,12 @@ export function BookAppointment() {
         </div>
         <aside className="hidden lg:block">
           <div className="sticky top-28 overflow-hidden rounded-[28px] bg-ink text-white">
-            <img src={images.braids} alt="" className="aspect-[4/5] w-full object-cover" />
+            <SiteImage
+              sizes="(min-width: 1024px) 33vw, 100vw"
+              src={images.braids}
+              alt=""
+              className="aspect-[4/5] w-full object-cover"
+            />
             <div className="p-6">
               <p className="font-display text-2xl">Pay after your service</p>
               <p className="mt-2 text-sm text-white/70">

@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import type { Division } from '@/types/product';
 import { Button } from '@/components/ui/Button';
 import { StoreSearch } from '@/components/store/StoreSearch';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 interface StoreHeroProps {
   division: Division;
@@ -48,7 +49,9 @@ export function StoreHero({
           </div>
         </motion.div>
         <div className="relative">
-          <img
+          <SiteImage
+            sizes="(min-width: 1024px) 45vw, 100vw"
+            priority
             src={image}
             alt={imageAlt}
             className="aspect-[4/3.6] w-full rounded-[32px] object-cover lg:aspect-[4/4.4]"

@@ -13,6 +13,7 @@ import { WishlistButton } from '@/components/product/WishlistButton';
 import { useUI } from '@/contexts/UIContext';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { defaultSelection, divisionLabel, priceForSelection } from '@/lib/utils/products';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function QuickViewModal() {
   const { quickView: product, setQuickView } = useUI();
@@ -35,7 +36,12 @@ export function QuickViewModal() {
       {product && priced && (
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="aspect-[4/5] bg-ivory md:aspect-auto">
-            <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+            <SiteImage
+              sizes="(min-width: 768px) 450px, 100vw"
+              src={product.images[0]}
+              alt={product.name}
+              className="h-full w-full object-cover"
+            />
           </div>
           <div className="flex flex-col p-6 md:p-8">
             <div className="flex items-start justify-between gap-4">

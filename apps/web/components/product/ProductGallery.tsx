@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeftIcon, ChevronRightIcon, Maximize2Icon } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/utils/cn';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [index, setIndex] = useState(0);
@@ -36,7 +37,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
                   i === index ? 'ring-ink' : 'ring-transparent opacity-70 hover:opacity-100',
                 )}
               >
-                <img src={src} alt="" className="h-full w-full object-cover" />
+                <SiteImage sizes="80px" src={src} alt="" className="h-full w-full object-cover" />
               </button>
             </li>
           ))}
@@ -50,17 +51,22 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         onClick={() => setViewer(true)}
       >
         <AnimatePresence mode="wait" initial={false}>
-          <motion.img
+          <motion.div
             key={images[index]}
-            src={images[index]}
-            alt={`${name} — image ${index + 1} of ${images.length}`}
-            className="aspect-[4/5] w-full object-cover"
-            style={zoom ? { transform: 'scale(1.8)', transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-          />
+          >
+            <SiteImage
+              src={images[index]}
+              alt={`${name} — image ${index + 1} of ${images.length}`}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              priority={index === 0}
+              className="aspect-[4/5] w-full object-cover"
+              style={zoom ? { transform: 'scale(1.8)', transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
+            />
+          </motion.div>
         </AnimatePresence>
         <button
           onClick={(e) => {
@@ -76,7 +82,8 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
 
       <Modal open={viewer} onClose={() => setViewer(false)} title={`${name} images`} dark className="max-w-5xl">
         <div className="relative flex items-center justify-center bg-ink p-4">
-          <img
+          <SiteImage
+            sizes="(min-width: 1024px) 1024px, 100vw"
             src={images[index]}
             alt={`${name} — image ${index + 1}`}
             className="max-h-[75vh] w-auto rounded-xl object-contain"

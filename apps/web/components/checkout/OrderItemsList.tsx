@@ -2,6 +2,7 @@ import React from 'react';
 import type { OrderItem } from '@/types/order';
 import { formatNaira } from '@/lib/utils/currency';
 import { divisionLabel } from '@/lib/utils/products';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function OrderItemsList({ items, compact }: { items: OrderItem[]; compact?: boolean }) {
   return (
@@ -9,7 +10,8 @@ export function OrderItemsList({ items, compact }: { items: OrderItem[]; compact
       {items.map((item) => (
         <li key={item.key} className="flex gap-4 py-4">
           <div className="relative shrink-0">
-            <img
+            <SiteImage
+              sizes="64px"
               src={item.image}
               alt=""
               className={compact ? 'h-16 w-14 rounded-lg object-cover' : 'h-20 w-16 rounded-xl object-cover'}

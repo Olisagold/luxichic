@@ -8,6 +8,7 @@ import { Logo } from '@/components/ui/Logo';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { images } from '@/data/images';
 import { cn } from '@/lib/utils/cn';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 const divisions = [
   {
@@ -69,7 +70,8 @@ export function DivisionCards() {
                 className="block overflow-hidden rounded-[28px] bg-black ring-1 ring-white/10 transition-[box-shadow] duration-200 hover:ring-pink/60"
               >
                 <div className="relative aspect-[4/5] overflow-hidden">
-                  <img
+                  <SiteImage
+                    sizes="(min-width: 768px) 33vw, 100vw"
                     src={d.image}
                     alt=""
                     className="h-full w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-[1.05]"

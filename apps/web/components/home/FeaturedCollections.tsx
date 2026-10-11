@@ -8,6 +8,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { productInCategory } from '@/lib/utils/products';
 import { cn } from '@/lib/utils/cn';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 const featuredSlugs = [
   'bone-straight',
@@ -82,16 +83,21 @@ export function FeaturedCollections() {
           </ul>
           <div className="sticky top-28 h-[560px] overflow-hidden rounded-t-[999px] rounded-b-[28px] bg-champagne">
             <AnimatePresence initial={false}>
-              <motion.img
+              <motion.div
                 key={current.slug}
-                src={current.image}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0"
                 initial={{ opacity: 0, scale: 1.03 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              />
+              >
+                <SiteImage
+                  src={current.image}
+                  alt=""
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  className="h-full w-full object-cover"
+                />
+              </motion.div>
             </AnimatePresence>
             <div className="absolute inset-x-0 bottom-0 bg-ink/50 p-6 text-white">
               <p className="font-display text-3xl">{current.name}</p>
@@ -112,7 +118,12 @@ export function FeaturedCollections() {
               href={`/hairs/shop/${c.slug}`}
               className="relative w-[68%] shrink-0 snap-start overflow-hidden rounded-[24px] sm:w-[40%]"
             >
-              <img src={c.image} alt="" className="aspect-[3/4] w-full object-cover" />
+              <SiteImage
+                sizes="(min-width: 1024px) 25vw, 50vw"
+                src={c.image}
+                alt=""
+                className="aspect-[3/4] w-full object-cover"
+              />
               <div className="absolute inset-x-0 bottom-0 bg-ink/55 p-4 text-white">
                 <p className="font-display text-2xl">{c.name}</p>
                 <p className="mt-1 line-clamp-2 text-xs text-white/85">{c.description}</p>

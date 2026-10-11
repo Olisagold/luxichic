@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRightIcon } from 'lucide-react';
 import type { MegaMenu as MegaMenuData } from '@/data/navigation';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 interface MegaMenuProps {
   menu: MegaMenuData;
@@ -47,7 +48,8 @@ export function MegaMenu({ menu, onNavigate }: MegaMenuProps) {
           onClick={onNavigate}
           className="group relative block overflow-hidden rounded-[24px]"
         >
-          <img
+          <SiteImage
+            sizes="320px"
             src={menu.feature.image}
             alt=""
             className="h-64 w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-105"

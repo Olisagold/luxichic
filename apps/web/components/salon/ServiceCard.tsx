@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { formatNaira } from '@/lib/utils/currency';
 import { serviceEnquiryMessage } from '@/lib/utils/whatsapp';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function servicePriceLabel(s: SalonService): string {
   return s.startingPrice !== null ? `From ${formatNaira(s.startingPrice)}` : 'Price on request';
@@ -20,10 +21,10 @@ export function ServiceCard({ service, showWhatsApp = true }: { service: SalonSe
         tabIndex={-1}
         aria-hidden
       >
-        <img
+        <SiteImage
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           src={service.image}
           alt=""
-          loading="lazy"
           className="aspect-[3/4] w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-[1.04]"
         />
       </Link>

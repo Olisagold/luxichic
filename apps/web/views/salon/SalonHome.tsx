@@ -9,6 +9,7 @@ import { ServiceCard } from '@/components/salon/ServiceCard';
 import { Reveal } from '@/components/ui/Reveal';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 const how = [
   {
@@ -34,7 +35,13 @@ export function SalonHome() {
   return (
     <>
       <section className="relative overflow-hidden bg-ink text-white">
-        <img src={images.salonInterior} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45" />
+        <SiteImage
+          sizes="100vw"
+          priority
+          src={images.salonInterior}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-45"
+        />
         <div className="absolute inset-0 bg-ink/40" aria-hidden />
         <div className="relative mx-auto grid grid-cols-1 max-w-site gap-10 px-5 py-24 md:py-32 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:px-8">
           <motion.div
@@ -57,7 +64,8 @@ export function SalonHome() {
               </Button>
             </div>
           </motion.div>
-          <img
+          <SiteImage
+            sizes="384px"
             src={images.nails}
             alt="Pink almond nails with chrome detailing by LUXICHIC"
             className="hidden aspect-[4/5] w-full max-w-sm justify-self-end rounded-t-[999px] rounded-b-[28px] object-cover lg:block"

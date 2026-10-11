@@ -4,6 +4,7 @@ import { instagramGalleries } from '@/data/content';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Reveal } from '@/components/ui/Reveal';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function InstagramGallery() {
   const { instagram } = useStorefront().business;
@@ -29,10 +30,10 @@ export function InstagramGallery() {
                       className="group relative block overflow-hidden rounded-2xl"
                       aria-label={`${g.title} post ${i + 1} on Instagram`}
                     >
-                      <img
+                      <SiteImage
+                        sizes="(min-width: 1024px) 16vw, 33vw"
                         src={src}
                         alt=""
-                        loading="lazy"
                         className="aspect-square w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-105"
                       />
                       <span className="absolute inset-0 flex items-center justify-center bg-ink/35 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">

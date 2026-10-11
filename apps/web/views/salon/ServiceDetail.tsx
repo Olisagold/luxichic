@@ -10,6 +10,7 @@ import { AppointmentBookingForm } from '@/components/salon/AppointmentBookingFor
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { serviceEnquiryMessage } from '@/lib/utils/whatsapp';
 import { NotFound } from '@/views/info/NotFound';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -35,7 +36,9 @@ export function ServiceDetail() {
         />
       </div>
       <section className="mx-auto grid grid-cols-1 max-w-site gap-10 px-5 pb-16 pt-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8">
-        <img
+        <SiteImage
+          sizes="(min-width: 1024px) 40vw, 100vw"
+          priority
           src={service.image}
           alt={service.name}
           className="aspect-[4/5] w-full rounded-t-[999px] rounded-b-[32px] object-cover"

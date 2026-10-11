@@ -6,6 +6,7 @@ import { productInCategory } from '@/lib/utils/products';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { Reveal } from '@/components/ui/Reveal';
 import { cn } from '@/lib/utils/cn';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 interface CategoryTilesProps {
   division: Division;
@@ -29,10 +30,10 @@ export function CategoryTiles({ division, categories, columns = 3 }: CategoryTil
           <Reveal delay={Math.min(i, 5) * 0.04}>
             <Link href={`/${division}/shop/${c.slug}`} className="group block">
               <div className="relative overflow-hidden rounded-[22px] bg-champagne">
-                <img
+                <SiteImage
+                  sizes="(min-width: 1024px) 20vw, 50vw"
                   src={c.image}
                   alt=""
-                  loading="lazy"
                   className="aspect-[4/5] w-full object-cover transition-transform duration-300 ease-lux group-hover:scale-[1.04]"
                 />
                 <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink transition-transform duration-200 ease-lux group-hover:rotate-45">

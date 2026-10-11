@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { ReviewForm } from '@/components/product/ReviewForm';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { formatDate } from '@/lib/utils/dates';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function AccountReviews() {
   const { user } = useAuth();
@@ -41,11 +42,11 @@ export function AccountReviews() {
               return (
                 <li key={r.id} className="flex flex-col gap-4 rounded-[24px] bg-white p-6 sm:flex-row">
                   {p && (
-                    <img
+                    <SiteImage
+                      sizes="64px"
                       src={p.images[0]}
                       alt=""
                       className="h-20 w-16 shrink-0 rounded-xl object-cover"
-                      loading="lazy"
                     />
                   )}
                   <div className="min-w-0 flex-1">

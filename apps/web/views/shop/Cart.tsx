@@ -13,6 +13,7 @@ import { useCart } from '@/contexts/CartContext';
 import { formatNaira } from '@/lib/utils/currency';
 import { divisionLabel } from '@/lib/utils/products';
 import type { CartItem } from '@/types/order';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function Cart() {
   const {
@@ -141,7 +142,7 @@ export function Cart() {
           <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {savedItems.map((item) => (
               <li key={item.key} className="flex gap-4 rounded-2xl bg-white p-4">
-                <img src={item.image} alt="" className="h-24 w-20 rounded-xl object-cover" />
+                <SiteImage sizes="80px" src={item.image} alt="" className="h-24 w-20 rounded-xl object-cover" />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <p className="truncate text-sm font-medium text-ink">{item.name}</p>
                   <p className="text-xs text-subtle">{Object.values(item.variants).join(' · ')}</p>
@@ -182,7 +183,7 @@ function CartRow({
           href={`/${item.division}/product/${item.slug}`}
           className="row-span-2 block h-28 w-[88px] shrink-0 overflow-hidden rounded-xl bg-ivory md:row-span-1"
         >
-          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+          <SiteImage sizes="96px" src={item.image} alt={item.name} className="h-full w-full object-cover" />
         </Link>
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-subtle">

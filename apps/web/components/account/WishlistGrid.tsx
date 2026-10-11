@@ -11,6 +11,7 @@ import { useAddToCart } from '@/hooks/useAddToCart';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { divisionLabel } from '@/lib/utils/products';
 import type { Product } from '@/types/product';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function WishlistGrid() {
   const { ids, remove } = useWishlist();
@@ -42,7 +43,12 @@ export function WishlistGrid() {
         <li key={p.id} className="flex flex-col">
           <div className="relative overflow-hidden rounded-2xl bg-champagne/40">
             <Link href={`/${p.division}/product/${p.slug}`}>
-              <img src={p.images[0]} alt={p.name} className="aspect-[4/5] w-full object-cover" />
+              <SiteImage
+                sizes="(min-width: 1024px) 25vw, 50vw"
+                src={p.images[0]}
+                alt={p.name}
+                className="aspect-[4/5] w-full object-cover"
+              />
             </Link>
             <button
               onClick={() => remove(p.id)}

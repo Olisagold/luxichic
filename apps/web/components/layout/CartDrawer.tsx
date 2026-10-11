@@ -12,6 +12,7 @@ import { useUI } from '@/contexts/UIContext';
 import { formatNaira } from '@/lib/utils/currency';
 import { divisionLabel } from '@/lib/utils/products';
 import { cn } from '@/lib/utils/cn';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export function CartDrawer() {
   const { cartOpen, closeCart } = useUI();
@@ -54,7 +55,7 @@ export function CartDrawer() {
                     onClick={closeCart}
                     className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-ivory"
                   >
-                    <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                    <SiteImage sizes="96px" src={item.image} alt={item.name} className="h-full w-full object-cover" />
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start justify-between gap-2">

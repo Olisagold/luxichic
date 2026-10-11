@@ -10,6 +10,7 @@ import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { divisionLabel } from '@/lib/utils/products';
 import { formatNaira } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 export type SearchScope = 'all' | 'hairs' | 'tools';
 
@@ -144,7 +145,12 @@ export function SearchOverlay() {
                         }}
                         className="flex items-center gap-4 rounded-lg px-2 py-3 transition-colors duration-150 hover:bg-ivory"
                       >
-                        <img src={p.images[0]} alt="" className="h-14 w-12 rounded-lg object-cover" />
+                        <SiteImage
+                          sizes="48px"
+                          src={p.images[0]}
+                          alt=""
+                          className="h-14 w-12 rounded-lg object-cover"
+                        />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium text-ink">{p.name}</span>
                           <span className="block text-xs text-subtle">{divisionLabel(p.division)}</span>

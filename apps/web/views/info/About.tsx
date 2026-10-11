@@ -8,6 +8,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { images } from '@/data/images';
+import { SiteImage } from '@/components/ui/SiteImage';
 
 const divisions = [
   {
@@ -62,7 +63,8 @@ export function About() {
             </dl>
           )}
         </Reveal>
-        <img
+        <SiteImage
+          sizes="(min-width: 1024px) 40vw, 100vw"
           src={about.image}
           alt="LUXICHIC client with LUXICHIC Hairs bags"
           className="aspect-[4/5] w-full rounded-t-[999px] rounded-b-[32px] object-cover"
@@ -79,11 +81,11 @@ export function About() {
                   href={d.to}
                   className="group grid grid-cols-1 items-center gap-6 py-8 md:grid-cols-[160px_1fr_auto]"
                 >
-                  <img
+                  <SiteImage
+                    sizes="160px"
                     src={d.image}
                     alt=""
                     className="aspect-square w-32 rounded-2xl object-cover md:w-40"
-                    loading="lazy"
                   />
                   <div>
                     <Logo variant={d.logo} className="-ml-1 h-12" />
