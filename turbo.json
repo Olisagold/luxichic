@@ -15,6 +15,7 @@
         "SENTRY_ORG",
         "SENTRY_PROJECT",
         "VERCEL_ENV",
+        "VERCEL_DEPLOYMENT_ID",
         "CI"
       ]
     },

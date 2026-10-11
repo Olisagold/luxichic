@@ -23,6 +23,7 @@ export const getStorefrontData = unstable_cache(
     if (!env.DATABASE_URL) return deriveStorefront(prototypeSource());
     return deriveStorefront(await loadStorefrontSource());
   },
-  ['storefront-data-v1'],
+  // Vercel keeps this cache across deployments, so each deployment gets its own key and starts fresh.
+  ['storefront-data-v1', process.env.VERCEL_DEPLOYMENT_ID ?? 'local'],
   { tags: [STOREFRONT_TAG], revalidate: 3600 },
 );
