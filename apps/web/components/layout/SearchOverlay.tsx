@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ClockIcon, SearchIcon, XIcon } from 'lucide-react';
 import { useUI } from '@/contexts/UIContext';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
+import { useProductSearch } from '@/hooks/useProductSearch';
 import { divisionLabel } from '@/lib/utils/products';
 import { formatNaira } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
@@ -28,7 +29,8 @@ export function SearchOverlay() {
   const [scope, setScope] = useState<SearchScope>('all');
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const { products, productsFor, searchProducts } = useCatalog();
+  const { products } = useCatalog();
+  const suggestionIds = useProductSearch(q, scope, { limit: 5, minLength: 2 });
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -42,9 +44,10 @@ export function SearchOverlay() {
   }, [searchOpen, closeSearch]);
 
   const suggestions = useMemo(() => {
-    const pool = scope === 'all' ? products : productsFor(scope);
-    return q.trim().length >= 2 ? searchProducts(pool, q).slice(0, 5) : [];
-  }, [q, scope, products, productsFor, searchProducts]);
+    if (q.trim().length < 2) return [];
+    const byId = new Map(products.map((p) => [p.id, p]));
+    return (suggestionIds ?? []).map((id) => byId.get(id)).filter((p) => p !== undefined);
+  }, [q, suggestionIds, products]);
 
   const finish = () => {
     closeSearch();

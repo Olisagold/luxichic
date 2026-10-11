@@ -204,7 +204,7 @@ Tested end to end in a browser against local Supabase (33 checks): redirects, si
 customers and admins, admin sign-in and its logging, customers kept out of `/admin`, addresses, and no demo
 passwords in the bundle.
 
-## Phase 3: Catalog and content (read side)
+## Phase 3: Catalog and content (read side) ✅
 
 **Decided 2026-10-10:** prod starts with a copy of the prototype's catalog: products, categories, salon
 services, specialists and site content. No customers, orders, reviews or logins. The live shop looks the same
@@ -227,7 +227,12 @@ when it switches to the database, and the admin replaces items in Phase 8.
    `pnpm db:media` uploads `public/images` and rewrites the database URLs (safe to re-run). Phase 8's admin
    uploads use the same code: the browser sends the original straight to Storage (Vercel rejects requests over
    4.5 MB), then the server makes the sizes.
-6. ⏳ Product search on Postgres full-text search, replacing in-memory filtering.
+6. ✅ Product search on Postgres full-text search (`lib/storefront/search.ts`). `products.search_document`
+   holds name, categories, attributes, lengths, descriptions and specs, weighted in that order and kept current
+   by triggers (pgTAP tests in `supabase/tests/database/product_search.test.sql`). English stemming ("wigs" =
+   "wig"), the last word may be unfinished, products whose name ends in a searched word lead ("Closure Wig"
+   before "Wig Caps"), and a trigram fallback catches typos ("bone stright"). The `/search` page searches on
+   the server; the search overlay and the in-category search call `GET /api/search` (ids only, cached).
 
 Notes:
 

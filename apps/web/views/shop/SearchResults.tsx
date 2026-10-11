@@ -13,22 +13,28 @@ import { sortProducts } from '@/lib/utils/products';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { cn } from '@/lib/utils/cn';
 
-export function SearchResults() {
+/** `ids`: the server's matches for `q`, best first (null when nothing was searched: show everything in scope). */
+export function SearchResults({ ids }: { ids: string[] | null }) {
   const params = useSearchParams();
   const q = params.get('q') ?? '';
   const scope = (params.get('scope') as SearchScope) || 'all';
   const [input, setInput] = useState(q);
-  const [sort, setSort] = useState<SortOption>('featured');
+  const [sort, setSort] = useState<SortOption | 'relevance'>('relevance');
   const { addRecentSearch } = useUI();
   const router = useRouter();
-  const { products, productsFor, searchProducts } = useCatalog();
+  const { products, productsFor } = useCatalog();
 
   useEffect(() => setInput(q), [q]);
 
   const results = useMemo(() => {
-    const pool = scope === 'hairs' || scope === 'tools' ? productsFor(scope) : products;
-    return sortProducts(searchProducts(pool, q), sort);
-  }, [q, scope, sort, products, productsFor, searchProducts]);
+    if (!ids) {
+      const pool = scope === 'hairs' || scope === 'tools' ? productsFor(scope) : products;
+      return sortProducts(pool, sort === 'relevance' ? 'featured' : sort);
+    }
+    const byId = new Map(products.map((p) => [p.id, p]));
+    const found = ids.map((id) => byId.get(id)).filter((p) => p !== undefined);
+    return sort === 'relevance' ? found : sortProducts(found, sort);
+  }, [ids, scope, sort, products, productsFor]);
 
   const update = (next: { q?: string; scope?: string }) => {
     const p = new URLSearchParams(params);
@@ -94,9 +100,10 @@ export function SearchResults() {
           <select
             id="search-sort"
             value={sort}
-            onChange={(e) => setSort(e.target.value as SortOption)}
+            onChange={(e) => setSort(e.target.value as SortOption | 'relevance')}
             className="h-10 rounded-full border border-line bg-white px-4 text-sm"
           >
+            <option value="relevance">Best match</option>
             <option value="featured">Featured</option>
             <option value="newest">Newest</option>
             <option value="price-asc">Price: Low to High</option>

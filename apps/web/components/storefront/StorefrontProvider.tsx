@@ -11,7 +11,6 @@ import {
   productsFor,
   relatedProducts,
 } from '@/lib/storefront/catalog';
-import { searchProducts } from '@/lib/utils/products';
 import type { Division, Product } from '@/types/product';
 
 const StorefrontContext = createContext<StorefrontData | null>(null);
@@ -42,7 +41,6 @@ export function useCatalog() {
       findProductById: (id: string) => findProductById(data, id),
       relatedProducts: (p: Product, limit?: number) => relatedProducts(data, p, limit),
       findService: (slug?: string | null) => findService(data, slug),
-      searchProducts: (list: Product[], query: string) => searchProducts(list, query, data.categories),
     }),
     [data],
   );

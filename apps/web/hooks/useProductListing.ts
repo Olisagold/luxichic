@@ -8,6 +8,7 @@ import {
   sortProducts,
 } from '@/lib/utils/products';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
+import { useProductSearch } from '@/hooks/useProductSearch';
 
 export const PAGE_SIZE = 9;
 
@@ -16,7 +17,8 @@ export function useProductListing(division: Division, category: Category | undef
   const [sort, setSort] = useState<SortOption>('featured');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
-  const { productsFor, searchProducts } = useCatalog();
+  const { productsFor } = useCatalog();
+  const matchIds = useProductSearch(query, division);
 
   useEffect(() => {
     setFilters(emptyFilters());
@@ -32,9 +34,11 @@ export function useProductListing(division: Division, category: Category | undef
   );
 
   const results = useMemo(() => {
-    const searched = query.trim() ? searchProducts(base, query) : base;
+    // Until the server answers the first search, show the category as it was.
+    const matches = matchIds && new Set(matchIds);
+    const searched = matches ? base.filter((p) => matches.has(p.id)) : base;
     return sortProducts(filterProducts(searched, filters), sort);
-  }, [base, filters, sort, query, searchProducts]);
+  }, [base, filters, sort, matchIds]);
 
   const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
 

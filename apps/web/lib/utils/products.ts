@@ -100,7 +100,10 @@ export function sortProducts(list: Product[], sort: SortOption): Product[] {
   }
 }
 
-/** Searches name, categories, texture, lengths, description and specifications. */
+/**
+ * In-memory search over name, categories, texture, lengths, description and specifications. Only for when there
+ * is no database (fresh clone, CI); the shop searches with Postgres (lib/storefront/search.ts).
+ */
 export function searchProducts(list: Product[], query: string, categories: Record<Division, Category[]>): Product[] {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!terms.length) return list;
