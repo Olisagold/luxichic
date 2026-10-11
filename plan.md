@@ -220,7 +220,13 @@ when it switches to the database, and the admin replaces items in Phase 8.
    `revalidateTag('storefront')` so edits show at once.
 4. ✅ SEO: metadata and share image per product, category, service and policy page (prebuilt from the
    database), schema.org Product data, `sitemap.xml`, `robots.txt` (previews not indexed).
-5. ⏳ Move the images from `public/images` into Supabase Storage. Use `next/image` with the Supabase domain allowed.
+5. ✅ Images in Supabase Storage (public `media` bucket, only the server writes). Each image is resized once
+   with sharp (`lib/media/variants.ts`): the untouched original plus WebP at 300, 600, 1200 and 1920px wide,
+   keeping its shape (layouts crop with CSS). Storefront images use `<SiteImage>` (next/image) with a custom
+   loader that picks the stored width; no Vercel or Supabase resizing. The database keeps the 1200px URL.
+   `pnpm db:media` uploads `public/images` and rewrites the database URLs (safe to re-run). Phase 8's admin
+   uploads use the same code: the browser sends the original straight to Storage (Vercel rejects requests over
+   4.5 MB), then the server makes the sizes.
 6. ⏳ Product search on Postgres full-text search, replacing in-memory filtering.
 
 Notes:

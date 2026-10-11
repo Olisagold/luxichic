@@ -483,6 +483,9 @@ async function main() {
       ? 'Seeded logins use SEED_PASSWORD.'
       : `Seeded logins (customers and admins) use this password: ${password}`,
   );
+  console.log(
+    `Images still point at /images. Next: corepack pnpm db:media${remote ? ' -- --env-file apps/web/.env.local' : ''}`,
+  );
 }
 
 main()
