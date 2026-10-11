@@ -14,7 +14,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { categories } from './categories';
-import { createdAt, division, productDiscountMode, productStatus, publicRead, updatedAt } from './_shared';
+import { createdAt, division, productDiscountMode, productStatus, publicRead, tsvector, updatedAt } from './_shared';
 
 /** Filterable attributes; keys match `ProductAttributes` in types/product.ts. */
 export type ProductAttributes = {
@@ -62,11 +62,17 @@ export const products = pgTable(
     rating: numeric('rating', { precision: 2, scale: 1, mode: 'number' }).notNull().default(0),
     reviewCount: integer('review_count').notNull().default(0),
     salesCount: integer('sales_count').notNull().default(0),
+    /**
+     * Words customers can find the product by: name, categories, attributes, descriptions and specs, weighted in
+     * that order. Kept up to date by triggers (migration `product_search`); see lib/storefront/search.ts.
+     */
+    searchDocument: tsvector('search_document'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     index('products_division_status_idx').on(t.division, t.status),
+    index('products_search_idx').using('gin', t.searchDocument),
     check('products_price_check', sql`${t.price} >= 0`),
     check('products_discount_percent_check', sql`${t.discountPercent} between 1 and 99`),
     publicRead('products: public read published', sql`status = 'published'`),

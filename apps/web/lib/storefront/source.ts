@@ -1,5 +1,5 @@
 import 'server-only';
-import { asc } from 'drizzle-orm';
+import { asc, getTableColumns } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import type { AdminProduct, AdminService, SiteContent, SocialLink, Specialist, StoreSettings } from '@/types/admin';
@@ -28,8 +28,10 @@ function groupBy<T, K>(rows: T[], key: (r: T) => K): Map<K, T[]> {
 }
 
 async function loadProducts(categoryById: Map<string, { slug: string }>): Promise<AdminProduct[]> {
+  // The search document is only used inside the database (lib/storefront/search.ts).
+  const { searchDocument: _search, ...productColumns } = getTableColumns(s.products);
   const rows = await db
-    .select()
+    .select(productColumns)
     .from(s.products)
     .orderBy(asc(s.products.division), asc(s.products.featuredRank), asc(s.products.createdAt));
   const stock = await db.select().from(s.inventory);

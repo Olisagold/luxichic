@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgEnum, pgPolicy, timestamp } from 'drizzle-orm/pg-core';
+import { customType, pgEnum, pgPolicy, timestamp } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole, authUid } from 'drizzle-orm/supabase';
 
 /*
@@ -33,6 +33,9 @@ export const ownRows = (name: string, op: 'select' | 'insert' | 'update' | 'dele
 /* ------------------------------------------------------------------ */
 /* Enums                                                               */
 /* ------------------------------------------------------------------ */
+
+/** Postgres full-text search document. Filled by database triggers; never written by the app. */
+export const tsvector = customType<{ data: string }>({ dataType: () => 'tsvector' });
 
 export const division = pgEnum('division', ['hairs', 'tools']);
 
