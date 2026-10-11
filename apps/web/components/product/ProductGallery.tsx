@@ -20,7 +20,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
   };
 
   return (
-    <div className="flex flex-col-reverse gap-4 md:flex-row">
+    <div className="flex flex-col-reverse gap-4 self-start md:flex-row">
       {images.length > 1 && (
         <ul
           className="no-scrollbar flex gap-3 relative overflow-x-auto md:w-20 md:flex-col"
@@ -45,7 +45,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
       )}
 
       <div
-        className="relative flex-1 cursor-zoom-in overflow-hidden rounded-[28px] bg-champagne/40"
+        className="relative flex-1 cursor-zoom-in overflow-hidden md:self-start rounded-[28px] bg-champagne/40"
         onMouseMove={onMove}
         onMouseLeave={() => setZoom(null)}
         onClick={() => setViewer(true)}
