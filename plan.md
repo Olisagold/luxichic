@@ -273,28 +273,48 @@ Notes:
   to the cart; `placeOrder` (Phase 5) re-reads prices and stock straight from the database, not the cached
   catalog.
 
-## Phase 5: Checkout and orders
+## Phase 5: Checkout and orders ✅
 
-Follows the **Payment flow** section above. Guest checkout stays.
+Done 2026-10-12. Follows the **Payment flow** section above. Guest checkout stays. No migration needed.
 
-1. A `placeOrder` server action that:
-   - Validates input with Zod.
-   - Recalculates totals.
-   - Applies the promo code.
-   - Checks the delivery state is enabled and adds its fee.
-   - Decrements stock in a transaction.
-   - Generates a unique internal order number and a unique 8-digit transaction reference, retrying on a
-     collision.
-2. Payment methods:
-   - Bank transfer: status `pending_verification`. The customer sees the bank details from settings, the amount
-     and the transaction reference to use as the narration.
-   - Pay on delivery: only if enabled in settings.
-3. Optional "Send receipt on WhatsApp" button on the confirmation page and in the order account view.
-   It opens a `wa.me` link with the order number, amount and transaction reference prefilled.
-   It never changes the payment status.
-4. Order confirmation page and order tracking read from the database. Guest tracking uses order number + email.
-5. Link guest orders to an account when someone signs up with the same email.
-6. Account orders list and order detail from the database.
+1. ✅ `placeOrder` (`lib/orders/actions.ts`). Validates with Zod and recomputes everything from the database,
+   uncached: prices and stock (`loadLiveProducts`), the delivery fee of an enabled state, the promo code and
+   whether the payment method is offered. In one transaction it counts the promo use (only while under its
+   limit), creates the order with its items, payment and timeline, takes the items out of stock (product and
+   option stock, with `stock_movements`) and removes the ordered lines from a signed-in customer's saved cart.
+   Order numbers and 8-digit transaction references come from the server (`node:crypto`) and retry on a clash.
+   If the total differs from what the customer saw, nothing is placed: they see the new total and the cart is
+   repriced. The cart now prices live too, so the two always agree.
+2. ✅ Payment methods: bank transfer starts `pending_verification`, with the bank details from `settings`;
+   Pay on Delivery (`pay_on_delivery`) only while it is switched on. Checkout reads bank details, delivery fees
+   and Pay on Delivery from the database (`StorefrontData.checkout`).
+3. ✅ "Send Payment Receipt on WhatsApp" on the confirmation page and the account order view (unchanged: it never
+   changes the payment status).
+4. ✅ The confirmation page shows an order only to its account or the browser that placed it (`lx_orders`
+   cookie of order ids); anyone else tracks it with order number + email. The prototype's "simulate
+   confirmation" email preview is gone (real emails come in Phase 9).
+5. ✅ Guest orders join an account at sign-in, but only once its email is verified: a Google sign-in, or a
+   confirmation email that was sent and clicked (`lib/orders/link.ts`). While "Confirm email" is off (until
+   Phase 11), email + password sign-ups are auto-confirmed without any email, so their guest orders are not
+   linked; otherwise anyone could read another person's orders by signing up with their email.
+6. ✅ Account overview, orders list and order detail read the customer's own orders on the server.
+7. ✅ Promo codes are checked on the server (`discounts`: active, dates, usage limit, minimum spend, store
+   scope). `pnpm db:set-promo` creates or updates codes until the admin Discounts page saves (Phase 8).
+
+Notes:
+
+- Prod settings (2026-10-12): bank MONIE POINT / LUXICHIC HAIRS / 5108508288, Pay on Delivery off, promo code
+  `LUXE10` (10% off everything, until 2026-12-31). Dev keeps the demo bank account and Pay on Delivery on.
+- Tested end to end in a browser against `luxichic-dev` (36 checks), then cleaned up: guest bank transfer with
+  LUXE10 and an option with its own stock; a price change between seeing and placing the order; the reference
+  shown before placing is the order's; promo use counted; stock, option stock, movements and sales counts;
+  confirmation hidden from other browsers and accounts; tracking needs the right email; signed-in Pay on
+  Delivery from the saved cart; account order pages; not enough stock; Pay on Delivery switched off mid-checkout;
+  guest orders linked for a verified email and not for an auto-confirmed one. Google sign-in linking follows the
+  same rule but wasn't run headless.
+- **Before launch:** the admin still shows the prototype's orders (Phase 8), so real orders can't be seen or
+  confirmed in `/admin` yet, and no emails are sent (Phase 9). Cancelling an order doesn't return stock yet
+  (Phase 8). Order tracking has no rate limit; add one with Phase 10's hardening.
 
 ## Phase 6: Salon booking
 
