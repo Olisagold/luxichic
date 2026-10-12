@@ -4,11 +4,11 @@ import { revalidateTag } from 'next/cache';
 import { and, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
-import { AuthorizationError, requirePermission } from '@/lib/auth/session';
+import { ActionError, adminAction, audit } from '@/lib/auth/admin-action';
 import { byNumber } from '@/lib/orders/queries';
 import { STOREFRONT_TAG } from '@/lib/storefront/data';
 import { formatNaira } from '@/lib/utils/currency';
-import type { AdminUser, Permission } from '@/types/admin';
+import type { AdminUser } from '@/types/admin';
 import type { OrderStatus } from '@/types/order';
 import type { Result } from '@/types/user';
 
@@ -25,18 +25,6 @@ type Step = (typeof s.orderEventStep.enumValues)[number];
 const FLOW: DbStatus[] = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
 const toDb = (status: OrderStatus) => status.toLowerCase() as DbStatus;
 
-class ActionError extends Error {}
-
-/** Runs `fn` as an admin holding `permission`, turning refusals into a message. */
-async function asAdmin(permission: Permission, fn: (admin: AdminUser) => Promise<Result>): Promise<Result> {
-  try {
-    return await fn(await requirePermission(permission));
-  } catch (e) {
-    if (e instanceof AuthorizationError || e instanceof ActionError) return { ok: false, error: e.message };
-    throw e;
-  }
-}
-
 /** The order locked for this transaction, with its payment. */
 async function lockOrder(tx: Tx, orderNumber: string) {
   if (typeof orderNumber !== 'string' || orderNumber.length > 20) throw new ActionError('Order not found.');
@@ -50,10 +38,9 @@ async function lockOrder(tx: Tx, orderNumber: string) {
   return row;
 }
 
-async function audit(tx: Tx, admin: AdminUser, action: string, orderNumber: string, detail?: string) {
-  await tx.insert(s.auditLogs).values({
-    adminId: admin.id,
-    adminName: admin.fullName,
+/** An entry in the activity log, linked to the order. */
+function orderAudit(tx: Tx, admin: AdminUser, action: string, orderNumber: string, detail?: string) {
+  return audit(tx, admin, {
     section: 'Orders',
     action,
     target: detail ? `${orderNumber} · ${detail}` : orderNumber,
@@ -121,7 +108,7 @@ async function restock(tx: Tx, order: typeof s.orders.$inferSelect) {
  * `payment_confirmed` and the order to Confirmed, recording who did it and when.
  */
 export async function confirmPayment(orderNumber: string): Promise<Result> {
-  return asAdmin('orders.confirmPayment', async (admin) => {
+  return adminAction('orders.confirmPayment', async (admin) => {
     await db.transaction(async (tx) => {
       const { order, payment } = await lockOrder(tx, orderNumber);
       if (order.paymentMethod !== 'bank_transfer' || payment?.status !== 'pending_verification') {
@@ -135,7 +122,7 @@ export async function confirmPayment(orderNumber: string): Promise<Result> {
         .where(eq(s.payments.id, payment.id));
       await tx.update(s.orders).set({ status: 'confirmed', updatedAt: now }).where(eq(s.orders.id, order.id));
       await stamp(tx, order.id, ['payment_confirmed'], admin.id);
-      await audit(tx, admin, 'Confirmed payment', order.orderNumber, formatNaira(order.total));
+      await orderAudit(tx, admin, 'Confirmed payment', order.orderNumber, formatNaira(order.total));
     });
     return { ok: true };
   });
@@ -159,7 +146,7 @@ async function changeStatus(tx: Tx, admin: AdminUser, orderNumber: string, statu
       .where(eq(s.orders.id, order.id));
     await stamp(tx, order.id, ['cancelled'], admin.id);
     await restock(tx, order);
-    await audit(tx, admin, 'Cancelled order', order.orderNumber, why.slice(0, 200));
+    await orderAudit(tx, admin, 'Cancelled order', order.orderNumber, why.slice(0, 200));
     return;
   }
 
@@ -177,12 +164,12 @@ async function changeStatus(tx: Tx, admin: AdminUser, orderNumber: string, statu
   if (target === 'delivered' && order.paymentMethod === 'pay_on_delivery' && payment) {
     await tx.update(s.payments).set({ status: 'paid', updatedAt: now }).where(eq(s.payments.id, payment.id));
   }
-  await audit(tx, admin, `Marked as ${target}`, order.orderNumber);
+  await orderAudit(tx, admin, `Marked as ${target}`, order.orderNumber);
 }
 
 /** Confirms a Pay on Delivery order, moves an order on (Processing → Shipped → Delivered) or cancels it. */
 export async function setOrderStatus(orderNumber: string, status: OrderStatus, reason?: string): Promise<Result> {
-  return asAdmin('orders.edit', async (admin) => {
+  return adminAction('orders.edit', async (admin) => {
     await db.transaction((tx) => changeStatus(tx, admin, orderNumber, status, reason));
     if (status === 'Cancelled') revalidateTag(STOREFRONT_TAG);
     return { ok: true };
@@ -197,7 +184,7 @@ export async function setOrdersStatus(
 ): Promise<Result & { updated: number; skipped: string[] }> {
   let updated = 0;
   const skipped: string[] = [];
-  const res = await asAdmin('orders.edit', async (admin) => {
+  const res = await adminAction('orders.edit', async (admin) => {
     for (const orderNumber of orderNumbers.slice(0, 200)) {
       try {
         await db.transaction((tx) => changeStatus(tx, admin, orderNumber, status, reason));
@@ -215,7 +202,7 @@ export async function setOrdersStatus(
 
 /** Deletes an order for good. Its stock and promo use come back unless it was already cancelled or delivered. */
 export async function deleteOrder(orderNumber: string): Promise<Result> {
-  return asAdmin('orders.delete', async (admin) => {
+  return adminAction('orders.delete', async (admin) => {
     await db.transaction(async (tx) => {
       const { order } = await lockOrder(tx, orderNumber);
       if (order.status !== 'cancelled' && order.status !== 'delivered') await restock(tx, order);
@@ -223,7 +210,7 @@ export async function deleteOrder(orderNumber: string): Promise<Result> {
         .delete(s.adminNotes)
         .where(sql`${s.adminNotes.subject} = 'order' and ${s.adminNotes.subjectId} = ${order.id}`);
       await tx.delete(s.orders).where(eq(s.orders.id, order.id));
-      await audit(tx, admin, 'Deleted order', order.orderNumber, formatNaira(order.total));
+      await orderAudit(tx, admin, 'Deleted order', order.orderNumber, formatNaira(order.total));
     });
     revalidateTag(STOREFRONT_TAG);
     return { ok: true };
@@ -232,13 +219,13 @@ export async function deleteOrder(orderNumber: string): Promise<Result> {
 
 /** An internal note on an order, only visible to admins. */
 export async function addOrderNote(orderNumber: string, text: string): Promise<Result> {
-  return asAdmin('orders.view', async (admin) => {
+  return adminAction('orders.view', async (admin) => {
     const body = typeof text === 'string' ? text.trim().slice(0, 2000) : '';
     if (!body) return { ok: false, error: 'Write a note first.' };
     await db.transaction(async (tx) => {
       const { order } = await lockOrder(tx, orderNumber);
       await tx.insert(s.adminNotes).values({ subject: 'order', subjectId: order.id, body, adminId: admin.id });
-      await audit(tx, admin, 'Added a note', order.orderNumber);
+      await orderAudit(tx, admin, 'Added a note', order.orderNumber);
     });
     return { ok: true };
   });

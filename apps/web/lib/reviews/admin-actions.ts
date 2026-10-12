@@ -1,10 +1,9 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { auditLogs, reviews } from '@/db/schema';
-import { AuthorizationError, requirePermission } from '@/lib/auth/session';
+import { reviews } from '@/db/schema';
+import { ActionError, adminAction, audit } from '@/lib/auth/admin-action';
 import { REVIEWS_TAG } from '@/lib/reviews/queries';
 import { STOREFRONT_TAG } from '@/lib/storefront/data';
 import { isUuid } from '@/lib/utils/validation';
@@ -23,35 +22,23 @@ const ACTION: Record<Status, string> = {
   archived: 'Archived review',
 };
 
-async function moderate(
-  id: string,
-  change: (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => Promise<string | undefined>,
-  action: (title: string) => string,
-): Promise<Result> {
-  try {
-    const admin = await requirePermission('reviews.moderate');
-    if (!isUuid(id)) return { ok: false, error: 'Review not found.' };
-    const done = await db.transaction(async (tx) => {
-      const title = await change(tx);
-      if (title === undefined) return false;
-      await tx.insert(auditLogs).values({
-        adminId: admin.id,
-        adminName: admin.fullName,
-        section: 'Reviews',
-        action: action(title),
-        target: title,
-        link: '/admin/reviews',
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Runs a moderation change (returns the review's title, or undefined if it doesn't exist) and logs it. */
+async function moderate(id: string, change: (tx: Tx) => Promise<string | undefined>, action: string): Promise<Result> {
+  return adminAction(
+    'reviews.moderate',
+    async (admin) => {
+      if (!isUuid(id)) throw new ActionError('Review not found.');
+      await db.transaction(async (tx) => {
+        const title = await change(tx);
+        if (title === undefined) throw new ActionError('Review not found.');
+        await audit(tx, admin, { section: 'Reviews', action, target: title, link: '/admin/reviews' });
       });
-      return true;
-    });
-    if (!done) return { ok: false, error: 'Review not found.' };
-    revalidateTag(REVIEWS_TAG);
-    revalidateTag(STOREFRONT_TAG);
-    return { ok: true };
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { ok: false, error: e.message };
-    throw e;
-  }
+      return { ok: true };
+    },
+    { revalidate: [REVIEWS_TAG, STOREFRONT_TAG] },
+  );
 }
 
 /** Shows (visible), hides or archives a review. Hidden and archived reviews don't count towards ratings. */
@@ -67,7 +54,7 @@ export async function setReviewStatus(id: string, status: Status): Promise<Resul
         .returning({ title: reviews.title });
       return row?.title;
     },
-    () => ACTION[status],
+    ACTION[status],
   );
 }
 
@@ -79,6 +66,6 @@ export async function deleteReview(id: string): Promise<Result> {
       const [row] = await tx.delete(reviews).where(eq(reviews.id, id)).returning({ title: reviews.title });
       return row?.title;
     },
-    () => 'Deleted review',
+    'Deleted review',
   );
 }
