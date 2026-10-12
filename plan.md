@@ -443,11 +443,6 @@ Connect each admin section to the database through server actions. Each action c
    - **WhatsApp** stays visible with a "Coming soon" note; its fields are disabled and nothing is saved.
    - Tested in a browser against dev (15 checks, including checkout showing the new fee and bank and refusing a
      state switched off), with the settings snapshotted and restored afterwards.
-
-     The bot token stays in env vars and is never stored in the database or shown.
-
-   - **WhatsApp settings** (`/admin/whatsapp`) stays visible but **non-functional**. Inputs are disabled and a
-     "Coming soon" note is shown; nothing is saved or sent.
 8. Administration: admin users (invite through Supabase Auth), roles and permissions, activity log.
 9. Settings: general, business, social, security (password change and login history).
 10. Dashboard and analytics read real aggregates (SQL views or queries) instead of `lib/utils/adminAnalytics.ts`
