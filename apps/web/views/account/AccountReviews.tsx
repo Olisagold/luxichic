@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { StarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Review } from '@/types/user';
-import { useAuth } from '@/contexts/AuthContext';
-import { useReviews } from '@/contexts/ReviewsContext';
+import { useRouter } from 'next/navigation';
+import { deleteMyReview, saveReview } from '@/lib/reviews/actions';
 import { Stars } from '@/components/ui/Stars';
 import { Modal } from '@/components/ui/Modal';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -16,13 +16,11 @@ import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { formatDate } from '@/lib/utils/dates';
 import { SiteImage } from '@/components/ui/SiteImage';
 
-export function AccountReviews() {
-  const { user } = useAuth();
-  const { byAuthor, updateReview, deleteReview } = useReviews();
+/** The signed-in customer's reviews (loaded on the server), with edit and delete. */
+export function AccountReviews({ reviews }: { reviews: Review[] }) {
+  const router = useRouter();
   const { findProductById } = useCatalog();
   const [editing, setEditing] = useState<Review | null>(null);
-  if (!user) return null;
-  const reviews = byAuthor(user.email);
 
   return (
     <div>
@@ -32,7 +30,7 @@ export function AccountReviews() {
           <EmptyState
             icon={<StarIcon className="h-7 w-7" />}
             title="No reviews yet"
-            text="Share your thoughts on products you’ve bought from the product page."
+            text="Share your thoughts on any LUXICHIC product from its page, whether you bought it online or in store."
             actions={<Button to="/hairs">Browse products</Button>}
           />
         ) : (
@@ -62,6 +60,9 @@ export function AccountReviews() {
                       <Stars rating={r.rating} />
                       <span className="text-xs text-subtle">{formatDate(r.date)}</span>
                     </div>
+                    {r.status !== 'visible' && (
+                      <p className="mt-2 text-xs font-semibold text-subtle">Hidden by LUXICHIC · only you can see it</p>
+                    )}
                     <p className="mt-2 font-semibold text-ink">{r.title}</p>
                     <p className="mt-1 text-sm leading-relaxed text-charcoal">{r.body}</p>
                     <div className="mt-4 flex gap-4 text-xs font-semibold">
@@ -69,9 +70,12 @@ export function AccountReviews() {
                         Edit
                       </button>
                       <button
-                        onClick={() => {
-                          deleteReview(r.id);
+                        onClick={async () => {
+                          if (!window.confirm('Delete this review? This cannot be undone.')) return;
+                          const res = await deleteMyReview(r.productId);
+                          if (!res.ok) return toast.error(res.error ?? 'We couldn’t delete your review.');
                           toast('Review deleted');
+                          router.refresh();
                         }}
                         className="text-subtle hover:text-red-700"
                       >
@@ -97,10 +101,12 @@ export function AccountReviews() {
               }}
               submitLabel="Save changes"
               onCancel={() => setEditing(null)}
-              onSubmit={(d) => {
-                updateReview(editing.id, d);
+              onSubmit={async (d) => {
+                const res = await saveReview({ productId: editing.productId, ...d });
+                if (!res.ok) return res.error ?? 'We couldn’t save your review.';
                 toast.success('Review updated');
                 setEditing(null);
+                router.refresh();
               }}
             />
           </div>

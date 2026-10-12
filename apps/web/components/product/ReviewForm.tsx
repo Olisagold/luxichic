@@ -5,6 +5,8 @@ import { ImagePlusIcon, StarIcon, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { TextAreaField, TextField } from '@/components/ui/FormField';
 import { cn } from '@/lib/utils/cn';
+import { shrinkPhoto } from '@/lib/media/shrink';
+import { uploadReviewPhoto } from '@/lib/reviews/actions';
 
 export interface ReviewDraft {
   rating: number;
@@ -16,7 +18,8 @@ export interface ReviewDraft {
 interface ReviewFormProps {
   initial?: ReviewDraft;
   submitLabel?: string;
-  onSubmit: (d: ReviewDraft) => void;
+  /** Saves the review; resolves to an error message if it couldn't. */
+  onSubmit: (d: ReviewDraft) => Promise<string | void>;
   onCancel: () => void;
 }
 
@@ -26,16 +29,32 @@ export function ReviewForm({ initial, submitLabel = 'Post Review', onSubmit, onC
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const addImages = (files: FileList | null) => {
+  const [uploading, setUploading] = useState(0);
+
+  // Each photo is shrunk in the browser, then stored on the server; the form keeps its URL.
+  const addImages = async (files: FileList | null) => {
     if (!files) return;
-    Array.from(files)
-      .slice(0, 3 - draft.images.length)
-      .forEach((f) => {
-        if (!f.type.startsWith('image/') || f.size > 5 * 1024 * 1024) return;
-        const reader = new FileReader();
-        reader.onload = () => setDraft((d) => ({ ...d, images: [...d.images, String(reader.result)].slice(0, 3) }));
-        reader.readAsDataURL(f);
-      });
+    const chosen = Array.from(files).slice(0, 3 - draft.images.length - uploading);
+    setErrors((e) => ({ ...e, images: '' }));
+    setUploading((n) => n + chosen.length);
+    for (const file of chosen) {
+      try {
+        if (!file.type.startsWith('image/')) throw new Error('Please choose a photo.');
+        const form = new FormData();
+        form.append('photo', await shrinkPhoto(file), 'photo.jpg');
+        const res = await uploadReviewPhoto(form);
+        if (!res.ok || !res.url) throw new Error(res.error);
+        const url = res.url;
+        setDraft((d) => ({ ...d, images: [...d.images, url].slice(0, 3) }));
+      } catch (err) {
+        setErrors((e) => ({
+          ...e,
+          images: (err instanceof Error && err.message) || 'We couldn’t add that photo. Please try another.',
+        }));
+      } finally {
+        setUploading((n) => n - 1);
+      }
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -47,9 +66,11 @@ export function ReviewForm({ initial, submitLabel = 'Post Review', onSubmit, onC
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
+    const error = await onSubmit({ ...draft, title: draft.title.trim(), body: draft.body.trim() }).catch(
+      () => 'We couldn’t save your review. Please check your connection and try again.',
+    );
     setSaving(false);
-    onSubmit({ ...draft, title: draft.title.trim(), body: draft.body.trim() });
+    if (error) setErrors({ form: error });
   };
 
   return (
@@ -118,7 +139,16 @@ export function ReviewForm({ initial, submitLabel = 'Post Review', onSubmit, onC
               </button>
             </div>
           ))}
-          {draft.images.length < 3 && (
+          {Array.from({ length: uploading }).map((_, i) => (
+            <div
+              key={`up${i}`}
+              className="flex h-20 w-20 items-center justify-center rounded-xl bg-ivory text-[10px] text-subtle"
+              aria-busy="true"
+            >
+              Uploading…
+            </div>
+          ))}
+          {draft.images.length + uploading < 3 && (
             <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-line text-[10px] text-subtle transition-colors duration-150 hover:border-ink">
               <ImagePlusIcon className="h-5 w-5" aria-hidden />
               Add
@@ -127,14 +157,27 @@ export function ReviewForm({ initial, submitLabel = 'Post Review', onSubmit, onC
                 accept="image/*"
                 multiple
                 className="sr-only"
-                onChange={(e) => addImages(e.target.files)}
+                onChange={(e) => {
+                  void addImages(e.target.files);
+                  e.target.value = '';
+                }}
               />
             </label>
           )}
         </div>
       </div>
+      {errors.images && (
+        <p className="-mt-2 text-xs text-red-700" role="alert">
+          {errors.images}
+        </p>
+      )}
+      {errors.form && (
+        <p className="text-sm text-red-700" role="alert">
+          {errors.form}
+        </p>
+      )}
       <div className="flex gap-3">
-        <Button type="submit" loading={saving}>
+        <Button type="submit" loading={saving} disabled={uploading > 0}>
           {submitLabel}
         </Button>
         <Button variant="ghost" onClick={onCancel}>

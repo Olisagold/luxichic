@@ -4,11 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Product } from '@/types/product';
+import type { Review } from '@/types/user';
 import { ReviewsSection } from '@/components/product/ReviewsSection';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { cn } from '@/lib/utils/cn';
 
-export function ProductTabs({ product }: { product: Product }) {
+export function ProductTabs({ product, reviews }: { product: Product; reviews: Review[] }) {
   const tabs = [
     { id: 'description', label: 'Description' },
     { id: 'specs', label: 'Specifications' },
@@ -99,7 +100,7 @@ export function ProductTabs({ product }: { product: Product }) {
             </Link>
           </div>
         )}
-        {active === 'reviews' && <ReviewsSection product={product} />}
+        {active === 'reviews' && <ReviewsSection product={product} reviews={reviews} />}
       </div>
     </div>
   );

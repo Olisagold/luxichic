@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Share2Icon, ShieldCheckIcon, TruckIcon, ZapIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Division } from '@/types/product';
+import type { Review } from '@/types/user';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Stars } from '@/components/ui/Stars';
 import { Button } from '@/components/ui/Button';
@@ -24,7 +25,8 @@ import { discountPercent } from '@/lib/utils/currency';
 import { businessConfig } from '@/data/config';
 import { NotFound } from '@/views/info/NotFound';
 
-export function ProductDetail({ division }: { division: Division }) {
+/** `reviews` are the product's visible reviews, loaded on the server. */
+export function ProductDetail({ division, reviews }: { division: Division; reviews: Review[] }) {
   const { slug } = useParams<{ slug: string }>();
   const { findProduct, relatedProducts } = useCatalog();
   const product = findProduct(slug);
@@ -165,7 +167,7 @@ export function ProductDetail({ division }: { division: Division }) {
         </div>
 
         <div className="mt-20">
-          <ProductTabs product={product} />
+          <ProductTabs product={product} reviews={reviews} />
         </div>
       </div>
 

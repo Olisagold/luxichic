@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     imageSizes: [300],
     deviceSizes: [600, 1200, 1920],
   },
+  // Review photos are shrunk in the browser first (lib/media/shrink.ts); this leaves room for one.
+  experimental: { serverActions: { bodySizeLimit: '3mb' } },
 };
 
 // Source maps upload only when SENTRY_AUTH_TOKEN, SENTRY_ORG and SENTRY_PROJECT are set (Vercel builds).

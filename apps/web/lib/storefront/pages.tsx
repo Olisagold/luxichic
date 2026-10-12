@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { getProductReviews } from '@/lib/reviews/queries';
 import { getStorefrontData } from '@/lib/storefront/data';
 import { findCategory, findProduct, findService, productsFor } from '@/lib/storefront/catalog';
 import { JsonLd } from '@/lib/seo/JsonLd';
@@ -43,6 +44,7 @@ export function productPage(division: Division) {
       const product = await load((await params).slug);
       if (!product) notFound();
       const inStock = product.stock > 0;
+      const reviews = await getProductReviews(product.id);
       return (
         <>
           <JsonLd
@@ -61,9 +63,19 @@ export function productPage(division: Division) {
                 price: product.price,
                 availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
               },
+              // Only from real reviews (Phase 7), and only when there are some.
+              ...(product.reviewCount > 0
+                ? {
+                    aggregateRating: {
+                      '@type': 'AggregateRating',
+                      ratingValue: product.rating,
+                      reviewCount: product.reviewCount,
+                    },
+                  }
+                : {}),
             }}
           />
-          <ProductDetail division={division} />
+          <ProductDetail division={division} reviews={reviews} />
         </>
       );
     },
