@@ -316,13 +316,34 @@ Notes:
   confirmed in `/admin` yet, and no emails are sent (Phase 9). Cancelling an order doesn't return stock yet
   (Phase 8). Order tracking has no rate limit; add one with Phase 10's hardening.
 
-## Phase 6: Salon booking
+## Phase 6: Salon booking ✅
 
-1. Compute availability on the server from specialist hours, blocks, service duration and existing appointments.
-2. A `bookAppointment` server action, with a database constraint that prevents double-booking a specialist slot.
-3. Appointment confirmation page and the account appointments list read from the database.
-4. Customers can cancel or reschedule within the allowed window _(business rule to confirm, written down in
-   `docs/business-rules/`)_.
+Done 2026-10-12. Rules agreed and written down in [`docs/business-rules/salon.md`](docs/business-rules/salon.md).
+
+1. ✅ Availability on the server (`lib/salon/availability.ts`, pure; `lib/salon/schedule.ts` loads it live):
+   specialists who perform the service, their weekly hours, closed days/hours (`blocks`), the service's length
+   and existing Pending/Confirmed/Rescheduled bookings. Hourly start times, Lagos time, up to 60 days ahead,
+   at least 1 hour's notice. The prototype's random "taken" slots are gone.
+2. ✅ `bookAppointment` (`lib/salon/actions.ts`) checks availability again. "No preference" gets the free
+   specialist with the fewest bookings that day. Migration `appointment_duration` stores each booking's length
+   and adds `appointments_no_double_booking`, an exclusion constraint: a specialist can't have two active
+   appointments that overlap, even when booked at the same moment (pgTAP: `appointments.test.sql`). If it
+   refuses, the next free specialist is tried or the customer picks another time. Applied to dev and prod.
+3. ✅ The appointment page (`/salon/appointment/[reference]`) shows a booking only to its account or the browser
+   that made it (`lx_appointments` cookie). Account appointments and the overview read the database.
+4. ✅ **Decided 2026-10-12:** customers can cancel or reschedule online **any time before the appointment
+   starts**, from its page; a rescheduled appointment goes **back to Pending**. Each change is in its history.
+5. ✅ Guest appointments join an account under the same verified-email rule as orders.
+
+Notes:
+
+- Tested end to end in a browser against `luxichic-dev` (21 checks), then cleaned up: closed weekdays and
+  closed-salon days, times taken only when every specialist is busy, a service that doesn't fit before closing,
+  choosing a specialist, guest booking with automatic assignment, hidden from other browsers, reschedule (new
+  time, Pending, same specialist, history), cancel, a time taken between choosing and submitting, signed-in
+  booking on the account pages, guest appointment linked to a verified account.
+- **Before launch:** the admin still shows the prototype's appointments until Phase 8 (confirm, reject,
+  admin reschedule, closed days), and no emails or Telegram alerts are sent until Phase 9.
 
 ## Phase 7: Reviews
 
