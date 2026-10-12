@@ -426,8 +426,12 @@ Connect each admin section to the database through server actions. Each action c
    - Tested in a browser against dev (14 checks, including a closed day showing as fully booked to customers and
      a new service live on the salon pages), then cleaned up. A new service's default WhatsApp number still comes
      from the prototype config until the Settings section.
-6. Website content: homepage, about, FAQs, pages; media library on Supabase Storage. Saving revalidates
-   the storefront cache.
+6. ✅ **Website content** (2026-10-12; `lib/content/admin-actions.ts`): homepage, About, FAQs, contact and
+   policies load on the server and save only what changed (blocks in `site_content`; announcements,
+   testimonials, FAQs and policies in their tables), with `content.homepage` / `content.pages` checked per part;
+   the storefront refreshes at once. Media library and image picker upload to Storage; deleting an image is
+   refused while anything still shows it, otherwise its files are removed too. Tested in a browser against dev
+   (12 checks, each change seen on the live pages), with the content snapshotted and restored afterwards.
 7. Operations: delivery rates, payment settings (bank details), email settings
    (Resend sender, replacing the SMTP form), notifications.
    - New **Telegram settings** page (`/admin/telegram`, added to the sidebar under Operations):
