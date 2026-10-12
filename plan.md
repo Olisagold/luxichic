@@ -414,7 +414,18 @@ Connect each admin section to the database through server actions. Each action c
    "Forgot password" until invitation emails arrive in Phase 11), delete (orders, bookings and reviews stay),
    internal notes. Tested in a browser against dev (13 checks, including a blocked customer refused at sign-in
    and signing in with a changed email), then cleaned up.
-5. Salon: appointments, calendar, services and the service editor, specialists, availability.
+5. ✅ **Salon** (2026-10-12; `lib/salon/admin-actions.ts`): appointments, calendar, services, specialists and
+   closed days from the database, permission-checked and logged; services, specialists and closed days refresh
+   the storefront at once.
+   - Appointments: confirm, complete, reject, cancel (with reasons, in the appointment's history); reschedule
+     offers the server's free times and keeps the originally requested time; the database still refuses a
+     double booking.
+   - Calendar open days and hours follow the active specialists' working hours.
+   - Services (with image upload and specialist assignment) and specialists (working days and hours, services,
+     status; deleting refused while they have upcoming bookings).
+   - Tested in a browser against dev (14 checks, including a closed day showing as fully booked to customers and
+     a new service live on the salon pages), then cleaned up. A new service's default WhatsApp number still comes
+     from the prototype config until the Settings section.
 6. Website content: homepage, about, FAQs, pages; media library on Supabase Storage. Saving revalidates
    the storefront cache.
 7. Operations: delivery rates, payment settings (bank details), email settings
