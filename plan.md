@@ -473,6 +473,12 @@ Connect each admin section to the database through server actions. Each action c
 
 ## After launch (not scheduled)
 
+- **Faster admin image uploads** (measured 2026-10-12; waiting for the CEO's review). Resizing is fast (~0.15s);
+  the time is network calls. Options, best first: (1) shrink photos in the browser to ~2560px before upload, which
+  means the stored "original" is that copy, not the camera file (needs the CEO's OK); (2) upload the 4 sizes in
+  parallel; (3) move the original into place instead of uploading it twice; (4) resize in parallel with a lighter
+  WebP setting; (5) upload several images at once in the editor. All in `lib/media/admin-upload.ts`,
+  `upload-client.ts` and the editor's images section.
 - Online payments (Paystack or Flutterwave), if manual verification becomes a bottleneck.
 - WhatsApp Cloud API for customer messages.
 - Marketing analytics (GA4) with a consent banner.
