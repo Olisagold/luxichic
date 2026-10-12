@@ -9,6 +9,7 @@ import type { PgDatabase } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import * as s from '../../apps/web/db/schema';
 import type { buildInitialDb } from '../../apps/web/lib/mock-db/initial';
+import { productValues, writeProductDetails } from '../../apps/web/lib/catalog/product-rows';
 
 /** The database or a transaction on it. */
 type Db = PgDatabase<PostgresJsQueryResultHKT, typeof s>;
@@ -51,35 +52,13 @@ export async function loadCatalog(db: Db, store: Store): Promise<CatalogRefs> {
     }
   }
 
-  /* Products */
+  /* Products (stored the same way the admin editor saves them: lib/catalog/product-rows.ts) */
   const productIds = new Map<string, string>();
   for (const p of store.products) {
     const [row] = await db
       .insert(s.products)
       .values({
-        division: p.division,
-        slug: p.slug,
-        sku: p.sku,
-        name: p.name,
-        shortDescription: p.shortDescription,
-        description: p.description,
-        price: p.price,
-        compareAtPrice: p.originalPrice ?? null,
-        status: p.status,
-        discountMode: p.discountMode,
-        discountPercent: p.discountPercent ?? null,
-        discountStartsOn: p.discountStart ?? null,
-        discountEndsOn: p.discountEnd ?? null,
-        attributes: p.attributes,
-        specs: p.specs,
-        usage: p.usage,
-        benefits: p.benefits,
-        care: p.care,
-        shipping: p.shipping,
-        isFeatured: p.isFeatured,
-        featuredRank: p.featuredRank,
-        isBestseller: p.isBestseller ?? false,
-        isNew: p.isNew ?? false,
+        ...productValues(p),
         rating: p.rating,
         reviewCount: p.reviewCount,
         salesCount: p.salesCount,
@@ -87,44 +66,7 @@ export async function loadCatalog(db: Db, store: Store): Promise<CatalogRefs> {
       })
       .returning({ id: s.products.id });
     productIds.set(p.id, row.id);
-
-    await db.insert(s.inventory).values({
-      productId: row.id,
-      stock: p.stock,
-      lowStockThreshold: p.lowStockThreshold,
-      trackInventory: p.trackInventory,
-      outOfStockBehaviour: p.outOfStockBehaviour === 'hide' ? 'hide' : 'show_sold_out',
-    });
-    if (p.images.length) {
-      await db.insert(s.productImages).values(p.images.map((url, i) => ({ productId: row.id, url, sortOrder: i })));
-    }
-    const cats = p.categories.map((slug) => categoryIds.get(`${p.division}:${slug}`)).filter((x): x is string => !!x);
-    if (cats.length)
-      await db.insert(s.productCategories).values(cats.map((categoryId) => ({ productId: row.id, categoryId })));
-
-    for (const [gi, g] of p.variants.entries()) {
-      const [opt] = await db
-        .insert(s.productOptions)
-        .values({ productId: row.id, key: g.key, name: g.name, sortOrder: gi })
-        .returning({ id: s.productOptions.id });
-      if (g.values.length) {
-        await db.insert(s.productOptionValues).values(
-          g.values.map((v, vi) => {
-            const meta = p.variantMeta[`${g.key}::${v.label}`];
-            return {
-              optionId: opt.id,
-              productId: row.id,
-              label: v.label,
-              priceDelta: v.priceDelta ?? 0,
-              stock: v.stock ?? null,
-              sku: meta?.sku ?? null,
-              enabled: meta?.enabled ?? true,
-              sortOrder: vi,
-            };
-          }),
-        );
-      }
-    }
+    await writeProductDetails(db, row.id, p, (slug) => categoryIds.get(`${p.division}:${slug}`));
   }
   const productRef = (legacyId: string) => productIds.get(legacyId) ?? null;
 
