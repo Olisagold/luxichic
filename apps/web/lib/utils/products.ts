@@ -4,6 +4,8 @@ export function divisionLabel(d: Division): string {
   return d === 'hairs' ? 'LUXICHIC Hairs' : 'Hair Tools & Essentials';
 }
 
+export const reviewsLabel = (n: number) => `${n} review${n === 1 ? '' : 's'}`;
+
 export function isDiscounted(p: Product): boolean {
   return !!p.originalPrice && p.originalPrice > p.price;
 }

@@ -71,10 +71,17 @@ export function ProductCard({ product, dark }: { product: Product; dark?: boolea
           </Link>
         </h3>
         <div className={cn('mt-1.5 flex items-center gap-1.5 text-xs', dark ? 'text-white/60' : 'text-subtle')}>
-          <Stars rating={product.rating} />
-          <span className="tabular-nums">
-            {product.rating.toFixed(1)} ({product.reviewCount})
-          </span>
+          {product.reviewCount > 0 ? (
+            <>
+              <Stars rating={product.rating} />
+              <span className="tabular-nums">
+                {product.rating.toFixed(1)} ({product.reviewCount})
+              </span>
+            </>
+          ) : (
+            // Same height as the stars, so prices line up across the grid.
+            <span className="leading-4">No reviews yet</span>
+          )}
         </div>
         <PriceTag price={product.price} original={product.originalPrice} light={dark} className="mt-2" />
         <p

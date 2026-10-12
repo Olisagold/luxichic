@@ -18,7 +18,7 @@ import { ProductRail } from '@/components/store/ProductRail';
 import { useAddToCart } from '@/hooks/useAddToCart';
 import { toCartItem } from '@/lib/cart/items';
 import { useCart } from '@/contexts/CartContext';
-import { defaultSelection, divisionLabel, priceForSelection } from '@/lib/utils/products';
+import { defaultSelection, divisionLabel, priceForSelection, reviewsLabel } from '@/lib/utils/products';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { discountPercent } from '@/lib/utils/currency';
 import { businessConfig } from '@/data/config';
@@ -86,8 +86,15 @@ export function ProductDetail({ division }: { division: Division }) {
             <p className="text-xs font-semibold text-pink-deep">{divisionLabel(division)}</p>
             <h1 className="mt-2 font-display text-4xl leading-[1.05] text-ink md:text-5xl">{product.name}</h1>
             <a href="#product-tabs" className="mt-3 inline-flex items-center gap-2 text-sm text-subtle hover:text-ink">
-              <Stars rating={product.rating} size="md" />
-              <span className="tabular-nums">{product.rating.toFixed(1)}</span> · {product.reviewCount} reviews
+              {product.reviewCount > 0 ? (
+                <>
+                  <Stars rating={product.rating} size="md" />
+                  <span className="tabular-nums">{product.rating.toFixed(1)}</span> ·{' '}
+                  {reviewsLabel(product.reviewCount)}
+                </>
+              ) : (
+                'No reviews yet · Be the first to review'
+              )}
             </a>
 
             <div className="mt-6 flex items-center gap-3">

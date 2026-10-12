@@ -12,7 +12,7 @@ import { QuantitySelector } from '@/components/product/QuantitySelector';
 import { WishlistButton } from '@/components/product/WishlistButton';
 import { useUI } from '@/contexts/UIContext';
 import { useAddToCart } from '@/hooks/useAddToCart';
-import { defaultSelection, divisionLabel, priceForSelection } from '@/lib/utils/products';
+import { defaultSelection, divisionLabel, priceForSelection, reviewsLabel } from '@/lib/utils/products';
 import { SiteImage } from '@/components/ui/SiteImage';
 
 export function QuickViewModal() {
@@ -56,7 +56,13 @@ export function QuickViewModal() {
             </div>
             <h2 className="mt-2 font-display text-3xl leading-tight text-ink">{product.name}</h2>
             <div className="mt-2 flex items-center gap-2 text-xs text-subtle">
-              <Stars rating={product.rating} /> {product.rating.toFixed(1)} · {product.reviewCount} reviews
+              {product.reviewCount > 0 ? (
+                <>
+                  <Stars rating={product.rating} /> {product.rating.toFixed(1)} · {reviewsLabel(product.reviewCount)}
+                </>
+              ) : (
+                'No reviews yet'
+              )}
             </div>
             <PriceTag price={priced.price} original={priced.original} size="lg" className="mt-4" />
             <p className="mt-3 text-sm leading-relaxed text-charcoal">{product.shortDescription}</p>

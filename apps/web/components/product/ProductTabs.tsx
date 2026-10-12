@@ -15,7 +15,7 @@ export function ProductTabs({ product }: { product: Product }) {
     ...(product.usage ? [{ id: 'usage', label: 'How to Use' }] : []),
     { id: 'shipping', label: 'Shipping & Delivery' },
     { id: 'returns', label: 'Returns & Refunds' },
-    { id: 'reviews', label: `Reviews (${product.reviewCount})` },
+    { id: 'reviews', label: product.reviewCount ? `Reviews (${product.reviewCount})` : 'Reviews' },
   ];
 
   const [active, setActive] = useState('description');
