@@ -38,7 +38,9 @@ export const reviews = pgTable(
     index('reviews_product_status_idx').on(t.productId, t.status),
     index('reviews_user_idx').on(t.userId),
     // One review per customer per product (they edit it instead). Imported reviews have no user.
-    uniqueIndex('reviews_product_user_key').on(t.productId, t.userId).where(sql`${t.userId} is not null`),
+    uniqueIndex('reviews_product_user_key')
+      .on(t.productId, t.userId)
+      .where(sql`${t.userId} is not null`),
     // Visible reviews are public (author_email is never selected by storefront queries).
     publicRead('reviews: public read visible', sql`status = 'visible'`),
     // Authors also see their own hidden/archived reviews in their account.
