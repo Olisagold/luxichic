@@ -1,28 +1,9 @@
 import { toast } from 'sonner';
 import type { Product } from '@/types/product';
-import type { CartItem } from '@/types/order';
 import { useCart } from '@/contexts/CartContext';
 import { useUI } from '@/contexts/UIContext';
+import { toCartItem } from '@/lib/cart/items';
 import { defaultSelection, priceForSelection } from '@/lib/utils/products';
-
-export function toCartItem(product: Product, selection: Record<string, string>, quantity: number): CartItem {
-  const keyParts = product.variants.map((g) => `${g.key}:${selection[g.key] ?? ''}`);
-  const variants: Record<string, string> = {};
-  product.variants.forEach((g) => {
-    if (selection[g.key]) variants[g.name] = selection[g.key];
-  });
-  return {
-    key: [product.id, ...keyParts].join('|'),
-    productId: product.id,
-    slug: product.slug,
-    division: product.division,
-    name: product.name,
-    image: product.images[0],
-    unitPrice: priceForSelection(product, selection).price,
-    quantity,
-    variants,
-  };
-}
 
 export function useAddToCart() {
   const { addItem } = useCart();
