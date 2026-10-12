@@ -5,8 +5,11 @@ import { toast } from 'sonner';
 import type { CartItem } from '@/types/order';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { businessConfig } from '@/data/config';
 import { clampQuantity, toCartLine } from '@/lib/cart/items';
+import { checkPromoCode } from '@/lib/checkout/actions';
+import { promoDiscount, scopeLabel, type PromoRule } from '@/lib/checkout/pricing';
+import { formatNaira } from '@/lib/utils/currency';
+import type { Result } from '@/types/user';
 import { addCartItem, clearCart, removeCartItem, syncCart, updateCartItem, type CartResult } from '@/lib/cart/actions';
 
 interface CartContextValue {
@@ -16,13 +19,15 @@ interface CartContextValue {
   count: number;
   subtotal: number;
   promoCode: string | null;
+  /** The applied code's rule, sent to checkout (which checks it again). */
+  promo: PromoRule | null;
   discount: number;
   lastAddedKey: string | null;
   addItem: (item: CartItem) => void;
   removeItem: (key: string) => void;
   updateQuantity: (key: string, quantity: number) => void;
   toggleSaveForLater: (key: string) => void;
-  applyPromo: (code: string) => boolean;
+  applyPromo: (code: string) => Promise<Result>;
   removePromo: () => void;
   clearActive: () => void;
   /** Single item used by "Buy Now" — checked out without touching the cart. */
@@ -31,13 +36,6 @@ interface CartContextValue {
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-
-export function discountFor(subtotal: number, code: string | null): number {
-  const promo = businessConfig.promoCodes.find((p) => p.code === code);
-  if (!promo || subtotal < (promo.minSpend ?? 0)) return 0;
-  if (promo.amount) return Math.min(subtotal, promo.amount);
-  return Math.round((subtotal * promo.percent) / 100);
-}
 
 /** Applies the same change to a list of items, in the browser (guests) or ahead of the server (signed in). */
 const local = {
@@ -68,7 +66,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { user, ready } = useAuth();
   const [guestItems, setGuestItems, guestLoaded] = useLocalStorage<CartItem[]>('lx_cart', []);
   const [accountItems, setAccountItems] = useState<CartItem[] | null>(null);
-  const [promoCode, setPromoCode] = useLocalStorage<string | null>('lx_promo', null);
+  // Holds the rule (the prototype stored only the code string, which is ignored).
+  const [storedPromo, setPromo] = useLocalStorage<PromoRule | string | null>('lx_promo', null);
+  const promo = storedPromo && typeof storedPromo === 'object' ? storedPromo : null;
   const [lastAddedKey, setLastAddedKey] = useState<string | null>(null);
   const [buyNowItem, setBuyNowItem] = useLocalStorage<CartItem | null>('lx_buynow', null);
 
@@ -134,7 +134,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const savedItems = useMemo(() => items.filter((i) => i.savedForLater), [items]);
   const count = activeItems.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = activeItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-  const discount = discountFor(subtotal, promoCode);
+  const discount = promoDiscount(promo, activeItems);
 
   const addItem = (item: CartItem) => {
     change(local.add(item), () => addCartItem(toCartLine(item)));
@@ -151,16 +151,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     change(local.toggleSaved(key), () => updateCartItem(key, { savedForLater: saved }));
   };
 
-  const applyPromo = (code: string) => {
-    const match = businessConfig.promoCodes.find((p) => p.code === code.trim().toUpperCase());
-    if (!match) return false;
-    setPromoCode(match.code);
-    return true;
+  const applyPromo = async (code: string): Promise<Result> => {
+    try {
+      const res = await checkPromoCode(code);
+      if (!res.ok || !res.rule) return { ok: false, error: res.error ?? 'That code is not valid.' };
+      if (!promoDiscount(res.rule, activeItems)) {
+        return {
+          ok: false,
+          error: `Spend at least ${formatNaira(res.rule.minSpend)} on ${scopeLabel(res.rule.scope)} to use this code.`,
+        };
+      }
+      setPromo(res.rule);
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'We could not check that code. Please try again.' };
+    }
   };
 
   const clearActive = () => {
     change(local.clearActive(), clearCart);
-    setPromoCode(null);
+    setPromo(null);
   };
 
   return (
@@ -171,7 +181,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         savedItems,
         count,
         subtotal,
-        promoCode,
+        promoCode: promo?.code ?? null,
+        promo,
         discount,
         lastAddedKey,
         addItem,
@@ -179,7 +190,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updateQuantity,
         toggleSaveForLater,
         applyPromo,
-        removePromo: () => setPromoCode(null),
+        removePromo: () => setPromo(null),
         clearActive,
         buyNowItem,
         setBuyNowItem,

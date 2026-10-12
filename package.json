@@ -18,7 +18,8 @@
     "db:create-owner": "tsx --tsconfig apps/web/tsconfig.json scripts/database/create-owner.ts",
     "db:load-catalog": "tsx --tsconfig apps/web/tsconfig.json scripts/database/load-catalog.ts",
     "db:media": "tsx --tsconfig apps/web/tsconfig.json scripts/database/media.ts",
-    "db:set-payments": "tsx --tsconfig apps/web/tsconfig.json scripts/database/set-payments.ts"
+    "db:set-payments": "tsx --tsconfig apps/web/tsconfig.json scripts/database/set-payments.ts",
+    "db:set-promo": "tsx --tsconfig apps/web/tsconfig.json scripts/database/set-promo.ts"
   },
   "devDependencies": {
     "prettier": "^3",

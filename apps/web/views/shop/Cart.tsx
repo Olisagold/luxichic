@@ -30,15 +30,19 @@ export function Cart() {
   } = useCart();
   const [code, setCode] = useState('');
   const [promoError, setPromoError] = useState('');
+  const [checking, setChecking] = useState(false);
 
-  const submitPromo = (e: React.FormEvent) => {
+  const submitPromo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim()) return;
-    if (applyPromo(code)) {
+    if (!code.trim() || checking) return;
+    setChecking(true);
+    const res = await applyPromo(code);
+    setChecking(false);
+    if (res.ok) {
       setPromoError('');
       setCode('');
       toast.success('Promo code applied');
-    } else setPromoError('That code is not valid. Try the sample code LUXE10.');
+    } else setPromoError(res.error ?? 'That code is not valid.');
   };
 
   return (
@@ -112,7 +116,7 @@ export function Cart() {
                     className="h-11 flex-1 rounded-full border border-line px-4 text-sm uppercase focus:border-ink focus:outline-none"
                   />
 
-                  <Button type="submit" variant="outline" size="sm" className="h-11">
+                  <Button type="submit" variant="outline" size="sm" className="h-11" loading={checking}>
                     Apply
                   </Button>
                 </div>
