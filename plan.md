@@ -387,7 +387,18 @@ Connect each admin section to the database through server actions. Each action c
    - Tested in a browser against dev (17 checks) with real orders placed through the shop, then cleaned up.
    - Still to come: the payment-confirmed and status emails (Phase 9); the dashboard, sidebar badges and the
      customer pages' order history still read the prototype until their sections are done.
-2. Products: list, product editor (images upload to Supabase Storage), inventory, low-stock flags.
+2. ✅ **Products** (2026-10-12; `lib/catalog/admin-actions.ts`): list, editor and inventory read the catalog on the
+   server (every status, uncached) and save through permission-checked actions that write `audit_logs` and refresh
+   the storefront at once. Products are stored the same way as the catalog loader stores them
+   (`lib/catalog/product-rows.ts`).
+   - Editor: images, categories, options, stock; SKU and URL unique; publishing needs an image.
+   - Image uploads (`lib/media/admin-upload.ts`): the browser sends the original straight to Storage with a
+     signed URL, the server makes the WebP sizes and records it in the media library. The editor's library
+     picker reads the database.
+   - List: duplicate as draft, publish/unpublish/archive, feature/bestseller, add category, delete (single or bulk).
+   - Inventory: product and option stock adjustments and low-stock thresholds, all in the stock history.
+   - Tested in a browser against dev (16 checks, including a real image upload and the change showing on the shop
+     at once), then cleaned up. Low-stock alerts to the team come with Phase 9's notifications.
 3. Catalog: categories, discounts (review moderation is done, Phase 7).
 4. Customers: list, detail, block and unblock, customer activity.
 5. Salon: appointments, calendar, services and the service editor, specialists, availability.
