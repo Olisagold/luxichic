@@ -21,7 +21,8 @@ export function Toggle({ checked, onChange, label, description, disabled, srOnly
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label={srOnlyLabel ? label : undefined}
+      // Named even when the label is shown beside it, so screen readers say what it switches.
+      aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
