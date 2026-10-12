@@ -3,10 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ActivityIcon, CalendarCheckIcon, ShoppingBagIcon, StarIcon, UserPlusIcon } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
-import { useReviews } from '@/contexts/ReviewsContext';
-import { useDb } from '@/lib/mock-db/db';
+import { useAdminCustomers } from '@/components/admin/AdminCustomersProvider';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { AdminEmpty } from '@/components/admin/ui/AdminEmpty';
@@ -28,10 +25,7 @@ const PAGE = 25;
 
 /** A single feed of what customers have done across the store and salon. */
 export function CustomerActivity() {
-  const { users } = useAuth();
-  const { orders, appointments } = useOrders();
-  const { all: reviews } = useReviews();
-  const products = useDb((s) => s.products);
+  const { users, orders, appointments, reviews } = useAdminCustomers();
   const [kind, setKind] = useState<Kind>('all');
   const [page, setPage] = useState(1);
 
@@ -59,7 +53,7 @@ export function CustomerActivity() {
           kind: 'review' as const,
           at: `${r.date}T12:00:00.000Z`,
           who: r.authorName,
-          text: `reviewed ${products.find((p) => p.id === r.productId)?.name ?? 'a product'} · ${r.rating}★`,
+          text: `reviewed ${r.productName} · ${r.rating}★`,
           link: '/admin/reviews',
         })),
         ...users.map((u) => ({
@@ -71,7 +65,7 @@ export function CustomerActivity() {
           link: `/admin/customers/${u.id}`,
         })),
       ].sort((a, b) => b.at.localeCompare(a.at)),
-    [orders, appointments, reviews, users, products],
+    [orders, appointments, reviews, users],
   );
 
   const filtered = kind === 'all' ? events : events.filter((e) => e.kind === kind);

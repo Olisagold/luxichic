@@ -21,7 +21,7 @@ const statusLabel: Record<(typeof s.appointmentStatus.enumValues)[number], Appoi
 };
 const hhmm = (t: string) => t.slice(0, 5);
 
-async function loadAppointments(
+export async function loadAppointments(
   where: SQL | undefined,
 ): Promise<(Appointment & { id: string; userId: string | null })[]> {
   const rows = await db

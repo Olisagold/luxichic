@@ -4,10 +4,10 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { DownloadIcon, UserPlusIcon, UsersIcon } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
+import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useAdminOps } from '@/hooks/useAdminOps';
+import { useAdminCustomers } from '@/components/admin/AdminCustomersProvider';
+import { createCustomer } from '@/lib/customers/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -30,8 +30,7 @@ const PAGE = 20;
 const statusLabel = { active: 'Active', blocked: 'Blocked', guest: 'Guest' } as const;
 
 export function Customers() {
-  const { users } = useAuth();
-  const { orders, appointments } = useOrders();
+  const { users, orders, appointments } = useAdminCustomers();
   const { can } = useAdminAuth();
   const [tab, setTab] = useState<Tab>('all');
   const [sort, setSort] = useState<Sort>('recent');
@@ -223,11 +222,12 @@ export function Customers() {
 }
 
 function AddCustomerDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const ops = useAdminOps();
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', blocked: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!form.fullName.trim()) errs.fullName = 'Enter the customer’s name.';
@@ -235,16 +235,22 @@ function AddCustomerDialog({ open, onClose }: { open: boolean; onClose: () => vo
     if (form.phone && !isValidPhone(form.phone)) errs.phone = 'Enter a valid Nigerian phone number.';
     setErrors(errs);
     if (Object.keys(errs).length) return;
-    const res = ops.createCustomer({
+    setSaving(true);
+    const res = await createCustomer({
       fullName: form.fullName.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
       status: form.blocked ? 'blocked' : 'active',
+    }).catch(() => null);
+    setSaving(false);
+    if (!res?.ok) return setErrors({ email: res?.error ?? 'Could not create customer.' });
+    toast.success('Customer added', {
+      description: 'Ask them to use “Forgot password” on the sign-in page with this email to set their password.',
+      duration: 10000,
     });
-    if (!res.ok) return setErrors({ email: res.error ?? 'Could not create customer.' });
-    toast.success('Customer added', { description: 'They would receive an email to set their password.' });
     setForm({ fullName: '', email: '', phone: '', blocked: false });
     onClose();
+    router.refresh();
   };
 
   return (
@@ -281,13 +287,14 @@ function AddCustomerDialog({ open, onClose }: { open: boolean; onClose: () => vo
           onChange={(v) => setForm({ ...form, blocked: v })}
         />
         <p className="rounded-lg bg-canvas px-3 py-2 text-xs text-subtle">
-          The customer sets their own password from a secure setup link. You never choose it for them.
+          The customer sets their own password with “Forgot password” on the sign-in page. You never choose it for them.
+          (Invitation emails come with the email setup at launch.)
         </p>
         <div className="flex justify-end gap-2">
           <AdminButton variant="ghost" onClick={onClose}>
             Cancel
           </AdminButton>
-          <AdminButton type="submit" variant="primary">
+          <AdminButton type="submit" variant="primary" loading={saving}>
             Add customer
           </AdminButton>
         </div>

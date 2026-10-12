@@ -5,14 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { BanIcon, MessageSquareIcon, PencilIcon, TrashIcon, UserXIcon } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
-import { useReviews } from '@/contexts/ReviewsContext';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useAdminOps } from '@/hooks/useAdminOps';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { addNote } from '@/lib/mock-db/settings';
+import { useAdminCustomers } from '@/components/admin/AdminCustomersProvider';
+import { addCustomerNote, deleteCustomer, setCustomerBlocked, updateCustomer } from '@/lib/customers/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -32,16 +27,26 @@ import { isValidEmail } from '@/lib/utils/validation';
 export function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { users } = useAuth();
-  const { orders, appointments } = useOrders();
-  const reviews = useReviews();
+  const { users, orders, appointments, reviews, notes = [] } = useAdminCustomers();
   const { can } = useAdminAuth();
-  const ops = useAdminOps();
-  const actor = useActor();
-  const notesMap = useDb((s) => s.customerNotes);
-  const products = useDb((s) => s.products);
+  const [busy, setBusy] = useState(false);
   const [dialog, setDialog] = useState<'block' | 'delete' | 'edit' | null>(null);
   const [note, setNote] = useState('');
+
+  /** Runs a server action, reports the result and reloads the page's data. */
+  const run = async (action: () => Promise<{ ok: boolean; error?: string }>, success: string) => {
+    setBusy(true);
+    const res = await action().catch(() => null);
+    setBusy(false);
+    setDialog(null);
+    if (!res?.ok) {
+      toast.error(res?.error ?? 'Something went wrong. Please try again.');
+      return false;
+    }
+    toast.success(success);
+    router.refresh();
+    return true;
+  };
 
   const row = useMemo(
     () => buildCustomerRows(users, orders, appointments).find((r) => r.id === decodeURIComponent(id)),
@@ -62,8 +67,7 @@ export function CustomerDetail() {
 
   const cOrders = customerOrders(row.email, orders);
   const cAppts = customerAppointments(row.email, appointments);
-  const cReviews = reviews.all.filter((r) => r.authorEmail?.toLowerCase() === row.email.toLowerCase());
-  const notes = notesMap[row.email.toLowerCase()] ?? [];
+  const cReviews = reviews.filter((r) => r.authorEmail?.toLowerCase() === row.email.toLowerCase());
   const avg = row.orders
     ? Math.round(row.spent / Math.max(1, cOrders.filter((o) => o.status !== 'Cancelled').length))
     : 0;
@@ -92,9 +96,10 @@ export function CustomerDetail() {
                 <AdminButton
                   variant={u.status === 'blocked' ? 'outline' : 'dangerGhost'}
                   icon={<BanIcon className="h-4 w-4" />}
+                  disabled={busy}
                   onClick={() =>
                     u.status === 'blocked'
-                      ? (ops.setCustomerBlocked(u, false), toast.success('Customer unblocked'))
+                      ? run(() => setCustomerBlocked(u.id, false), 'Customer unblocked')
                       : setDialog('block')
                   }
                 >
@@ -212,7 +217,7 @@ export function CustomerDetail() {
                     </div>
                     <p className="mt-1 font-semibold text-ink">{r.title}</p>
                     <p className="text-xs text-subtle">
-                      {products.find((p) => p.id === r.productId)?.name ?? 'Product'} · {formatDate(r.date)}
+                      {r.productName} · {formatDate(r.date)}
                     </p>
                   </li>
                 ))}
@@ -268,12 +273,10 @@ export function CustomerDetail() {
 
           <Panel title="Internal notes" description="Only visible to admins.">
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                if (!note.trim()) return;
-                addNote(actor, 'customerNotes', row.email.toLowerCase(), note.trim());
-                setNote('');
-                toast.success('Note added');
+                if (!note.trim() || !u) return;
+                if (await run(() => addCustomerNote(u.id, note), 'Note added')) setNote('');
               }}
               className="flex gap-2"
             >
@@ -312,11 +315,7 @@ export function CustomerDetail() {
           <ConfirmDialog
             open={dialog === 'block'}
             onClose={() => setDialog(null)}
-            onConfirm={() => {
-              ops.setCustomerBlocked(u, true);
-              setDialog(null);
-              toast.success('Customer blocked');
-            }}
+            onConfirm={() => run(() => setCustomerBlocked(u.id, true), 'Customer blocked')}
             title={`Block ${u.fullName}?`}
             tone="danger"
             confirmLabel="Block customer"
@@ -326,15 +325,19 @@ export function CustomerDetail() {
           <ConfirmDialog
             open={dialog === 'delete'}
             onClose={() => setDialog(null)}
-            onConfirm={() => {
-              ops.deleteCustomer(u);
+            onConfirm={async () => {
+              setBusy(true);
+              const res = await deleteCustomer(u.id).catch(() => null);
+              setBusy(false);
+              setDialog(null);
+              if (!res?.ok) return toast.error(res?.error ?? 'Could not delete the account.');
               toast.success('Customer deleted');
               router.push('/admin/customers');
             }}
             title={`Delete ${u.fullName}’s account?`}
             tone="danger"
             confirmLabel="Delete account"
-            message="Their login and saved addresses are removed. Past orders stay in your records as guest orders."
+            message="Their login, saved addresses, cart and wishlist are removed. Past orders, bookings and reviews stay in your records without the account link."
           />
 
           <EditCustomerDialog
@@ -358,22 +361,27 @@ function EditCustomerDialog({
   onClose: () => void;
   user: NonNullable<ReturnType<typeof buildCustomerRows>[number]['user']>;
 }) {
-  const ops = useAdminOps();
+  const router = useRouter();
   const [form, setForm] = useState({ fullName: user.fullName, email: user.email, phone: user.phone });
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   return (
     <Modal open={open} onClose={onClose} title="Edit customer" className="max-w-md rounded-2xl">
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           if (!form.fullName.trim() || !isValidEmail(form.email)) return setError('Enter a name and a valid email.');
-          ops.updateCustomer(user, {
+          setSaving(true);
+          const res = await updateCustomer(user.id, {
             fullName: form.fullName.trim(),
             email: form.email.trim(),
             phone: form.phone.trim(),
-          });
+          }).catch(() => null);
+          setSaving(false);
+          if (!res?.ok) return setError(res?.error ?? 'Could not save the customer.');
           toast.success('Customer updated');
           onClose();
+          router.refresh();
         }}
         className="space-y-4 p-5"
       >
@@ -405,7 +413,7 @@ function EditCustomerDialog({
           <AdminButton variant="ghost" onClick={onClose}>
             Cancel
           </AdminButton>
-          <AdminButton type="submit" variant="primary">
+          <AdminButton type="submit" variant="primary" loading={saving}>
             Save
           </AdminButton>
         </div>
