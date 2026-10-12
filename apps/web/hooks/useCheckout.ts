@@ -4,8 +4,7 @@ import type { Address, Customer, OrderItem, PaymentMethod } from '@/types/order'
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrders } from '@/contexts/OrdersContext';
-import { useSettings } from '@/contexts/SettingsContext';
-import { deliveryFeeFor, isDeliveryAvailable } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { generateId, generateTransactionReference } from '@/lib/utils/references';
 import { isValidEmail, isValidPhone } from '@/lib/utils/validation';
 
@@ -28,7 +27,9 @@ export function useCheckout() {
   const { placeOrder, orders } = useOrders();
   // Issued up front so the customer sees it on the payment step and can use it as their transfer narration.
   const [reference] = useState(() => generateTransactionReference(orders.map((o) => o.reference)));
-  const { payOnDeliveryEnabled } = useSettings();
+  const storefront = useStorefront();
+  const { payOnDeliveryEnabled } = storefront.business;
+  const { deliveryFees } = storefront.checkout;
   const router = useRouter();
 
   const source = buyNow ? (cart.buyNowItem ? [cart.buyNowItem] : []) : cart.activeItems;
@@ -74,7 +75,7 @@ export function useCheckout() {
     if (!payOnDeliveryEnabled && method === 'pay_on_delivery') setMethod('bank_transfer');
   }, [payOnDeliveryEnabled, method]);
 
-  const deliveryFee = deliveryFeeFor(address.state);
+  const deliveryFee = deliveryFees[address.state] ?? 0;
 
   const chooseAddress = (id: string) => {
     setAddressId(id);
@@ -98,7 +99,7 @@ export function useCheckout() {
     }
     if (s === 1) {
       if (!address.state) e.state = 'Please select your state.';
-      else if (!isDeliveryAvailable(address.state))
+      else if (!(address.state in deliveryFees))
         e.state = `We don’t currently deliver to ${address.state}. Please contact us on WhatsApp.`;
       if (address.city.trim().length < 2) e.city = 'Please enter your city.';
       if (address.street.trim().length < 3) e.street = 'Please enter your street address.';

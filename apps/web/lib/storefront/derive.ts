@@ -1,4 +1,12 @@
-import type { AdminProduct, AdminService, SiteContent, SocialLink, Specialist, StoreSettings } from '@/types/admin';
+import type {
+  AdminProduct,
+  AdminService,
+  DeliveryRate,
+  SiteContent,
+  SocialLink,
+  Specialist,
+  StoreSettings,
+} from '@/types/admin';
 import type { Category, Product } from '@/types/product';
 import type { SalonService } from '@/types/salon';
 
@@ -13,8 +21,10 @@ export interface StorefrontSource {
     StoreSettings,
     'business' | 'instagram' | 'instagramHandles' | 'tiktok' | 'socialLinks' | 'payOnDeliveryEnabled'
   > & {
-    delivery: { estimate: string };
+    delivery: { estimate: string; rates: DeliveryRate[] };
     whatsapp: { businessNumber: string; adminNumber: string };
+    /** Bank account for transfers; null until one is set. */
+    bank: StoreSettings['bank'] | null;
   };
 }
 
@@ -54,6 +64,12 @@ export interface StorefrontData {
     socialLinks: SocialLink[];
     payOnDeliveryEnabled: boolean;
     deliveryEstimate: string;
+  };
+  /** What checkout shows. `placeOrder` re-reads all of it from the database. */
+  checkout: {
+    bank: StoreSettings['bank'] | null;
+    /** Delivery fee per state we deliver to (free states are 0). Other states can't be chosen. */
+    deliveryFees: Record<string, number>;
   };
 }
 
@@ -169,6 +185,12 @@ export function deriveStorefront(src: StorefrontSource, today = new Date().toISO
       socialLinks: (st.socialLinks ?? []).filter((l) => l.enabled),
       payOnDeliveryEnabled: st.payOnDeliveryEnabled,
       deliveryEstimate: st.delivery.estimate,
+    },
+    checkout: {
+      bank: st.bank,
+      deliveryFees: Object.fromEntries(
+        st.delivery.rates.filter((r) => r.enabled).map((r) => [r.state, r.free ? 0 : r.fee]),
+      ),
     },
   };
 }

@@ -231,7 +231,9 @@ export function Checkout() {
                   {c.address.state && (
                     <p className="text-sm text-subtle">
                       Delivery to {c.address.state}:{' '}
-                      <span className="font-semibold text-ink">{formatNaira(c.deliveryFee)}</span> (sample fee)
+                      <span className="font-semibold text-ink">
+                        {c.deliveryFee ? formatNaira(c.deliveryFee) : 'Free'}
+                      </span>
                     </p>
                   )}
                 </div>

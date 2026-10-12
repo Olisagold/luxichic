@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { CheckIcon, CopyIcon } from 'lucide-react';
-import { businessConfig } from '@/data/config';
+import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { formatNaira } from '@/lib/utils/currency';
 
 function CopyValue({ value, label }: { value: string; label: string }) {
@@ -28,7 +28,14 @@ function CopyValue({ value, label }: { value: string; label: string }) {
 }
 
 export function BankTransferInstructions({ amount, reference }: { amount: number; reference?: string }) {
-  const { bank } = businessConfig;
+  const { bank } = useStorefront().checkout;
+  if (!bank) {
+    return (
+      <p className="rounded-2xl bg-ivory p-5 text-sm leading-relaxed text-ink">
+        Bank transfer details are being updated. Please contact LUXICHIC on WhatsApp to complete your payment.
+      </p>
+    );
+  }
   const rows = [
     { label: 'Bank name', value: bank.bankName },
     { label: 'Account name', value: bank.accountName },

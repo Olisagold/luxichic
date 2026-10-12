@@ -223,6 +223,7 @@ async function loadContent(): Promise<SiteContent> {
 
 async function loadSettings(): Promise<StorefrontSource['settings']> {
   const rows = await db.select().from(s.settings);
+  const rates = await db.select().from(s.deliveryRates).orderBy(asc(s.deliveryRates.state));
   const links = await db.select().from(s.socialLinks).orderBy(asc(s.socialLinks.sortOrder));
   const value = <T>(key: string): T | undefined => rows.find((r) => r.key === key)?.value as T | undefined;
   const business = value<StoreSettings['business']>('business') ?? {
@@ -252,7 +253,11 @@ async function loadSettings(): Promise<StorefrontSource['settings']> {
     tiktok: value<StoreSettings['tiktok']>('tiktok') ?? undefined,
     socialLinks,
     payOnDeliveryEnabled: value<{ enabled: boolean }>('pay_on_delivery')?.enabled ?? false,
-    delivery: { estimate: value<{ text: string }>('delivery_estimate')?.text ?? '' },
+    delivery: {
+      estimate: value<{ text: string }>('delivery_estimate')?.text ?? '',
+      rates: rates.map((r) => ({ state: r.state, fee: r.fee, free: r.isFree, enabled: r.enabled })),
+    },
+    bank: value<StoreSettings['bank']>('bank') ?? null,
     whatsapp: {
       businessNumber: whatsapp?.businessNumber ?? business.whatsapp,
       adminNumber: whatsapp?.adminNumber ?? business.whatsapp,
