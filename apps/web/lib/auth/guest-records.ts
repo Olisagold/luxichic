@@ -2,7 +2,7 @@ import 'server-only';
 import { and, isNull, sql } from 'drizzle-orm';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { db } from '@/db';
-import { orders } from '@/db/schema';
+import { appointments, orders } from '@/db/schema';
 
 /**
  * Whether the account has proven it owns its email address:
@@ -28,16 +28,18 @@ export function hasVerifiedEmail(user: AuthUser): boolean {
 }
 
 /**
- * Moves guest orders placed with the customer's email into their account, once that email is verified. Runs
- * at every sign-in, so orders placed while signed out join the account the next time. `user` must have a
- * customer profile.
+ * Moves guest orders and appointments made with the customer's email into their account, once that email is
+ * verified. Runs at every sign-in, so anything placed while signed out joins the account the next time. `user`
+ * must have a customer profile.
  */
-export async function linkGuestOrders(user: AuthUser): Promise<number> {
-  if (!hasVerifiedEmail(user)) return 0;
-  const linked = await db
+export async function linkGuestRecords(user: AuthUser): Promise<void> {
+  if (!hasVerifiedEmail(user)) return;
+  await db
     .update(orders)
     .set({ userId: user.id, updatedAt: new Date() })
-    .where(and(isNull(orders.userId), sql`lower(${orders.customerEmail}) = lower(${user.email})`))
-    .returning({ id: orders.id });
-  return linked.length;
+    .where(and(isNull(orders.userId), sql`lower(${orders.customerEmail}) = lower(${user.email})`));
+  await db
+    .update(appointments)
+    .set({ userId: user.id, updatedAt: new Date() })
+    .where(and(isNull(appointments.userId), sql`lower(${appointments.customerEmail}) = lower(${user.email})`));
 }

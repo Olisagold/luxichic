@@ -3,7 +3,7 @@ import type { EmailOtpType, User } from '@supabase/supabase-js';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
-import { linkGuestOrders } from '@/lib/orders/link';
+import { linkGuestRecords } from '@/lib/auth/guest-records';
 import { createClient } from '@/lib/supabase/server';
 
 /** Only same-site paths, never `//evil.com`. */
@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
     }
     if (profile) {
       await db.update(profiles).set({ lastActiveAt: new Date() }).where(eq(profiles.id, user.id));
-      // Google sign-in and confirmed sign-ups prove the email, so earlier guest orders join the account.
-      await linkGuestOrders(user);
+      // Google sign-in and confirmed sign-ups prove the email, so earlier guest orders and appointments join the account.
+      await linkGuestRecords(user);
     }
   }
 

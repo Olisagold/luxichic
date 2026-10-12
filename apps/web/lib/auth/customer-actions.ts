@@ -6,7 +6,7 @@ import { db } from '@/db';
 import { addresses, profiles } from '@/db/schema';
 import { authErrorMessage, authReady, NOT_CONFIGURED, passwordMatches, siteOrigin } from '@/lib/auth/helpers';
 import { getCustomer } from '@/lib/auth/session';
-import { linkGuestOrders } from '@/lib/orders/link';
+import { linkGuestRecords } from '@/lib/auth/guest-records';
 import { REMEMBER_COOKIE } from '@/lib/supabase/cookies';
 import { createClient } from '@/lib/supabase/server';
 import { isValidEmail, isValidPhone, passwordError } from '@/lib/utils/validation';
@@ -44,7 +44,7 @@ export async function signIn(email: string, password: string, remember: boolean)
     return { ok: false, error: profile ? SUSPENDED : 'The email or password you entered is incorrect.' };
   }
   await db.update(profiles).set({ lastActiveAt: new Date() }).where(eq(profiles.id, profile.id));
-  await linkGuestOrders(data.user);
+  await linkGuestRecords(data.user);
   return { ok: true };
 }
 
