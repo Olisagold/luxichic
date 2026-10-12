@@ -399,7 +399,15 @@ Connect each admin section to the database through server actions. Each action c
    - Inventory: product and option stock adjustments and low-stock thresholds, all in the stock history.
    - Tested in a browser against dev (16 checks, including a real image upload and the change showing on the shop
      at once), then cleaned up. Low-stock alerts to the team come with Phase 9's notifications.
-3. Catalog: categories, discounts (review moderation is done, Phase 7).
+3. ✅ **Catalog** (2026-10-12): categories (`lib/catalog/category-actions.ts`) and promo codes
+   (`lib/checkout/discount-actions.ts`) from the database; review moderation was done in Phase 7.
+   - Categories: create, edit, rename, delete per store, with image uploads. The homepage's featured collections
+     follow a rename or delete; the built-in listings (all, new arrivals, bestsellers, discounted) are protected.
+   - Promo codes: create, edit, switch off, delete; unique ignoring case, stored in capitals; "no end date" is
+     kept as 2099-12-31. Checkout uses changes at once, so `pnpm db:set-promo` is no longer needed.
+   - Admin actions now share `lib/auth/admin-action.ts` (permission check, messages, cache refresh, audit log).
+   - Tested in a browser against dev (15 checks, including a new code working at checkout and a switched-off
+     one refused); the orders and reviews tests were rerun after the refactor and still pass.
 4. Customers: list, detail, block and unblock, customer activity.
 5. Salon: appointments, calendar, services and the service editor, specialists, availability.
 6. Website content: homepage, about, FAQs, pages; media library on Supabase Storage. Saving revalidates
