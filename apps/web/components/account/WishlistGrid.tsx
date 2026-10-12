@@ -14,10 +14,12 @@ import type { Product } from '@/types/product';
 import { SiteImage } from '@/components/ui/SiteImage';
 
 export function WishlistGrid() {
-  const { ids, remove } = useWishlist();
+  const { ids, ready, remove } = useWishlist();
   const addToCart = useAddToCart();
   const { findProductById } = useCatalog();
   const products = ids.map(findProductById).filter((p): p is Product => !!p);
+
+  if (!ready) return <div className="min-h-[320px]" aria-busy="true" />;
 
   if (!products.length) {
     return (

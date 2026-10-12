@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { HeartIcon } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { cn } from '@/lib/utils/cn';
@@ -16,13 +17,23 @@ interface WishlistButtonProps {
 
 export function WishlistButton({ productId, productName, withLabel, className }: WishlistButtonProps) {
   const { has, toggle } = useWishlist();
+  const router = useRouter();
+  const pathname = usePathname();
   const active = has(productId);
 
   const onClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const added = toggle(productId);
-    toast(added ? 'Saved to your wishlist' : 'Removed from your wishlist', { description: productName });
+    const result = toggle(productId);
+    if (result === 'loading') return;
+    if (result === 'sign-in') {
+      toast('Sign in to save to your wishlist', {
+        description: `We'll keep ${productName} for you once you're signed in.`,
+        action: { label: 'Sign in', onClick: () => router.push(`/login?redirect=${encodeURIComponent(pathname)}`) },
+      });
+      return;
+    }
+    toast(result === 'added' ? 'Saved to your wishlist' : 'Removed from your wishlist', { description: productName });
   };
 
   return (
