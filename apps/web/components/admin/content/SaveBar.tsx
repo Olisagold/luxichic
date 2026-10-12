@@ -9,11 +9,13 @@ export function SaveBar({
   dirty,
   onSave,
   onReset,
+  saving,
   label = 'Unsaved changes',
 }: {
   dirty: boolean;
   onSave: () => void;
   onReset: () => void;
+  saving?: boolean;
   label?: string;
 }) {
   return (
@@ -32,7 +34,7 @@ export function SaveBar({
               <AdminButton variant="ghost" onClick={onReset}>
                 Discard
               </AdminButton>
-              <AdminButton variant="primary" onClick={onSave}>
+              <AdminButton variant="primary" onClick={onSave} loading={saving}>
                 Save &amp; publish
               </AdminButton>
             </div>

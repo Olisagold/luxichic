@@ -4,9 +4,10 @@ import React, { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CopyIcon, ImageIcon, TrashIcon, UploadIcon } from 'lucide-react';
 import type { MediaItem } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { addMedia, deleteMedia } from '@/lib/mock-db/settings';
+import { useRouter } from 'next/navigation';
+import { useAdminContent } from '@/components/admin/AdminContentProvider';
+import { deleteMedia, mediaUploaded } from '@/lib/content/admin-actions';
+import { uploadAdminImage } from '@/lib/media/upload-client';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -14,17 +15,23 @@ import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminEmpty } from '@/components/admin/ui/AdminEmpty';
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
-import { readImageFile } from '@/lib/utils/images';
 import { formatDate } from '@/lib/utils/dates';
 
 type Folder = MediaItem['folder'];
 const folders: Folder[] = ['Homepage', 'Hairs', 'Hair Tools', 'Salon', 'Products', 'Services'];
+/** The library's folder names as stored in the database. */
+const FOLDER_KEY = {
+  Homepage: 'homepage',
+  Hairs: 'hairs',
+  'Hair Tools': 'hair_tools',
+  Salon: 'salon',
+  Products: 'products',
+  Services: 'services',
+} as const;
 
 export function MediaLibrary() {
-  const actor = useActor();
-  const media = useDb((s) => s.media);
-  const products = useDb((s) => s.products);
-  const content = useDb((s) => s.content);
+  const { media, products, content } = useAdminContent();
+  const router = useRouter();
   const [folder, setFolder] = useState<'all' | Folder>('all');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<MediaItem | null>(null);
@@ -49,25 +56,18 @@ export function MediaLibrary() {
     let ok = 0;
     for (const f of Array.from(files).slice(0, 10)) {
       try {
-        const url = await readImageFile(f);
-        const img = new Image();
-        img.src = url;
-        await img.decode().catch(() => undefined);
-        addMedia(actor, {
-          url,
-          name: f.name,
-          folder: folder === 'all' ? 'Products' : folder,
-          width: img.naturalWidth,
-          height: img.naturalHeight,
-          sizeKb: Math.round((url.length * 0.75) / 1024),
-        });
+        await uploadAdminImage(f, 'content', FOLDER_KEY[folder === 'all' ? 'Products' : folder]);
         ok += 1;
       } catch (e) {
-        toast.error(`${f.name}: ${e instanceof Error ? e.message : 'could not be read'}`);
+        toast.error(`${f.name}: ${e instanceof Error ? e.message : 'could not be uploaded'}`);
       }
     }
     setBusy(false);
-    if (ok) toast.success(`Uploaded ${ok} image${ok > 1 ? 's' : ''}`);
+    if (ok) {
+      await mediaUploaded(ok).catch(() => null);
+      toast.success(`Uploaded ${ok} image${ok > 1 ? 's' : ''}`);
+      router.refresh();
+    }
   };
 
   return (
@@ -203,10 +203,14 @@ export function MediaLibrary() {
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        onConfirm={() => {
-          if (removing) deleteMedia(actor, removing.id);
+        onConfirm={async () => {
+          if (!removing) return;
+          const res = await deleteMedia(removing.id).catch(() => null);
           setRemoving(null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not delete the image.');
+          setOpen(null);
           toast.success('Image deleted from the library');
+          router.refresh();
         }}
         title="Delete this image?"
         tone="danger"

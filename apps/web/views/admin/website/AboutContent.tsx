@@ -3,9 +3,7 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { ExternalLinkIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { useActor } from '@/hooks/useActor';
 import { useContentDraft } from '@/hooks/useContentDraft';
-import { updateContent } from '@/lib/mock-db/settings';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -15,7 +13,6 @@ import { MediaPicker } from '@/components/admin/content/MediaPicker';
 import { cn } from '@/lib/utils/cn';
 
 export function AboutContent() {
-  const actor = useActor();
   const c = useContentDraft(['about']);
   const a = c.draft.about;
   const set = (p: Partial<typeof a>) => c.set('about', { ...a, ...p });
@@ -126,10 +123,9 @@ export function AboutContent() {
       <SaveBar
         dirty={c.dirty}
         onReset={c.reset}
-        onSave={() => {
-          updateContent(actor, 'about', a, 'Updated About page');
-          c.markSaved();
-          toast.success('About page published');
+        saving={c.saving}
+        onSave={async () => {
+          if (await c.save()) toast.success('About page published');
         }}
       />
     </div>

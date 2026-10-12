@@ -3,9 +3,7 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { ExternalLinkIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { useActor } from '@/hooks/useActor';
 import { useContentDraft } from '@/hooks/useContentDraft';
-import { updateContent } from '@/lib/mock-db/settings';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -15,7 +13,6 @@ import { cn } from '@/lib/utils/cn';
 
 /** Contact page intro and the legal / policy pages. */
 export function PagesContent() {
-  const actor = useActor();
   const c = useContentDraft(['contact', 'policies']);
   const { contact, policies } = c.draft;
   const keys = Object.keys(policies);
@@ -23,12 +20,8 @@ export function PagesContent() {
   const policy = policies[active];
   const setPolicy = (p: Partial<typeof policy>) => c.set('policies', { ...policies, [active]: { ...policy, ...p } });
 
-  const save = () => {
-    c.changedKeys().forEach((k) =>
-      updateContent(actor, k, c.draft[k] as never, k === 'contact' ? 'Updated contact page' : 'Updated policies'),
-    );
-    c.markSaved();
-    toast.success('Pages published');
+  const save = async () => {
+    if (await c.save()) toast.success('Pages published');
   };
 
   return (
@@ -150,7 +143,7 @@ export function PagesContent() {
           </Panel>
         ) : null}
       </div>
-      <SaveBar dirty={c.dirty} onSave={save} onReset={c.reset} />
+      <SaveBar dirty={c.dirty} onSave={save} onReset={c.reset} saving={c.saving} />
     </div>
   );
 }

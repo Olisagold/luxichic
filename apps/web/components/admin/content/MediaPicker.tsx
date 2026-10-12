@@ -3,11 +3,10 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { ImageIcon } from 'lucide-react';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { addMedia } from '@/lib/mock-db/settings';
+import { useRouter } from 'next/navigation';
+import { useAdminContent } from '@/components/admin/AdminContentProvider';
 import { Modal } from '@/components/ui/Modal';
-import { readImageFile } from '@/lib/utils/images';
+import { uploadAdminImage } from '@/lib/media/upload-client';
 import { cn } from '@/lib/utils/cn';
 
 /** Image field: choose from the media library or upload (upload is also saved to the library). */
@@ -22,29 +21,23 @@ export function MediaPicker({
   label: string;
   compact?: boolean;
 }) {
-  const actor = useActor();
-  const media = useDb((s) => s.media);
+  const { media } = useAdminContent();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const upload = async (f?: File) => {
     if (!f) return;
+    setUploading(true);
     try {
-      const url = await readImageFile(f);
-      const img = new Image();
-      img.src = url;
-      await img.decode().catch(() => undefined);
-      addMedia(actor, {
-        url,
-        name: f.name,
-        folder: 'Homepage',
-        width: img.naturalWidth || 0,
-        height: img.naturalHeight || 0,
-        sizeKb: Math.round((url.length * 0.75) / 1024),
-      });
-      onChange(url);
+      // Stored and resized on the server, and added to the media library.
+      onChange(await uploadAdminImage(f, 'content', 'homepage'));
+      setOpen(false);
+      router.refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Could not read image');
+      toast.error(e instanceof Error ? e.message : 'Could not upload that image.');
     }
+    setUploading(false);
   };
 
   return (
@@ -75,7 +68,7 @@ export function MediaPicker({
       >
         <div className="p-4">
           <label className="mb-3 inline-flex cursor-pointer items-center rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white hover:bg-charcoal">
-            Upload new image
+            {uploading ? 'Uploading…' : 'Upload new image'}
             <input
               type="file"
               accept="image/*"

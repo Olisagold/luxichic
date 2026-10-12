@@ -3,9 +3,7 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon, PlusIcon, Trash2Icon } from 'lucide-react';
-import { useActor } from '@/hooks/useActor';
 import { useContentDraft } from '@/hooks/useContentDraft';
-import { updateContent } from '@/lib/mock-db/settings';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { adminInputClass } from '@/components/admin/ui/AdminField';
@@ -21,7 +19,6 @@ function move<T>(list: T[], i: number, dir: -1 | 1): T[] {
 }
 
 export function FaqContent() {
-  const actor = useActor();
   const c = useContentDraft(['faqs']);
   const faqs = c.draft.faqs;
   const setFaqs = (v: typeof faqs) => c.set('faqs', v);
@@ -145,14 +142,14 @@ export function FaqContent() {
       <SaveBar
         dirty={c.dirty}
         onReset={c.reset}
-        onSave={() => {
+        saving={c.saving}
+        onSave={async () => {
           const cleaned = faqs
             .map((f) => ({ ...f, items: f.items.filter((i) => i.q.trim() && i.a.trim()) }))
             .filter((f) => f.category.trim() && f.items.length);
-          updateContent(actor, 'faqs', cleaned, 'Updated FAQs');
-          c.set('faqs', cleaned);
-          c.markSaved({ faqs: cleaned });
-          toast.success('FAQs published', { description: 'Empty questions were removed.' });
+          if (await c.save({ faqs: cleaned })) {
+            toast.success('FAQs published', { description: 'Empty questions were removed.' });
+          }
         }}
       />
     </div>

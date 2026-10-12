@@ -5,10 +5,8 @@ import { Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 import { ExternalLinkIcon, GripVerticalIcon, PlusIcon, StarIcon, Trash2Icon } from 'lucide-react';
 import type { SiteContent, Testimonial } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
 import { useContentDraft } from '@/hooks/useContentDraft';
-import { useDb } from '@/lib/mock-db/db';
-import { updateContent } from '@/lib/mock-db/settings';
+import { useAdminContent } from '@/components/admin/AdminContentProvider';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -51,15 +49,12 @@ const tabs = [
 ] as const;
 
 export function HomepageContent() {
-  const actor = useActor();
   const c = useContentDraft(keys);
   const { draft, set } = c;
   const [tab, setTab] = useState<(typeof tabs)[number][0]>('layout');
 
-  const save = () => {
-    c.changedKeys().forEach((k) => updateContent(actor, k, draft[k] as never, 'Updated homepage'));
-    c.markSaved();
-    toast.success('Homepage published', { description: 'Changes are live on the storefront.' });
+  const save = async () => {
+    if (await c.save()) toast.success('Homepage published', { description: 'Changes are live on the storefront.' });
   };
 
   return (
@@ -392,7 +387,13 @@ export function HomepageContent() {
         </div>
       )}
 
-      <SaveBar dirty={c.dirty} onSave={save} onReset={c.reset} label="Homepage changes aren’t live yet" />
+      <SaveBar
+        dirty={c.dirty}
+        onSave={save}
+        onReset={c.reset}
+        saving={c.saving}
+        label="Homepage changes aren’t live yet"
+      />
     </div>
   );
 }
@@ -404,8 +405,9 @@ function FeaturedTab({
   draft: Pick<SiteContent, 'featuredProductIds' | 'featuredServiceSlugs' | 'salonSection'>;
   set: <K extends 'featuredProductIds' | 'featuredServiceSlugs' | 'salonSection'>(k: K, v: SiteContent[K]) => void;
 }) {
-  const products = useDb((s) => s.products.filter((p) => p.status === 'published'));
-  const services = useDb((s) => s.services.filter((x) => x.status === 'published'));
+  const admin = useAdminContent();
+  const products = admin.products.filter((p) => p.status === 'published');
+  const services = admin.services.filter((x) => x.status === 'published');
   const [q, setQ] = useState('');
   const matches = products
     .filter((p) => !draft.featuredProductIds.includes(p.id) && p.name.toLowerCase().includes(q.toLowerCase()))

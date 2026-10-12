@@ -171,7 +171,7 @@ export async function loadSalon(): Promise<{ services: AdminService[]; specialis
   return { services, specialists };
 }
 
-async function loadContent(): Promise<SiteContent> {
+export async function loadContent(): Promise<SiteContent> {
   const blocks = await db.select().from(s.siteContent);
   const faqRows = await db.select().from(s.faqs).orderBy(asc(s.faqs.sortOrder));
   const policyRows = await db.select().from(s.policies).orderBy(asc(s.policies.slug));
