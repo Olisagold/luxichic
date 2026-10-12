@@ -345,11 +345,31 @@ Notes:
 - **Before launch:** the admin still shows the prototype's appointments until Phase 8 (confirm, reject,
   admin reschedule, closed days), and no emails or Telegram alerts are sent until Phase 9.
 
-## Phase 7: Reviews
+## Phase 7: Reviews ✅
 
-1. Signed-in customers can review products. Optionally restrict this to verified purchasers
-   _(business rule to confirm)_.
-2. Admin moderation (approve, hide, delete) updates product ratings.
+Done 2026-10-12.
+
+1. ✅ **Decided 2026-10-12:** any signed-in customer can review any product, not only online buyers (many buy
+   in the physical store). "Verified purchase" marks reviewers with an online order for it that wasn't
+   cancelled. One review per customer per product (unique index); they edit or delete it from the product page
+   or their account (`lib/reviews/actions.ts`). Product pages load visible reviews on the server, cached under
+   the `reviews` tag, and add `aggregateRating` to the structured data once there are reviews.
+2. ✅ Review photos: shrunk in the browser (`lib/media/shrink.ts`), then stored as resized WebP only. No original
+   is kept, so nothing from the camera (such as location) is published.
+3. ✅ Ratings are real: a trigger (migration `review_ratings`) keeps each product's `rating` and `review_count`
+   in step with its visible reviews, so moderation updates them too. This replaced the prototype's sample
+   ratings; on prod every product starts with "No reviews yet". Applied to dev and prod.
+4. ✅ Admin moderation (`/admin/reviews`, `lib/reviews/admin-actions.ts`): restore, hide, archive and delete,
+   checked against `reviews.moderate` on the server and written to `audit_logs`. Brought forward from
+   Phase 8's catalog item.
+
+Notes:
+
+- Tested end to end in a browser against `luxichic-dev` (21 checks), then cleaned up: guest sign-in prompt,
+  posting with a photo (WebP sizes only, no original), rating follows each change, one review each, editing,
+  verified after an online order, account page, admin sees author and product, hide (rating cleared, hidden
+  review still visible to its author, audit log), delete. pgTAP: `review_ratings.test.sql`.
+- Photos from abandoned review drafts stay in storage; a cleanup can come with the media library in Phase 8.
 
 ## Phase 8: Admin back office
 
@@ -362,7 +382,7 @@ Connect each admin section to the database through server actions. Each action c
    - Filter for orders awaiting verification. The transaction reference is searchable, so it can be matched
      against the bank statement.
 2. Products: list, product editor (images upload to Supabase Storage), inventory, low-stock flags.
-3. Catalog: categories, discounts, review moderation.
+3. Catalog: categories, discounts (review moderation is done, Phase 7).
 4. Customers: list, detail, block and unblock, customer activity.
 5. Salon: appointments, calendar, services and the service editor, specialists, availability.
 6. Website content: homepage, about, FAQs, pages; media library on Supabase Storage. Saving revalidates
