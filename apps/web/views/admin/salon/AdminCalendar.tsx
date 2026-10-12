@@ -15,12 +15,11 @@ import {
 import { toast } from 'sonner';
 import { BanIcon, ChevronLeftIcon, ChevronRightIcon, LockOpenIcon } from 'lucide-react';
 import type { Appointment } from '@/types/salon';
-import { useOrders } from '@/contexts/OrdersContext';
+import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { addBlock, removeBlock } from '@/lib/mock-db/salon';
-import { businessConfig } from '@/data/config';
+import { useAdminSalon } from '@/components/admin/AdminSalonProvider';
+import { addBlock, removeBlock } from '@/lib/salon/admin-actions';
+import type { Specialist } from '@/types/admin';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { adminInputClass } from '@/components/admin/ui/AdminField';
@@ -40,11 +39,10 @@ const dot: Record<string, string> = {
 };
 
 export function AdminCalendar() {
-  const { appointments } = useOrders();
+  const { appointments, services, blocks, specialists } = useAdminSalon();
+  const router = useRouter();
+  const hours = useMemo(() => salonHours(specialists), [specialists]);
   const { can } = useAdminAuth();
-  const actor = useActor();
-  const services = useDb((s) => s.services);
-  const blocks = useDb((s) => s.blocks);
   const [view, setView] = useState<View>('month');
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState(toISODate(new Date()));
@@ -86,28 +84,30 @@ export function AdminCalendar() {
         ? `${format(days[0], 'd MMM')} – ${format(days[6], 'd MMM yyyy')}`
         : format(cursor, 'EEEE, d MMMM yyyy');
   const dayKey = view === 'day' ? toISODate(cursor) : selected;
-  const closed = (d: Date) => businessConfig.salon.closedWeekdays.includes(d.getDay());
+  const closed = (d: Date) => !hours.openDays.has(d.getDay());
 
-  const toggleSlot = (time: string | null) => {
+  const toggleSlot = async (time: string | null) => {
     const existing = blocks.find(
       (b) => b.date === dayKey && b.start === time && (b.serviceSlug ?? '') === service && !b.specialistId,
     );
-    if (existing) {
-      removeBlock(actor, existing.id);
-      toast.success('Slot reopened');
-    } else {
-      addBlock(actor, {
-        date: dayKey,
-        start: time,
-        end: time ? `${String(Number(time.slice(0, 2)) + 1).padStart(2, '0')}:00` : null,
-        serviceSlug: service || null,
-        specialistId: null,
-        reason: 'Blocked from calendar',
-      });
+    const res = existing
+      ? await removeBlock(existing.id).catch(() => null)
+      : await addBlock({
+          date: dayKey,
+          start: time,
+          end: time ? `${String(Number(time.slice(0, 2)) + 1).padStart(2, '0')}:00` : null,
+          serviceSlug: service || null,
+          specialistId: null,
+          reason: 'Blocked from calendar',
+        }).catch(() => null);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not change that time.');
+    if (existing) toast.success('Slot reopened');
+    else {
       toast.success(time ? `${formatSlot(time)} blocked` : 'Whole day blocked', {
         description: service ? `Only for ${services.find((s) => s.slug === service)?.name}.` : 'For all services.',
       });
     }
+    router.refresh();
   };
 
   const dayAppts = byDate[dayKey] ?? [];
@@ -317,13 +317,14 @@ function DaySlots({
   onToggle?: (t: string | null) => void;
   compact?: boolean;
 }) {
-  const blocks = useDb((s) => s.blocks);
-  const isClosed = businessConfig.salon.closedWeekdays.includes(new Date(dayKey).getDay());
+  const { blocks, specialists } = useAdminSalon();
+  const hours = salonHours(specialists);
+  const isClosed = !hours.openDays.has(new Date(`${dayKey}T00:00:00`).getDay());
   if (isClosed)
     return <p className="px-4 py-10 text-center text-[13px] text-subtle">The salon is closed on this day.</p>;
   return (
     <ul className={cn('divide-y divide-line', !compact && 'min-h-[360px]')}>
-      {businessConfig.salon.slots.map((time) => {
+      {hours.slots.map((time) => {
         const booked = appts.filter((a) => a.time === time);
         const block =
           isBlocked(blocks, dayKey, time, service || null, null) ??
@@ -371,4 +372,16 @@ function DaySlots({
       })}
     </ul>
   );
+}
+
+/** The salon's open weekdays and hourly time rows, from the active specialists' working hours. */
+function salonHours(specialists: Specialist[]): { openDays: Set<number>; slots: string[] } {
+  const active = specialists.filter((sp) => sp.status === 'active' && sp.workingDays.length);
+  const openDays = new Set(active.flatMap((sp) => sp.workingDays));
+  if (!active.length) return { openDays, slots: [] };
+  const hour = (t: string) => Number(t.slice(0, 2));
+  const first = Math.min(...active.map((sp) => hour(sp.hours.start)));
+  const last = Math.max(...active.map((sp) => hour(sp.hours.end)));
+  const slots = Array.from({ length: Math.max(0, last - first) }, (_, i) => `${String(first + i).padStart(2, '0')}:00`);
+  return { openDays, slots };
 }

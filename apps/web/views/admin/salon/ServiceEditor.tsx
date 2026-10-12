@@ -5,9 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { PlusIcon, ScissorsIcon, XIcon } from 'lucide-react';
 import type { AdminService } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { getDb, useDb } from '@/lib/mock-db/db';
-import { assignSpecialist, deleteService, saveService, setServiceStatus } from '@/lib/mock-db/salon';
+import { useAdminSalon } from '@/components/admin/AdminSalonProvider';
+import { assignSpecialist, deleteService, saveService, setServiceStatus } from '@/lib/salon/admin-actions';
+import { uploadAdminImage } from '@/lib/media/upload-client';
 import { businessConfig } from '@/data/config';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
@@ -16,7 +16,6 @@ import { AdminEmpty } from '@/components/admin/ui/AdminEmpty';
 import { AdminInput, AdminSelect, AdminTextarea } from '@/components/admin/ui/AdminField';
 import { Toggle } from '@/components/admin/ui/Toggle';
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
-import { readImageFile } from '@/lib/utils/images';
 import { slugify } from '@/lib/utils/text';
 
 const blank = (): AdminService => ({
@@ -39,7 +38,8 @@ const blank = (): AdminService => ({
 export function ServiceEditor() {
   const { slug } = useParams<{ slug: string }>();
   const isNew = !slug || slug === 'new';
-  const existing = isNew ? undefined : getDb().services.find((s) => s.slug === slug);
+  const { services } = useAdminSalon();
+  const existing = isNew ? undefined : services.find((s) => s.slug === slug);
   if (!isNew && !existing) {
     return (
       <div className="rounded-xl border border-line bg-white">
@@ -55,36 +55,43 @@ export function ServiceEditor() {
 }
 
 function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
-  const actor = useActor();
   const router = useRouter();
-  const specialists = useDb((s) => s.specialists.filter((sp) => sp.status !== 'archived'));
-  const categories = useDb((s) => Array.from(new Set(s.services.map((x) => x.category))));
+  const salon = useAdminSalon();
+  const specialists = salon.specialists.filter((sp) => sp.status !== 'archived');
+  const categories = Array.from(new Set(salon.services.map((x) => x.category)));
+  const [saving, setSaving] = useState(false);
   const [s, setS] = useState<AdminService>(initial);
   const [include, setInclude] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const set = (patch: Partial<AdminService>) => setS((x) => ({ ...x, ...patch }));
 
-  const save = () => {
+  const save = async () => {
     const slug = s.slug || slugify(s.name);
     const errs: Record<string, string> = {};
     if (!s.name.trim()) errs.name = 'Enter a service name.';
-    if (isNew && getDb().services.some((x) => x.slug === slug)) errs.name = 'A service with this name already exists.';
+    if (isNew && salon.services.some((x) => x.slug === slug)) errs.name = 'A service with this name already exists.';
     if (!s.shortDescription.trim()) errs.short = 'Add a one-line description.';
     if (s.status === 'published' && !s.image) errs.image = 'Add an image before publishing.';
     setErrors(errs);
     if (Object.keys(errs).length) return toast.error('Please fix the highlighted fields.');
-    saveService(actor, { ...s, slug, name: s.name.trim() });
+    setSaving(true);
+    const res = await saveService({ ...s, slug, name: s.name.trim() }, isNew ? undefined : initial.slug).catch(
+      () => null,
+    );
+    setSaving(false);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not save the service.');
     toast.success(isNew ? 'Service created' : 'Service saved', {
       description: s.status === 'published' ? 'Visible on the salon pages.' : 'Saved as draft.',
     });
-    if (isNew) router.replace(`/admin/salon/services/${slug}`);
+    if (isNew && 'slug' in res && res.slug) router.replace(`/admin/salon/services/${res.slug}`);
+    else router.refresh();
   };
 
   const upload = async (f?: File) => {
     if (!f) return;
     try {
-      set({ image: await readImageFile(f) });
+      set({ image: await uploadAdminImage(f, 'salon', 'services') });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not read image');
     }
@@ -100,10 +107,12 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
             {!isNew && s.status !== 'archived' && (
               <AdminButton
                 variant="dangerGhost"
-                onClick={() => {
-                  setServiceStatus(actor, s.slug, 'archived');
+                onClick={async () => {
+                  const res = await setServiceStatus(s.slug, 'archived').catch(() => null);
+                  if (!res?.ok) return toast.error(res?.error ?? 'Could not archive the service.');
                   set({ status: 'archived' });
                   toast.success('Service archived');
+                  router.refresh();
                 }}
               >
                 Archive
@@ -114,7 +123,7 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
                 Delete
               </AdminButton>
             )}
-            <AdminButton variant="primary" onClick={save}>
+            <AdminButton variant="primary" onClick={save} loading={saving}>
               {isNew ? 'Create service' : 'Save changes'}
             </AdminButton>
           </>
@@ -301,9 +310,11 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
                       label={sp.name}
                       description={`${sp.title}${sp.status === 'on-leave' ? ' · on leave' : ''}`}
                       checked={sp.serviceSlugs.includes(s.slug)}
-                      onChange={(on) => {
-                        assignSpecialist(actor, sp.id, s.slug, on);
+                      onChange={async (on) => {
+                        const res = await assignSpecialist(sp.id, s.slug, on).catch(() => null);
+                        if (!res?.ok) return toast.error(res?.error ?? 'Could not update the specialist.');
                         toast.success(on ? `${sp.name} assigned` : `${sp.name} removed`);
+                        router.refresh();
                       }}
                     />
                   </li>
@@ -316,8 +327,10 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
       <ConfirmDialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        onConfirm={() => {
-          deleteService(actor, s.slug);
+        onConfirm={async () => {
+          const res = await deleteService(s.slug).catch(() => null);
+          setConfirmDelete(false);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not delete the service.');
           toast.success('Service deleted');
           router.push('/admin/salon/services');
         }}

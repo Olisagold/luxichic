@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { PencilIcon, PlusIcon, UserRoundIcon } from 'lucide-react';
 import type { Specialist } from '@/types/admin';
-import { useOrders } from '@/contexts/OrdersContext';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { deleteSpecialist, saveSpecialist } from '@/lib/mock-db/salon';
+import { useRouter } from 'next/navigation';
+import { useAdminSalon } from '@/components/admin/AdminSalonProvider';
+import { deleteSpecialist, saveSpecialist } from '@/lib/salon/admin-actions';
+import { uploadAdminImage } from '@/lib/media/upload-client';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminEmpty } from '@/components/admin/ui/AdminEmpty';
@@ -15,7 +15,6 @@ import { AdminInput, AdminSelect, AdminTextarea } from '@/components/admin/ui/Ad
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { readImageFile } from '@/lib/utils/images';
 import { generateId } from '@/lib/utils/references';
 import { toISODate } from '@/lib/utils/dates';
 import { cn } from '@/lib/utils/cn';
@@ -36,10 +35,8 @@ const blank = (): Specialist => ({
 });
 
 export function Specialists() {
-  const actor = useActor();
-  const specialists = useDb((s) => s.specialists);
-  const services = useDb((s) => s.services);
-  const { appointments } = useOrders();
+  const { specialists, services, appointments } = useAdminSalon();
+  const router = useRouter();
   const [editing, setEditing] = useState<Specialist | null>(null);
   const [removing, setRemoving] = useState<Specialist | null>(null);
   const today = toISODate(new Date());
@@ -129,20 +126,25 @@ export function Specialists() {
               }
             : undefined
         }
-        onSave={(sp) => {
-          saveSpecialist(actor, sp);
+        onSave={async (sp) => {
+          const res = await saveSpecialist(sp).catch(() => null);
+          if (!res?.ok) return res?.error ?? 'Could not save the specialist.';
           toast.success('Specialist saved');
           setEditing(null);
+          router.refresh();
         }}
       />
 
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        onConfirm={() => {
-          if (removing) deleteSpecialist(actor, removing.id);
+        onConfirm={async () => {
+          if (!removing) return;
+          const res = await deleteSpecialist(removing.id).catch(() => null);
           setRemoving(null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not remove the specialist.');
           toast.success('Specialist removed');
+          router.refresh();
         }}
         title={`Remove ${removing?.name}?`}
         tone="danger"
@@ -161,21 +163,25 @@ function SpecialistDialog({
 }: {
   specialist: Specialist | null;
   onClose: () => void;
-  onSave: (s: Specialist) => void;
+  /** Saves; resolves to an error message if it couldn't. */
+  onSave: (s: Specialist) => Promise<string | void>;
   onDelete?: () => void;
 }) {
-  const services = useDb((s) => s.services.filter((x) => x.status !== 'archived'));
+  const services = useAdminSalon().services.filter((x) => x.status !== 'archived');
+  const [saving, setSaving] = useState(false);
   const [sp, setSp] = useState<Specialist>(specialist ?? blank());
   const [specialties, setSpecialties] = useState((specialist?.specialties ?? []).join(', '));
   const [error, setError] = useState('');
   const set = (patch: Partial<Specialist>) => setSp((x) => ({ ...x, ...patch }));
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sp.name.trim() || !sp.title.trim()) return setError('Enter a name and title.');
     if (sp.hours.end <= sp.hours.start) return setError('Finish time must be after start time.');
-    onSave({
+    setSaving(true);
+    // New specialists get their id from the server.
+    const failed = await onSave({
       ...sp,
       id: sp.id || generateId('sp'),
       name: sp.name.trim(),
@@ -184,6 +190,8 @@ function SpecialistDialog({
         .map((x) => x.trim())
         .filter(Boolean),
     });
+    setSaving(false);
+    if (failed) setError(failed);
   };
 
   return (
@@ -210,7 +218,7 @@ function SpecialistDialog({
                 const f = e.target.files?.[0];
                 if (f)
                   try {
-                    set({ image: await readImageFile(f) });
+                    set({ image: await uploadAdminImage(f, 'salon', 'salon') });
                   } catch {
                     toast.error('Could not read image');
                   }
@@ -330,7 +338,7 @@ function SpecialistDialog({
             <AdminButton variant="ghost" onClick={onClose}>
               Cancel
             </AdminButton>
-            <AdminButton type="submit" variant="primary">
+            <AdminButton type="submit" variant="primary" loading={saving}>
               Save
             </AdminButton>
           </div>

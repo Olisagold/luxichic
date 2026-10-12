@@ -5,10 +5,9 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { PlusIcon, ScissorsIcon } from 'lucide-react';
 import type { AdminService } from '@/types/admin';
-import { useOrders } from '@/contexts/OrdersContext';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { setServiceStatus } from '@/lib/mock-db/salon';
+import { useRouter } from 'next/navigation';
+import { useAdminSalon } from '@/components/admin/AdminSalonProvider';
+import { setServiceStatus } from '@/lib/salon/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -22,10 +21,8 @@ type Tab = 'all' | AdminService['status'];
 const label = { published: 'Published', draft: 'Draft', archived: 'Archived' } as const;
 
 export function SalonServices() {
-  const actor = useActor();
-  const services = useDb((s) => s.services);
-  const specialists = useDb((s) => s.specialists);
-  const { appointments } = useOrders();
+  const { services, specialists, appointments } = useAdminSalon();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>('all');
   const [q, setQ] = useState('');
 
@@ -106,9 +103,11 @@ export function SalonServices() {
                       srOnlyLabel
                       label={`Publish ${s.name}`}
                       checked={s.status === 'published'}
-                      onChange={(on) => {
-                        setServiceStatus(actor, s.slug, on ? 'published' : 'draft');
+                      onChange={async (on) => {
+                        const res = await setServiceStatus(s.slug, on ? 'published' : 'draft').catch(() => null);
+                        if (!res?.ok) return toast.error(res?.error ?? 'Could not update the service.');
                         toast.success(on ? `${s.name} is live` : `${s.name} hidden from the salon pages`);
+                        router.refresh();
                       }}
                     />
                   )}

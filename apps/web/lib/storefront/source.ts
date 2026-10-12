@@ -125,7 +125,7 @@ async function loadProducts(categoryById: Map<string, { slug: string }>, ids?: s
   });
 }
 
-async function loadSalon(): Promise<{ services: AdminService[]; specialists: Specialist[] }> {
+export async function loadSalon(): Promise<{ services: AdminService[]; specialists: Specialist[] }> {
   const serviceRows = await db.select().from(s.services).orderBy(asc(s.services.sortOrder));
   const specialistRows = await db.select().from(s.specialists).orderBy(asc(s.specialists.createdAt));
   const links = await db.select().from(s.specialistServices);

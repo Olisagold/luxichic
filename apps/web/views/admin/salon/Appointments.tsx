@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CalendarClockIcon, CalendarDaysIcon } from 'lucide-react';
 import type { AppointmentStatus } from '@/types/salon';
-import { useOrders } from '@/contexts/OrdersContext';
+import { useAdminSalon } from '@/components/admin/AdminSalonProvider';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -20,7 +20,7 @@ type Tab = 'upcoming' | 'all' | AppointmentStatus;
 const PAGE = 15;
 
 export function Appointments() {
-  const { appointments } = useOrders();
+  const { appointments } = useAdminSalon();
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

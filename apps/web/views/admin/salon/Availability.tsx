@@ -3,10 +3,9 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { BanIcon, CalendarOffIcon, TrashIcon } from 'lucide-react';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { addBlock, removeBlock } from '@/lib/mock-db/salon';
-import { businessConfig } from '@/data/config';
+import { useRouter } from 'next/navigation';
+import { useAdminSalon } from '@/components/admin/AdminSalonProvider';
+import { addBlock, removeBlock } from '@/lib/salon/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -18,10 +17,23 @@ import { formatLongDate, formatSlot, toISODate } from '@/lib/utils/dates';
 const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function Availability() {
-  const actor = useActor();
-  const blocks = useDb((s) => s.blocks);
-  const services = useDb((s) => s.services.filter((x) => x.status !== 'archived'));
-  const specialists = useDb((s) => s.specialists.filter((x) => x.status !== 'archived'));
+  const router = useRouter();
+  const salon = useAdminSalon();
+  const blocks = salon.blocks;
+  const services = salon.services.filter((x) => x.status !== 'archived');
+  const specialists = salon.specialists.filter((x) => x.status !== 'archived');
+  // Opening hours per weekday, from the active specialists' working hours.
+  const opening = weekdays.map((_, day) => {
+    const working = specialists.filter((sp) => sp.status === 'active' && sp.workingDays.includes(day));
+    if (!working.length) return null;
+    const start = working.map((sp) => sp.hours.start).sort()[0];
+    const end = working
+      .map((sp) => sp.hours.end)
+      .sort()
+      .at(-1)!;
+    return { start, end };
+  });
+  const hourOptions = Array.from({ length: 15 }, (_, i) => `${String(i + 7).padStart(2, '0')}:00`);
   const today = toISODate(new Date());
   const [form, setForm] = useState({
     date: today,
@@ -33,29 +45,29 @@ export function Availability() {
     reason: '',
   });
   const [error, setError] = useState('');
-  const [showPast, setShowPast] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.date) return setError('Choose a date.');
     if (form.date < today) return setError('Choose today or a future date.');
     if (!form.allDay && form.end <= form.start) return setError('End time must be after start time.');
     setError('');
-    addBlock(actor, {
+    const res = await addBlock({
       date: form.date,
       start: form.allDay ? null : form.start,
       end: form.allDay ? null : form.end,
       serviceSlug: form.serviceSlug || null,
       specialistId: form.specialistId || null,
       reason: form.reason.trim() || 'Unavailable',
-    });
+    }).catch(() => null);
+    if (!res?.ok) return setError(res?.error ?? 'Could not block that time.');
     toast.success('Time blocked', { description: 'Customers can no longer book it.' });
     setForm({ ...form, reason: '' });
+    router.refresh();
   };
 
-  const list = blocks
-    .filter((b) => showPast || b.date >= today)
-    .sort((a, b) => `${a.date}${a.start ?? ''}`.localeCompare(`${b.date}${b.start ?? ''}`));
+  // Upcoming only (the page loads today onwards).
+  const list = [...blocks].sort((a, b) => `${a.date}${a.start ?? ''}`.localeCompare(`${b.date}${b.start ?? ''}`));
   const name = (slug: string | null) => (slug ? (services.find((s) => s.slug === slug)?.name ?? slug) : 'All services');
   const spName = (id: string | null) =>
     id ? (specialists.find((s) => s.id === id)?.name ?? 'Specialist') : 'Any specialist';
@@ -86,7 +98,7 @@ export function Availability() {
                     label="From"
                     value={form.start}
                     onChange={(e) => setForm({ ...form, start: e.target.value })}
-                    options={businessConfig.salon.slots.map((t) => ({ value: t, label: formatSlot(t) }))}
+                    options={hourOptions.map((t) => ({ value: t, label: formatSlot(t) }))}
                   />
                   <AdminInput
                     id="av-end"
@@ -140,12 +152,8 @@ export function Availability() {
               {weekdays.map((d, i) => (
                 <li key={d} className="flex justify-between">
                   <span className="text-charcoal">{d}</span>
-                  <span
-                    className={businessConfig.salon.closedWeekdays.includes(i) ? 'text-subtle' : 'font-medium text-ink'}
-                  >
-                    {businessConfig.salon.closedWeekdays.includes(i)
-                      ? 'Closed'
-                      : `${formatSlot(businessConfig.salon.slots[0])} – last booking ${formatSlot(businessConfig.salon.slots[businessConfig.salon.slots.length - 1])}`}
+                  <span className={opening[i] ? 'font-medium text-ink' : 'text-subtle'}>
+                    {opening[i] ? `${formatSlot(opening[i].start)} – ${formatSlot(opening[i].end)}` : 'Closed'}
                   </span>
                 </li>
               ))}
@@ -153,21 +161,7 @@ export function Availability() {
           </Panel>
         </div>
 
-        <Panel
-          title={`Blocked times (${list.length})`}
-          bodyClassName="p-0"
-          actions={
-            <label className="flex items-center gap-2 text-xs text-subtle">
-              <input
-                type="checkbox"
-                checked={showPast}
-                onChange={(e) => setShowPast(e.target.checked)}
-                className="h-3.5 w-3.5 accent-ink"
-              />
-              Show past
-            </label>
-          }
-        >
+        <Panel title={`Blocked times (${list.length})`} bodyClassName="p-0">
           {list.length === 0 ? (
             <AdminEmpty
               icon={<CalendarOffIcon className="h-5 w-5" />}
@@ -193,9 +187,11 @@ export function Availability() {
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      removeBlock(actor, b.id);
+                    onClick={async () => {
+                      const res = await removeBlock(b.id).catch(() => null);
+                      if (!res?.ok) return toast.error(res?.error ?? 'Could not reopen that time.');
                       toast.success('Time reopened');
+                      router.refresh();
                     }}
                     className="rounded-md p-1.5 text-subtle hover:bg-red-50 hover:text-red-700"
                     aria-label="Remove block"
