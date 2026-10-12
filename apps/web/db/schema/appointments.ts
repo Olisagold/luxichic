@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { date, index, pgTable, text, time, uuid } from 'drizzle-orm/pg-core';
+import { check, date, index, integer, pgTable, text, time, uuid } from 'drizzle-orm/pg-core';
 import { admins } from './admins';
 import { services } from './services';
 import { specialists } from './specialists';
@@ -8,7 +8,8 @@ import { appointmentStatus, createdAt, ownRows, updatedAt } from './_shared';
 
 /**
  * Salon bookings. Service, specialist and customer details are snapshotted at booking time.
- * Double-booking prevention (a constraint on specialist + slot) is added with the booking flow in Phase 6.
+ * A specialist can't have two active (pending, confirmed, rescheduled) appointments that overlap: the
+ * `appointments_no_double_booking` exclusion constraint (migration `no_double_booking`) enforces it.
  */
 export const appointments = pgTable(
   'appointments',
@@ -22,6 +23,8 @@ export const appointments = pgTable(
     specialistName: text('specialist_name'),
     date: date('date').notNull(),
     time: time('time').notNull(),
+    /** Length of the booked service, so overlapping bookings can be refused. */
+    durationMinutes: integer('duration_minutes').notNull().default(60),
     userId: uuid('user_id').references(() => profiles.id, { onDelete: 'set null' }),
     customerName: text('customer_name').notNull(),
     customerEmail: text('customer_email').notNull(),
@@ -41,6 +44,7 @@ export const appointments = pgTable(
     index('appointments_date_idx').on(t.date, t.time),
     index('appointments_user_idx').on(t.userId),
     index('appointments_specialist_date_idx').on(t.specialistId, t.date),
+    check('appointments_duration_check', sql`${t.durationMinutes} between 5 and 600`),
     ownRows('appointments: read own', 'select'),
   ],
 );
