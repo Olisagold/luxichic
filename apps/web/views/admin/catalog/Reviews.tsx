@@ -4,11 +4,11 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { ArchiveIcon, EyeIcon, EyeOffIcon, MessageSquareIcon, TrashIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import type { Review } from '@/types/user';
-import { useReviews } from '@/contexts/ReviewsContext';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useAdminOps } from '@/hooks/useAdminOps';
-import { useDb } from '@/lib/mock-db/db';
+import { deleteReview, setReviewStatus } from '@/lib/reviews/admin-actions';
+import type { AdminReview } from '@/lib/reviews/queries';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -25,18 +25,15 @@ type Status = NonNullable<Review['status']>;
 const label: Record<Status, string> = { visible: 'Visible', hidden: 'Hidden', archived: 'Archived' };
 const PAGE = 12;
 
-export function Reviews() {
-  const { all } = useReviews();
+/** Review moderation, from the database. Changes go through permission-checked server actions. */
+export function Reviews({ reviews: all }: { reviews: AdminReview[] }) {
   const { can } = useAdminAuth();
-  const ops = useAdminOps();
-  const products = useDb((s) => s.products);
+  const router = useRouter();
   const [tab, setTab] = useState<Status>('visible');
   const [rating, setRating] = useState(0);
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
-  const [deleting, setDeleting] = useState<Review | null>(null);
-
-  const productName = (id: string) => products.find((p) => p.id === id)?.name ?? 'Removed product';
+  const [deleting, setDeleting] = useState<AdminReview | null>(null);
   const status = (r: Review): Status => r.status ?? 'visible';
 
   const filtered = useMemo(() => {
@@ -44,20 +41,19 @@ export function Reviews() {
     return all
       .filter((r) => status(r) === tab)
       .filter((r) => !rating || r.rating === rating)
-      .filter(
-        (r) => !t || [r.title, r.body, r.authorName, productName(r.productId)].some((f) => f.toLowerCase().includes(t)),
-      )
+      .filter((r) => !t || [r.title, r.body, r.authorName, r.productName].some((f) => f.toLowerCase().includes(t)))
       .sort((a, b) => b.date.localeCompare(a.date));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, tab, rating, q, products]);
+  }, [all, tab, rating, q]);
 
   const avg = all.filter((r) => status(r) === 'visible');
   const average = avg.length ? (avg.reduce((s, r) => s + r.rating, 0) / avg.length).toFixed(1) : '—';
-  const act = (r: Review, s: Status) => {
-    ops.setReviewStatus(r.id, s);
+  const act = async (r: Review, s: Status) => {
+    const res = await setReviewStatus(r.id, s).catch(() => null);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not update the review.');
     toast.success(
       s === 'visible' ? 'Review restored' : s === 'hidden' ? 'Review hidden from the store' : 'Review archived',
     );
+    router.refresh();
   };
 
   return (
@@ -144,7 +140,7 @@ export function Reviews() {
                       {r.authorName}
                       {r.authorEmail ? ` · ${r.authorEmail}` : ''} · {formatDate(r.date)} ·{' '}
                       <Link href={`/admin/products/${r.productId}`} className="font-medium text-ink hover:underline">
-                        {productName(r.productId)}
+                        {r.productName}
                       </Link>
                     </p>
                   </div>
@@ -193,10 +189,13 @@ export function Reviews() {
       <ConfirmDialog
         open={!!deleting}
         onClose={() => setDeleting(null)}
-        onConfirm={() => {
-          if (deleting) ops.deleteReview(deleting.id, deleting.title);
+        onConfirm={async () => {
+          if (!deleting) return;
+          const res = await deleteReview(deleting.id).catch(() => null);
           setDeleting(null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not delete the review.');
           toast.success('Review deleted');
+          router.refresh();
         }}
         title="Delete this review permanently?"
         tone="danger"
