@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  SendIcon,
   ActivityIcon,
   BarChart3Icon,
   BellIcon,
@@ -125,6 +126,7 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       { label: 'Delivery', to: '/admin/delivery', icon: TruckIcon, permission: 'settings.delivery' },
       { label: 'Payments', to: '/admin/payments', icon: CreditCardIcon, permission: 'settings.payment' },
+      { label: 'Telegram', to: '/admin/telegram', icon: SendIcon, permission: 'settings.general' },
       { label: 'WhatsApp', to: '/admin/whatsapp', icon: MessageCircleIcon, permission: 'settings.whatsapp' },
       { label: 'Email', to: '/admin/email', icon: MailIcon, permission: 'settings.email' },
       { label: 'Notifications', to: '/admin/notifications', icon: BellIcon, badge: 'unread' },

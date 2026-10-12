@@ -3,9 +3,9 @@
 import React, { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { DeliveryRate } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { getDb } from '@/lib/mock-db/db';
-import { updateSettings } from '@/lib/mock-db/settings';
+import { useRouter } from 'next/navigation';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { saveDelivery } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -17,8 +17,9 @@ import { formatNaira } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils/cn';
 
 export function DeliverySettings() {
-  const actor = useActor();
-  const initial = getDb().settings.delivery;
+  const router = useRouter();
+  const initial = useAdminSettings().settings.delivery;
+  const [saving, setSaving] = useState(false);
   const [rates, setRates] = useState<DeliveryRate[]>(initial.rates);
   const [estimate, setEstimate] = useState(initial.estimate);
   const [baseline, setBaseline] = useState(JSON.stringify(initial));
@@ -30,11 +31,15 @@ export function DeliverySettings() {
   const patch = (state: string, p: Partial<DeliveryRate>) =>
     setRates((rs) => rs.map((r) => (r.state === state ? { ...r, ...p } : r)));
 
-  const save = () => {
+  const save = async () => {
     const value = { rates, estimate };
-    updateSettings(actor, 'delivery', value, 'Delivery', 'Updated delivery fees');
+    setSaving(true);
+    const res = await saveDelivery(value).catch(() => null);
+    setSaving(false);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not save the delivery settings.');
     setBaseline(JSON.stringify(value));
     toast.success('Delivery settings saved', { description: 'Checkout uses the new fees immediately.' });
+    router.refresh();
   };
 
   return (
@@ -162,6 +167,7 @@ export function DeliverySettings() {
         </Panel>
       </div>
       <SaveBar
+        saving={saving}
         dirty={dirty}
         onSave={save}
         onReset={() => {

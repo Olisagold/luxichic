@@ -3,9 +3,8 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { MessageCircleIcon, PlugIcon, SendIcon } from 'lucide-react';
-import { useActor } from '@/hooks/useActor';
-import { getDb, useDb } from '@/lib/mock-db/db';
-import { updateSettings } from '@/lib/mock-db/settings';
+import { InfoIcon } from 'lucide-react';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -33,17 +32,14 @@ const sample: Record<string, string> = {
 };
 
 export function WhatsAppSettings() {
-  const actor = useActor();
-  const live = useDb((s) => s.settings.whatsapp);
-  const [w, setW] = useState(getDb().settings.whatsapp);
+  const live = useAdminSettings().settings.whatsapp;
+  const [w, setW] = useState(live);
   const [apiKey, setApiKey] = useState('');
   const [testing, setTesting] = useState(false);
   const [preview, setPreview] = useState<'order' | 'appointment'>('order');
 
-  const save = (next = w, action = 'Updated WhatsApp settings') => {
-    updateSettings(actor, 'whatsapp', next, 'WhatsApp', action);
-    setW(next);
-  };
+  // WhatsApp alerts aren't available yet (plan.md, Phase 8): the page is shown, but nothing is saved or sent.
+  const save = (next = w, _action?: string) => setW(next);
 
   const connect = async () => {
     if (!apiKey.trim() && !w.apiKeySet) return toast.error('Enter the API key from your WhatsApp provider.');
@@ -75,7 +71,15 @@ export function WhatsAppSettings() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <p className="mb-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-900">
+        <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+        <span>
+          <strong>Coming soon.</strong> WhatsApp alerts aren’t available yet, so nothing on this page is saved or sent.
+          Team alerts go to Telegram (Operations → Telegram). Customers can still chat with you on WhatsApp from the
+          website.
+        </span>
+      </p>
+      <fieldset disabled className="grid grid-cols-1 gap-5 opacity-60 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <Panel
             title="Connection"
@@ -241,7 +245,7 @@ export function WhatsAppSettings() {
             </div>
           </section>
         </aside>
-      </div>
+      </fieldset>
     </div>
   );
 }

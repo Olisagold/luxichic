@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { LandmarkIcon, ShieldAlertIcon } from 'lucide-react';
-import { useActor } from '@/hooks/useActor';
-import { getDb } from '@/lib/mock-db/db';
-import { updateSettings } from '@/lib/mock-db/settings';
+import { useRouter } from 'next/navigation';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { saveBankDetails, setPayOnDelivery } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -14,8 +14,8 @@ import { Toggle } from '@/components/admin/ui/Toggle';
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 
 export function PaymentSettings() {
-  const actor = useActor();
-  const s = getDb().settings;
+  const router = useRouter();
+  const s = useAdminSettings().settings;
   const [bank, setBank] = useState(s.bank);
   const [pod, setPod] = useState(s.payOnDeliveryEnabled);
   const [confirm, setConfirm] = useState(false);
@@ -80,16 +80,15 @@ export function PaymentSettings() {
               label="Offer Pay on Delivery at checkout"
               description="Customers pay cash or transfer when their order arrives."
               checked={pod}
-              onChange={(v) => {
+              onChange={async (v) => {
                 setPod(v);
-                updateSettings(
-                  actor,
-                  'payOnDeliveryEnabled',
-                  v,
-                  'Payments',
-                  v ? 'Enabled Pay on Delivery' : 'Disabled Pay on Delivery',
-                );
+                const res = await setPayOnDelivery(v).catch(() => null);
+                if (!res?.ok) {
+                  setPod(!v);
+                  return toast.error(res?.error ?? 'Could not change Pay on Delivery.');
+                }
                 toast.success(v ? 'Pay on Delivery is on' : 'Pay on Delivery is off');
+                router.refresh();
               }}
             />
           </Panel>
@@ -115,17 +114,12 @@ export function PaymentSettings() {
       <ConfirmDialog
         open={confirm}
         onClose={() => setConfirm(false)}
-        onConfirm={() => {
-          updateSettings(
-            actor,
-            'bank',
-            bank,
-            'Payments',
-            'Changed bank details',
-            `${bank.bankName} · ••••${bank.accountNumber.slice(-4)}`,
-          );
+        onConfirm={async () => {
+          const res = await saveBankDetails(bank).catch(() => null);
           setConfirm(false);
-          toast.success('Bank details updated');
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not save the bank details.');
+          toast.success('Bank details updated', { description: 'Checkout shows the new account now.' });
+          router.refresh();
         }}
         title="Change the bank details customers pay into?"
         tone="danger"

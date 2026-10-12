@@ -15,9 +15,9 @@ import {
   UserIcon,
 } from 'lucide-react';
 import type { NotificationKind } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { markNotifications, updateSettings } from '@/lib/mock-db/settings';
+import { useRouter } from 'next/navigation';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { markNotifications as markOnServer, saveNotificationPrefs } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { Panel } from '@/components/admin/ui/Panel';
@@ -38,16 +38,25 @@ const icons: Record<NotificationKind, typeof BellIcon> = {
 };
 
 export function Notifications() {
-  const actor = useActor();
-  const list = useDb((s) => s.notifications);
-  const prefs = useDb((s) => s.settings.notifications);
+  const router = useRouter();
+  const admin = useAdminSettings();
+  const list = admin.notifications;
+  const prefs = admin.settings.notifications;
+  const markNotifications = async (ids: string[] | 'all', read = true) => {
+    const res = await markOnServer(ids, read).catch(() => null);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not update notifications.');
+    router.refresh();
+  };
   const [tab, setTab] = useState<'all' | 'unread'>('all');
   const shown = list.filter((n) => tab === 'all' || !n.read).sort((a, b) => b.at.localeCompare(a.at));
   const unread = list.filter((n) => !n.read).length;
 
   const setPref = (k: keyof typeof prefs, v: boolean) => {
-    updateSettings(actor, 'notifications', { ...prefs, [k]: v }, 'Settings', 'Changed notification preferences');
-    toast.success('Preference saved');
+    void saveNotificationPrefs({ ...prefs, [k]: v }).then((res) => {
+      if (!res.ok) return toast.error(res.error ?? 'Could not save the preference.');
+      toast.success('Preference saved');
+      router.refresh();
+    });
   };
 
   return (

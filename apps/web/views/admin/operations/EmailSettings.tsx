@@ -2,18 +2,17 @@
 
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { MailIcon, SendIcon } from 'lucide-react';
+import { MailIcon } from 'lucide-react';
 import type { EmailTemplate } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { getDb, useDb } from '@/lib/mock-db/db';
-import { saveEmailTemplate, updateSettings } from '@/lib/mock-db/settings';
+import { useRouter } from 'next/navigation';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { saveEmailSender, saveEmailTemplate } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { AdminInput, AdminSelect, AdminTextarea } from '@/components/admin/ui/AdminField';
+import { AdminInput, AdminTextarea } from '@/components/admin/ui/AdminField';
 import { Toggle } from '@/components/admin/ui/Toggle';
 import { fillTemplate } from '@/lib/utils/text';
-import { isValidEmail, wait } from '@/lib/utils/validation';
 import { cn } from '@/lib/utils/cn';
 
 const sample: Record<string, string> = {
@@ -39,17 +38,17 @@ const sample: Record<string, string> = {
 };
 
 export function EmailSettings() {
-  const actor = useActor();
-  const templates = useDb((s) => s.emailTemplates);
-  const [tab, setTab] = useState<'templates' | 'smtp'>('templates');
+  const router = useRouter();
+  const { templates } = useAdminSettings();
+  const [tab, setTab] = useState<'templates' | 'sender'>('templates');
   const [activeId, setActiveId] = useState(templates[0]?.id ?? '');
   const active = templates.find((t) => t.id === activeId);
 
   return (
     <div>
-      <PageHeader title="Email" description="Customer and admin emails, and the mail server they’re sent from." />
+      <PageHeader title="Email" description="Customer and admin emails, and who they’re sent from." />
       <div className="mb-5 flex gap-1 border-b border-line" role="tablist">
-        {(['templates', 'smtp'] as const).map((t) => (
+        {(['templates', 'sender'] as const).map((t) => (
           <button
             key={t}
             role="tab"
@@ -60,7 +59,7 @@ export function EmailSettings() {
               tab === t ? 'border-pink text-ink' : 'border-transparent text-subtle hover:text-ink',
             )}
           >
-            {t === 'templates' ? 'Templates' : 'Mail server (SMTP)'}
+            {t === 'templates' ? 'Templates' : 'Sender'}
           </button>
         ))}
       </div>
@@ -89,15 +88,17 @@ export function EmailSettings() {
             <TemplateEditor
               key={active.id}
               template={active}
-              onSave={(t) => {
-                saveEmailTemplate(actor, t);
+              onSave={async (t) => {
+                const res = await saveEmailTemplate(t).catch(() => null);
+                if (!res?.ok) return toast.error(res?.error ?? 'Could not save the template.');
                 toast.success('Template saved');
+                router.refresh();
               }}
             />
           )}
         </div>
       ) : (
-        <SmtpForm />
+        <SenderForm />
       )}
     </div>
   );
@@ -166,117 +167,71 @@ function TemplateEditor({ template, onSave }: { template: EmailTemplate; onSave:
   );
 }
 
-function SmtpForm() {
-  const actor = useActor();
-  const [smtp, setSmtp] = useState(getDb().settings.smtp);
-  const [password, setPassword] = useState('');
-  const [testTo, setTestTo] = useState('');
-  const [testing, setTesting] = useState(false);
+/** Who customer emails come from. Sending (Resend) starts in Phase 9; the API key stays in the environment. */
+function SenderForm() {
+  const router = useRouter();
+  const { email, resendConfigured } = useAdminSettings();
+  const [sender, setSender] = useState(email);
+  const [saving, setSaving] = useState(false);
 
-  const save = () => {
-    if (!smtp.host.trim() || !isValidEmail(smtp.senderEmail))
-      return toast.error('Enter the SMTP host and a valid sender email.');
-    const next = { ...smtp, passwordSet: smtp.passwordSet || !!password };
-    updateSettings(actor, 'smtp', next, 'Email', 'Updated SMTP settings', smtp.host);
-    setSmtp(next);
-    setPassword('');
-    toast.success('Mail server saved', {
-      description: password ? 'The password is sent to the server only.' : undefined,
-    });
+  const save = async () => {
+    setSaving(true);
+    const res = await saveEmailSender(sender).catch(() => null);
+    setSaving(false);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not save the sender.');
+    toast.success('Email sender saved');
+    router.refresh();
   };
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <Panel title="SMTP settings">
+      <Panel title="Sender" description="How customer emails appear in their inbox.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AdminInput
-            id="smtp-host"
-            label="Host"
-            value={smtp.host}
-            placeholder="smtp.yourprovider.com"
-            onChange={(e) => setSmtp({ ...smtp, host: e.target.value })}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <AdminInput
-              id="smtp-port"
-              label="Port"
-              inputMode="numeric"
-              value={smtp.port}
-              onChange={(e) => setSmtp({ ...smtp, port: Number(e.target.value.replace(/\D/g, '')) || 0 })}
-            />
-            <AdminSelect
-              id="smtp-enc"
-              label="Encryption"
-              value={smtp.encryption}
-              onChange={(e) => setSmtp({ ...smtp, encryption: e.target.value as typeof smtp.encryption })}
-              options={['TLS', 'SSL', 'None'].map((v) => ({ value: v, label: v }))}
-            />
-          </div>
-          <AdminInput
-            id="smtp-user"
-            label="Username"
-            autoComplete="off"
-            value={smtp.username}
-            onChange={(e) => setSmtp({ ...smtp, username: e.target.value })}
-          />
-          <AdminInput
-            id="smtp-pass"
-            type="password"
-            autoComplete="new-password"
-            label="Password"
-            value={password}
-            placeholder={smtp.passwordSet ? '•••••••• (saved)' : ''}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <AdminInput
-            id="smtp-sname"
+            id="em-name"
             label="Sender name"
-            value={smtp.senderName}
-            onChange={(e) => setSmtp({ ...smtp, senderName: e.target.value })}
+            value={sender.senderName}
+            onChange={(e) => setSender({ ...sender, senderName: e.target.value })}
           />
           <AdminInput
-            id="smtp-semail"
+            id="em-from"
             type="email"
-            label="Sender email"
-            value={smtp.senderEmail}
-            onChange={(e) => setSmtp({ ...smtp, senderEmail: e.target.value })}
+            label="Send from"
+            value={sender.senderEmail}
+            placeholder="hello@yourdomain.com"
+            onChange={(e) => setSender({ ...sender, senderEmail: e.target.value })}
+            hint="Must be on the domain verified in Resend."
+          />
+          <AdminInput
+            id="em-reply"
+            type="email"
+            label="Replies go to"
+            optional
+            value={sender.replyTo}
+            onChange={(e) => setSender({ ...sender, replyTo: e.target.value })}
           />
         </div>
-        <AdminButton variant="primary" className="mt-5" onClick={save}>
-          Save mail server
+        <AdminButton variant="primary" className="mt-5" loading={saving} onClick={save}>
+          Save sender
         </AdminButton>
       </Panel>
-      <Panel title="Send a test email">
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!isValidEmail(testTo)) return toast.error('Enter a valid email.');
-            setTesting(true);
-            await wait(900);
-            setTesting(false);
-            toast.success(`Test email queued to ${testTo}`, {
-              description: 'Prototype — sending happens on the server.',
-            });
-          }}
-          className="space-y-3"
-        >
-          <AdminInput
-            id="smtp-test"
-            type="email"
-            label="Send to"
-            value={testTo}
-            onChange={(e) => setTestTo(e.target.value)}
-          />
-          <AdminButton type="submit" loading={testing} disabled={!smtp.host} icon={<SendIcon className="h-4 w-4" />}>
-            Send test
-          </AdminButton>
-          {!smtp.host && (
-            <p className="flex items-center gap-1.5 text-xs text-subtle">
-              <MailIcon className="h-3.5 w-3.5" aria-hidden />
-              Save a mail server first.
-            </p>
-          )}
-        </form>
+      <Panel title="Email service">
+        <div className="space-y-2 text-[13px] text-charcoal">
+          <p className="flex items-center gap-1.5">
+            <MailIcon className="h-4 w-4 text-ink" aria-hidden />
+            Sent with <strong className="text-ink">Resend</strong>
+          </p>
+          <p>
+            API key:{' '}
+            <strong className={resendConfigured ? 'text-emerald-700' : 'text-amber-700'}>
+              {resendConfigured ? 'set on the server' : 'not set yet'}
+            </strong>
+          </p>
+          <p className="text-xs text-subtle">
+            The key lives only in the server’s environment (RESEND_API_KEY), never here. Emails start sending once the
+            domain is verified at launch.
+          </p>
+        </div>
       </Panel>
     </div>
   );
