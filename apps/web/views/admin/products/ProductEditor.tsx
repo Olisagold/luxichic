@@ -8,7 +8,7 @@ import { ChevronLeftIcon, ExternalLinkIcon, PackageXIcon } from 'lucide-react';
 import type { Division } from '@/types/product';
 import { useProductEditor } from '@/hooks/useProductEditor';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { getDb } from '@/lib/mock-db/db';
+import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
 import { BasicsSection } from '@/components/admin/product-editor/BasicsSection';
 import { PricingSection } from '@/components/admin/product-editor/PricingSection';
 import { ImagesSection } from '@/components/admin/product-editor/ImagesSection';
@@ -31,8 +31,9 @@ const sections = [
 
 export function ProductEditor() {
   const { id } = useParams<{ id: string }>();
+  const { products } = useAdminCatalog();
   const isNewRoute = !id || id === 'new';
-  const exists = isNewRoute || !!getDb().products.find((p) => p.id === id);
+  const exists = isNewRoute || products.some((p) => p.id === id);
   if (!exists) {
     return (
       <div className="rounded-xl border border-line bg-white">
@@ -61,15 +62,17 @@ function Editor({ id }: { id?: string }) {
   };
 
   const onSave = async () => {
-    const saved = await save();
-    if (!saved) {
-      toast.error('Please fix the highlighted fields.');
+    const result = await save();
+    if ('error' in result) {
+      toast.error(result.error);
       return;
     }
+    const saved = result.product;
     toast.success(isNew ? 'Product created' : 'Changes saved', {
       description: saved.status === 'published' ? 'Live on the storefront now.' : `Saved as ${saved.status}.`,
     });
     if (isNew) router.replace(`/admin/products/${saved.id}`);
+    else router.refresh();
   };
 
   const jump = (key: string) =>

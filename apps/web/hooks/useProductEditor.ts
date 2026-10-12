@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AdminProduct } from '@/types/admin';
 import type { Division } from '@/types/product';
-import { getDb } from '@/lib/mock-db/db';
-import { emptyProduct, saveProduct } from '@/lib/mock-db/catalog';
-import { useActor } from '@/hooks/useActor';
+import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
+import { saveProduct } from '@/lib/catalog/admin-actions';
+import { emptyProduct } from '@/lib/catalog/empty-product';
 import { slugify } from '@/lib/utils/text';
 
 export interface EditorErrors {
@@ -12,8 +12,8 @@ export interface EditorErrors {
 
 /** Holds a draft copy of a product, tracks unsaved changes and validates before saving. */
 export function useProductEditor(id: string | undefined, division: Division) {
-  const actor = useActor();
-  const existing = id ? getDb().products.find((p) => p.id === id) : undefined;
+  const { products } = useAdminCatalog();
+  const existing = id ? products.find((p) => p.id === id) : undefined;
   const initial = useMemo(() => existing ?? emptyProduct(division), [existing, division]);
   const [draft, setDraft] = useState<AdminProduct>(() => JSON.parse(JSON.stringify(initial)));
   const [regular, setRegular] = useState<number>(() =>
@@ -70,7 +70,7 @@ export function useProductEditor(id: string | undefined, division: Division) {
     const e: EditorErrors = {};
     if (!draft.name.trim()) e.name = 'Enter a product name.';
     if (!draft.sku.trim()) e.sku = 'Enter a SKU.';
-    else if (getDb().products.some((p) => p.sku.toLowerCase() === draft.sku.trim().toLowerCase() && p.id !== draft.id))
+    else if (products.some((p) => p.sku.toLowerCase() === draft.sku.trim().toLowerCase() && p.id !== draft.id))
       e.sku = 'Another product already uses this SKU.';
     if (!draft.categories.length) e.categories = 'Choose at least one category.';
     if (!regular || regular <= 0) e.price = 'Enter a regular price above ₦0.';
@@ -87,18 +87,20 @@ export function useProductEditor(id: string | undefined, division: Division) {
     return e;
   };
 
-  const save = async (): Promise<AdminProduct | null> => {
+  /** Saves on the server. Returns the saved product, or an error message (also for field errors). */
+  const save = async (): Promise<{ product: AdminProduct } | { error: string }> => {
     const e = validate();
     setErrors(e);
-    if (Object.keys(e).length) return null;
+    if (Object.keys(e).length) return { error: 'Please fix the highlighted fields.' };
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 450));
-    const saved = saveProduct(actor, { ...compiled, name: compiled.name.trim(), sku: compiled.sku.trim() });
-    setDraft(saved);
-    setRegular(saved.originalPrice && saved.originalPrice > saved.price ? saved.originalPrice : saved.price);
-    setBaseline(null);
+    const product = { ...compiled, name: compiled.name.trim(), sku: compiled.sku.trim() };
+    const res = await saveProduct(product).catch(() => null);
     setSaving(false);
-    return saved;
+    if (!res?.ok || !('id' in res) || !res.id) return { error: res?.error ?? 'Could not save the product.' };
+    const saved = { ...product, id: res.id, slug: res.slug ?? product.slug };
+    setDraft(saved);
+    setBaseline(null);
+    return { product: saved };
   };
 
   return { draft, update, setDraft, regular, setRegular, salePrice, errors, saving, save, dirty, isNew: !existing };

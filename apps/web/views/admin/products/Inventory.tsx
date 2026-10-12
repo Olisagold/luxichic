@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { AlertTriangleIcon, BoxesIcon, ChevronDownIcon, HistoryIcon, MinusIcon, PlusIcon } from 'lucide-react';
 import type { AdminProduct } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { adjustStock, setThreshold, stockState, type StockMode } from '@/lib/mock-db/catalog';
+import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
+import { adjustStock, setLowStockThreshold, type StockMode } from '@/lib/catalog/admin-actions';
+import { stockState } from '@/lib/catalog/stock';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -28,10 +28,11 @@ interface Target {
 }
 const PAGE = 20;
 
+/** Stock levels and history, loaded on the server; changes go through permission-checked server actions. */
 export function Inventory() {
-  const actor = useActor();
-  const products = useDb((s) => s.products.filter((p) => p.status !== 'archived'));
-  const moves = useDb((s) => s.stockMoves);
+  const catalog = useAdminCatalog();
+  const products = useMemo(() => catalog.products.filter((p) => p.status !== 'archived'), [catalog.products]);
+  const moves = catalog.stockMoves ?? [];
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -181,8 +182,11 @@ export function Inventory() {
                             onBlur={(e) => {
                               const v = Number(e.target.value);
                               if (v !== p.lowStockThreshold) {
-                                setThreshold(actor, p.id, v);
-                                toast.success('Threshold updated');
+                                void setLowStockThreshold(p.id, v).then((res) => {
+                                  if (!res.ok) return toast.error(res.error ?? 'Could not update the threshold.');
+                                  toast.success('Threshold updated');
+                                  router.refresh();
+                                });
                               }
                             }}
                             className="mt-0.5 h-7 w-14 rounded-md border border-line px-2 text-[13px] text-ink"
@@ -272,18 +276,19 @@ export function Inventory() {
       <AdjustDialog
         target={target}
         onClose={() => setTarget(null)}
-        onApply={(mode, amount, reason) => {
+        onApply={async (mode, amount, reason) => {
           if (!target) return;
-          adjustStock(
-            actor,
+          const res = await adjustStock(
             target.product.id,
             mode,
             amount,
             reason,
             target.variant ? { groupKey: target.variant.groupKey, label: target.variant.label } : undefined,
-          );
+          ).catch(() => null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not update the stock.');
           toast.success('Stock updated');
           setTarget(null);
+          router.refresh();
         }}
       />
 

@@ -285,13 +285,12 @@ async function loadSettings(): Promise<StorefrontSource['settings']> {
   };
 }
 
-/** Reads the whole storefront source from the database (server code, bypasses RLS; filtering happens in derive). */
-export async function loadStorefrontSource(): Promise<StorefrontSource> {
+/** Categories of both divisions, in their display order, and a lookup by id. */
+async function loadCategories() {
   const categoryRows = await db
     .select()
     .from(s.categories)
     .orderBy(asc(s.categories.division), asc(s.categories.sortOrder));
-  const categoryById = new Map(categoryRows.map((c) => [c.id, c]));
   const toCategory = (c: (typeof categoryRows)[number]): Category => ({
     slug: c.slug,
     name: c.name,
@@ -299,6 +298,24 @@ export async function loadStorefrontSource(): Promise<StorefrontSource> {
     group: c.groupName,
     image: c.imageUrl ?? '',
   });
+  return {
+    categoryById: new Map(categoryRows.map((c) => [c.id, c])),
+    categories: {
+      hairs: categoryRows.filter((c) => c.division === 'hairs').map(toCategory),
+      tools: categoryRows.filter((c) => c.division === 'tools').map(toCategory),
+    },
+  };
+}
+
+/** Every product in any status, with categories (admin; uncached). Pass `ids` for just those products. */
+export async function loadAdminCatalog(ids?: string[]): Promise<Pick<StorefrontSource, 'products' | 'categories'>> {
+  const { categoryById, categories } = await loadCategories();
+  return { products: await loadProducts(categoryById, ids), categories };
+}
+
+/** Reads the whole storefront source from the database (server code, bypasses RLS; filtering happens in derive). */
+export async function loadStorefrontSource(): Promise<StorefrontSource> {
+  const { categoryById, categories } = await loadCategories();
 
   // One query at a time: see the note on pipelining in db/index.ts.
   const products = await loadProducts(categoryById);
@@ -307,10 +324,7 @@ export async function loadStorefrontSource(): Promise<StorefrontSource> {
   const settings = await loadSettings();
   return {
     products,
-    categories: {
-      hairs: categoryRows.filter((c) => c.division === 'hairs').map(toCategory),
-      tools: categoryRows.filter((c) => c.division === 'tools').map(toCategory),
-    },
+    categories,
     services: salon.services,
     specialists: salon.specialists,
     content,

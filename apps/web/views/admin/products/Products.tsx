@@ -18,16 +18,15 @@ import {
 import type { AdminProduct, ProductStatus } from '@/types/admin';
 import type { Division } from '@/types/product';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
+import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
 import {
+  addProductsCategory,
   deleteProducts,
   duplicateProduct,
-  setProductCategory,
-  setProductFlag,
-  setProductStatus,
-  stockState,
-} from '@/lib/mock-db/catalog';
+  setProductsFlag,
+  setProductsStatus,
+} from '@/lib/catalog/admin-actions';
+import { stockState } from '@/lib/catalog/stock';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -45,11 +44,10 @@ type Bulk = 'publish' | 'unpublish' | 'archive' | 'delete' | 'feature' | 'unfeat
 const PAGE = 15;
 const statusLabel: Record<ProductStatus, string> = { draft: 'Draft', published: 'Published', archived: 'Archived' };
 
+/** Every product, loaded on the server. Changes go through permission-checked server actions. */
 export function Products() {
-  const products = useDb((s) => s.products);
-  const categories = useDb((s) => s.categories);
+  const { products, categories } = useAdminCatalog();
   const { can } = useAdminAuth();
-  const actor = useActor();
   const router = useRouter();
   const [division, setDivision] = useState<'all' | Division>('all');
   const [status, setStatus] = useState<'all' | ProductStatus | 'oos'>('all');
@@ -90,37 +88,55 @@ export function Products() {
   const allOnPage = rows.length > 0 && rows.every((p) => selected.includes(p.id));
   const catOptions = division === 'all' ? [...categories.hairs, ...categories.tools] : categories[division];
 
-  const runBulk = () => {
+  /** Runs a server action, reports the result and reloads the list. */
+  const run = async (action: () => Promise<{ ok: boolean; error?: string }>, success: string) => {
+    const res = await action().catch(() => null);
+    if (!res?.ok) {
+      toast.error(res?.error ?? 'Something went wrong. Please try again.');
+      return false;
+    }
+    toast.success(success);
+    router.refresh();
+    return true;
+  };
+
+  const runBulk = async () => {
     const ids = selected;
+    const done = `Updated ${ids.length} product${ids.length > 1 ? 's' : ''}`;
+    setBulk(null);
+    let ok = false;
     switch (bulk) {
-      case 'publish':
-        setProductStatus(actor, ids, 'published');
+      case 'publish': {
+        const res = await setProductsStatus(ids, 'published').catch(() => null);
+        ok = await run(async () => res ?? { ok: false }, done);
+        if (res?.ok && 'skipped' in res && res.skipped) {
+          toast.warning(`${res.skipped} without images stayed unpublished`);
+        }
         break;
+      }
       case 'unpublish':
-        setProductStatus(actor, ids, 'draft');
+        ok = await run(() => setProductsStatus(ids, 'draft'), done);
         break;
       case 'archive':
-        setProductStatus(actor, ids, 'archived');
+        ok = await run(() => setProductsStatus(ids, 'archived'), done);
         break;
       case 'delete':
-        deleteProducts(actor, ids);
+        ok = await run(() => deleteProducts(ids), done);
         break;
       case 'feature':
-        setProductFlag(actor, ids, 'isFeatured', true);
+        ok = await run(() => setProductsFlag(ids, 'isFeatured', true), done);
         break;
       case 'unfeature':
-        setProductFlag(actor, ids, 'isFeatured', false);
+        ok = await run(() => setProductsFlag(ids, 'isFeatured', false), done);
         break;
       case 'bestseller':
-        setProductFlag(actor, ids, 'isBestseller', true);
+        ok = await run(() => setProductsFlag(ids, 'isBestseller', true), done);
         break;
       case 'category':
-        if (bulkCategory) setProductCategory(actor, ids, bulkCategory);
+        if (bulkCategory) ok = await run(() => addProductsCategory(ids, bulkCategory), done);
         break;
     }
-    toast.success(`Updated ${ids.length} product${ids.length > 1 ? 's' : ''}`);
-    setSelected([]);
-    setBulk(null);
+    if (ok) setSelected([]);
   };
 
   const bulkLabels: Record<Bulk, string> = {
@@ -409,16 +425,20 @@ export function Products() {
                                 <MenuItem
                                   icon={<CopyIcon className="h-3.5 w-3.5" />}
                                   label="Duplicate"
-                                  onClick={() => {
-                                    const c = duplicateProduct(actor, p.id);
+                                  onClick={async () => {
                                     setMenu(null);
-                                    if (c)
-                                      toast.success('Draft copy created', {
-                                        action: {
-                                          label: 'Open',
-                                          onClick: () => router.push(`/admin/products/${c.id}`),
-                                        },
-                                      });
+                                    const c = await duplicateProduct(p.id).catch(() => null);
+                                    if (!c?.ok || !('id' in c) || !c.id) {
+                                      return toast.error(c?.error ?? 'Could not duplicate the product.');
+                                    }
+                                    const copyId = c.id;
+                                    toast.success('Draft copy created', {
+                                      action: {
+                                        label: 'Open',
+                                        onClick: () => router.push(`/admin/products/${copyId}`),
+                                      },
+                                    });
+                                    router.refresh();
                                   }}
                                 />
                               )}
@@ -437,9 +457,8 @@ export function Products() {
                                   icon={<ArchiveIcon className="h-3.5 w-3.5" />}
                                   label="Restore as draft"
                                   onClick={() => {
-                                    setProductStatus(actor, [p.id], 'draft');
                                     setMenu(null);
-                                    toast.success('Restored as draft');
+                                    void run(() => setProductsStatus([p.id], 'draft'), 'Restored as draft');
                                   }}
                                 />
                               )}
@@ -502,10 +521,11 @@ export function Products() {
         onClose={() => setSingle(null)}
         onConfirm={() => {
           if (!single) return;
-          if (single.action === 'archive') setProductStatus(actor, [single.product.id], 'archived');
-          else deleteProducts(actor, [single.product.id]);
-          toast.success(single.action === 'archive' ? 'Product archived' : 'Product deleted');
+          const { action, product } = single;
           setSingle(null);
+          void (action === 'archive'
+            ? run(() => setProductsStatus([product.id], 'archived'), 'Product archived')
+            : run(() => deleteProducts([product.id]), 'Product deleted'));
         }}
         title={single?.action === 'archive' ? `Archive “${single.product.name}”?` : `Delete “${single?.product.name}”?`}
         tone={single?.action === 'delete' ? 'danger' : 'default'}

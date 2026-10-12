@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { ProductEditorState } from '@/hooks/useProductEditor';
-import { useDb } from '@/lib/mock-db/db';
+import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminInput, AdminSelect, AdminTextarea } from '@/components/admin/ui/AdminField';
 import { RichTextEditor } from '@/components/admin/ui/RichTextEditor';
@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils/cn';
 
 export function BasicsSection({ editor }: { editor: ProductEditorState }) {
   const { draft, update, errors, isNew } = editor;
-  const categories = useDb((s) => s.categories[draft.division]);
+  const categories = useAdminCatalog().categories[draft.division];
   const groups = Array.from(new Set(categories.map((c) => c.group)));
 
   const toggleCat = (slug: string) =>

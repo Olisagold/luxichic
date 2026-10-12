@@ -5,16 +5,17 @@ import { Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 import { GripVerticalIcon, ImageIcon, RefreshCwIcon, StarIcon, Trash2Icon, UploadIcon } from 'lucide-react';
 import type { ProductEditorState } from '@/hooks/useProductEditor';
-import { useDb } from '@/lib/mock-db/db';
+import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Modal } from '@/components/ui/Modal';
-import { readImageFile } from '@/lib/utils/images';
+import { uploadAdminImage } from '@/lib/media/upload-client';
 
 /** Drag to reorder; the first image is the primary image shown on cards. */
 export function ImagesSection({ editor }: { editor: ProductEditorState }) {
   const { draft, update, errors } = editor;
-  const media = useDb((s) => s.media);
+  const media = useAdminCatalog().media ?? [];
+  const upload = (file: File) => uploadAdminImage(file, 'product', draft.division === 'hairs' ? 'hairs' : 'hair_tools');
   const fileRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
@@ -26,8 +27,12 @@ export function ImagesSection({ editor }: { editor: ProductEditorState }) {
     if (!files?.length) return;
     setBusy(true);
     try {
-      const urls = await Promise.all(Array.from(files).slice(0, 8).map(readImageFile));
-      update({ images: [...draft.images, ...urls] });
+      // One at a time, so each finished image shows up straight away.
+      let images = draft.images;
+      for (const file of Array.from(files).slice(0, 8)) {
+        images = [...images, await upload(file)];
+        update({ images });
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not read that image.');
     }
@@ -37,7 +42,7 @@ export function ImagesSection({ editor }: { editor: ProductEditorState }) {
   const replace = async (files: FileList | null) => {
     if (!files?.[0] || replaceIndex === null) return;
     try {
-      const url = await readImageFile(files[0]);
+      const url = await upload(files[0]);
       update({ images: draft.images.map((img, i) => (i === replaceIndex ? url : img)) });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not read that image.');
@@ -104,7 +109,7 @@ export function ImagesSection({ editor }: { editor: ProductEditorState }) {
         >
           <UploadIcon className="h-5 w-5 text-subtle" aria-hidden />
           <span className="mt-2 text-[13px] font-semibold text-ink">Drop images here or click to upload</span>
-          <span className="text-xs text-subtle">JPG, PNG or WebP. Large images are resized automatically.</span>
+          <span className="text-xs text-subtle">JPG, PNG, WebP or HEIC, up to 25 MB. Resized automatically.</span>
         </button>
       ) : (
         <Reorder.Group axis="y" values={draft.images} onReorder={(images) => update({ images })} className="space-y-2">
