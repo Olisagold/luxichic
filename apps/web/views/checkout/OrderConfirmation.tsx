@@ -1,30 +1,24 @@
 'use client';
 
 import React from 'react';
-import { useParams } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CheckIcon, PackageSearchIcon } from 'lucide-react';
-import { useOrders } from '@/contexts/OrdersContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckoutStepper } from '@/components/checkout/CheckoutStepper';
 import { BankTransferInstructions } from '@/components/checkout/BankTransferInstructions';
 import { OrderDetailsView } from '@/components/orders/OrderDetailsView';
-import { OrderEmailSimulator } from '@/components/orders/OrderEmailSimulator';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
 import { receiptMessage } from '@/lib/utils/whatsapp';
+import type { Order } from '@/types/order';
 
-export function OrderConfirmation() {
-  const { orderNumber } = useParams<{ orderNumber: string }>();
-  const { getOrder, ready } = useOrders();
+/** `order` is null unless this browser or account placed it (checked on the server). */
+export function OrderConfirmation({ order }: { order: Order | null }) {
   const { user } = useAuth();
   const reduce = useReducedMotion();
   const { whatsapp } = useStorefront().business;
-  const order = getOrder(orderNumber);
-
-  if (!ready) return <div className="min-h-[60vh]" aria-busy="true" />;
 
   if (!order) {
     return (
@@ -32,7 +26,7 @@ export function OrderConfirmation() {
         <EmptyState
           icon={<PackageSearchIcon className="h-7 w-7" />}
           title="Order not found"
-          text="We couldn’t find this order on this device. Try looking it up with your order number and email."
+          text="We couldn’t show this order here. Look it up with your order number and the email you used at checkout."
           actions={<Button to="/track-order">Track an order</Button>}
         />
       </div>
@@ -106,11 +100,10 @@ export function OrderConfirmation() {
         )}
         {!user && !order.accountEmail && (
           <p className="rounded-2xl bg-blush/60 p-5 text-sm leading-relaxed text-ink">
-            Once your order is confirmed, we’ll email you a secure link to create your LUXICHIC account — your order
-            will already be in it.
+            Create a LUXICHIC account with {order.customer.email} and this order will be waiting in it, so you can
+            follow it any time.
           </p>
         )}
-        <OrderEmailSimulator order={order} />
       </div>
 
       <div className="mt-16">

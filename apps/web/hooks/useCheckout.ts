@@ -3,9 +3,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { Address, Customer, OrderItem, PaymentMethod } from '@/types/order';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
-import { generateId, generateTransactionReference } from '@/lib/utils/references';
+import { priceCartLines } from '@/lib/cart/actions';
+import { toCartLine } from '@/lib/cart/items';
+import { issueTransactionReference, placeOrder } from '@/lib/orders/actions';
+import { generateId } from '@/lib/utils/references';
 import { isValidEmail, isValidPhone } from '@/lib/utils/validation';
 
 const emptyAddress = (): Address => ({
@@ -23,10 +25,14 @@ export function useCheckout() {
   const params = useSearchParams();
   const buyNow = params.get('mode') === 'buynow';
   const cart = useCart();
-  const { user, saveAddress, isBlockedEmail } = useAuth();
-  const { placeOrder, orders } = useOrders();
-  // Issued up front so the customer sees it on the payment step and can use it as their transfer narration.
-  const [reference] = useState(() => generateTransactionReference(orders.map((o) => o.reference)));
+  const { user, saveAddress } = useAuth();
+  // Issued by the server up front, so the customer sees it on the payment step as their transfer narration.
+  const [reference, setReference] = useState<string | undefined>();
+  useEffect(() => {
+    issueTransactionReference()
+      .then(setReference)
+      .catch(() => {});
+  }, []);
   const storefront = useStorefront();
   const { payOnDeliveryEnabled } = storefront.business;
   const { deliveryFees } = storefront.checkout;
@@ -94,8 +100,6 @@ export function useCheckout() {
       if (customer.fullName.trim().length < 2) e.fullName = 'Please enter your full name.';
       if (!isValidEmail(customer.email)) e.email = 'Please enter a valid email address.';
       if (!isValidPhone(customer.phone)) e.phone = 'Please enter a valid phone number.';
-      if (isBlockedEmail(customer.email))
-        e.email = 'This account can’t place orders right now. Please contact LUXICHIC for help.';
     }
     if (s === 1) {
       if (!address.state) e.state = 'Please select your state.';
@@ -120,26 +124,39 @@ export function useCheckout() {
     setPlacing(true);
     setPlaceError('');
     try {
-      const order = await placeOrder({
+      const res = await placeOrder({
+        lines: source.map(toCartLine),
         customer: { fullName: customer.fullName.trim(), email: customer.email.trim(), phone: customer.phone.trim() },
         address,
-        items,
-        subtotal,
-        deliveryFee,
-        discount,
         paymentMethod: method,
-        accountEmail: user?.email,
+        promoCode: buyNow ? null : cart.promoCode,
         reference,
+        expectedTotal: subtotal + deliveryFee - discount,
+        fromCart: !buyNow,
       });
+      if (!res.ok || !res.orderNumber) {
+        setPlaceError(res.error ?? 'We could not place your order. Please try again.');
+        setPlacing(false);
+        if (res.promoInvalid) cart.removePromo();
+        // Show current prices so the customer can check the new total.
+        if (res.changed) {
+          if (!buyNow) cart.refresh();
+          else if (cart.buyNowItem) {
+            const [item] = await priceCartLines([toCartLine(cart.buyNowItem)]);
+            cart.setBuyNowItem(item ?? null);
+          }
+        }
+        return;
+      }
       if (user && addressId === 'new' && saveToAccount) {
         const { instructions: _i, ...rest } = address;
         saveAddress({ ...rest, label: 'Saved address', isDefault: savedAddresses.length === 0 });
       }
-      router.push(`/order/${order.orderNumber}`);
+      router.push(`/order/${res.orderNumber}`);
       if (buyNow) cart.setBuyNowItem(null);
       else cart.clearActive();
     } catch {
-      setPlaceError('We could not place your order. Please try again.');
+      setPlaceError('We could not place your order. Please check your connection and try again.');
       setPlacing(false);
     }
   };

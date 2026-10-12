@@ -1,29 +1,22 @@
 'use client';
 
 import React from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, PackageSearchIcon } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
 import { OrderDetailsView } from '@/components/orders/OrderDetailsView';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
+import type { Order } from '@/types/order';
 
-export function AccountOrderDetail() {
-  const { orderNumber } = useParams<{ orderNumber: string }>();
-  const { user } = useAuth();
-  const { getOrder } = useOrders();
-  const order = getOrder(orderNumber);
-  const owns = order && user && order.accountEmail?.toLowerCase() === user.email.toLowerCase();
-
+/** `order` is null unless it belongs to the signed-in account (checked on the server). */
+export function AccountOrderDetail({ order }: { order: Order | null }) {
   return (
     <div>
       <Link href="/account/orders" className="inline-flex items-center gap-2 text-sm text-subtle hover:text-ink">
         <ArrowLeftIcon className="h-4 w-4" aria-hidden /> All orders
       </Link>
       <div className="mt-6">
-        {order && owns ? (
+        {order ? (
           <OrderDetailsView order={order} />
         ) : (
           <EmptyState

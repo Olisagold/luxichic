@@ -4,24 +4,22 @@ import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Order } from '@/types/order';
-import { useOrders } from '@/contexts/OrdersContext';
+import { trackOrder } from '@/lib/orders/actions';
 import { useAuth } from '@/contexts/AuthContext';
 import { OrderDetailsView } from '@/components/orders/OrderDetailsView';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/FormField';
-import { isValidEmail, wait } from '@/lib/utils/validation';
+import { isValidEmail } from '@/lib/utils/validation';
 
 export function TrackOrder() {
   const params = useSearchParams();
-  const { lookupOrder, getOrder } = useOrders();
   const { user } = useAuth();
   const [orderNumber, setOrderNumber] = useState(params.get('order') ?? '');
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [found, setFound] = useState<string | null>(null);
-  const order: Order | undefined = found ? getOrder(found) : undefined;
+  const [order, setOrder] = useState<Order | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,12 +29,11 @@ export function TrackOrder() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
-    await wait(600);
-    const match = lookupOrder(orderNumber, email);
+    const match = await trackOrder(orderNumber, email).catch(() => null);
     setLoading(false);
-    if (match) setFound(match.orderNumber);
+    if (match) setOrder(match);
     else {
-      setFound(null);
+      setOrder(null);
       setErrors({
         form: 'We couldn’t find an order with those details. Check your order number (e.g. LXC-482913) and email.',
       });

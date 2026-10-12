@@ -11,14 +11,15 @@ import { AppointmentList } from '@/components/account/AppointmentList';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { toISODate } from '@/lib/utils/dates';
+import type { Order } from '@/types/order';
 
-export function AccountOverview() {
+export function AccountOverview({ orders }: { orders: Order[] }) {
   const { user } = useAuth();
-  const { ordersForAccount, appointmentsForAccount } = useOrders();
+  // Appointments stay on the prototype until Phase 6.
+  const { appointmentsForAccount } = useOrders();
   const params = useSearchParams();
   if (!user) return null;
 
-  const orders = ordersForAccount(user.email);
   const today = toISODate(new Date());
   const upcoming = appointmentsForAccount(user.email)
     .filter((a) => a.date >= today && a.status !== 'Cancelled')

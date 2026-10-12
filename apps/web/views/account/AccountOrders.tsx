@@ -2,9 +2,8 @@
 
 import React, { useState } from 'react';
 import { PackageIcon, SearchIcon } from 'lucide-react';
-import type { OrderStatus } from '@/types/order';
+import type { Order, OrderStatus } from '@/types/order';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
 import { OrderHistoryTable } from '@/components/account/OrderHistoryTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
@@ -19,14 +18,12 @@ const statuses: ('All' | OrderStatus)[] = [
   'Cancelled',
 ];
 
-export function AccountOrders() {
+export function AccountOrders({ orders: all }: { orders: Order[] }) {
   const { user } = useAuth();
-  const { ordersForAccount } = useOrders();
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<(typeof statuses)[number]>('All');
   if (!user) return null;
 
-  const all = ordersForAccount(user.email);
   const term = q.trim().toLowerCase();
   const list = all.filter(
     (o) =>
