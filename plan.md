@@ -432,14 +432,17 @@ Connect each admin section to the database through server actions. Each action c
    the storefront refreshes at once. Media library and image picker upload to Storage; deleting an image is
    refused while anything still shows it, otherwise its files are removed too. Tested in a browser against dev
    (12 checks, each change seen on the live pages), with the content snapshotted and restored afterwards.
-7. Operations: delivery rates, payment settings (bank details), email settings
-   (Resend sender, replacing the SMTP form), notifications.
-   - New **Telegram settings** page (`/admin/telegram`, added to the sidebar under Operations):
-     - Bot connection status
-     - Alert chat ID
-     - Toggles for new-order and new-appointment alerts
-     - Message templates
-     - A "send test message" button
+7. ✅ **Operations** (2026-10-12; `lib/settings/admin-actions.ts`), each permission-checked and logged:
+   - Payments (bank details, Pay on Delivery; replaces `pnpm db:set-payments`) and delivery (fee, free and
+     on/off per state, delivery text). Checkout follows at once.
+   - Email: Resend sender name/address/reply-to (replaces the SMTP form; the key stays in `RESEND_API_KEY`) and
+     the email templates. Sending starts in Phase 9.
+   - Notifications: mark read and alert preferences. New **Telegram** page (`/admin/telegram`, in the sidebar
+     under Operations, permission `settings.general`): bot status via the Bot API, alert chat ID, new-order and
+     new-appointment toggles, message templates, test message. The bot token stays in `TELEGRAM_BOT_TOKEN`.
+   - **WhatsApp** stays visible with a "Coming soon" note; its fields are disabled and nothing is saved.
+   - Tested in a browser against dev (15 checks, including checkout showing the new fee and bank and refusing a
+     state switched off), with the settings snapshotted and restored afterwards.
 
      The bot token stays in env vars and is never stored in the database or shown.
 
