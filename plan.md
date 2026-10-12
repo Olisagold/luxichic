@@ -408,7 +408,12 @@ Connect each admin section to the database through server actions. Each action c
    - Admin actions now share `lib/auth/admin-action.ts` (permission check, messages, cache refresh, audit log).
    - Tested in a browser against dev (15 checks, including a new code working at checkout and a switched-off
      one refused); the orders and reviews tests were rerun after the refactor and still pass.
-4. Customers: list, detail, block and unblock, customer activity.
+4. ✅ **Customers** (2026-10-12; `lib/customers/admin-actions.ts`): list, detail and activity from the database
+   (guests who only ordered or booked show as guest rows). Block/unblock (refused at sign-in, checkout and
+   booking), edit name/phone/email (a new email becomes the login), add a customer (no password: they use
+   "Forgot password" until invitation emails arrive in Phase 11), delete (orders, bookings and reviews stay),
+   internal notes. Tested in a browser against dev (13 checks, including a blocked customer refused at sign-in
+   and signing in with a changed email), then cleaned up.
 5. Salon: appointments, calendar, services and the service editor, specialists, availability.
 6. Website content: homepage, about, FAQs, pages; media library on Supabase Storage. Saving revalidates
    the storefront cache.
