@@ -13,18 +13,20 @@ import {
   subMonths,
 } from 'date-fns';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { getDateStatus } from '@/lib/utils/availability';
+import type { DayStatus } from '@/lib/salon/availability';
 import { toISODate } from '@/lib/utils/dates';
 import { cn } from '@/lib/utils/cn';
 
 interface AppointmentCalendarProps {
   value: string | null;
   onChange: (dateKey: string) => void;
+  /** Day statuses from the server; days not listed can't be booked. Null while loading. */
+  days: Record<string, DayStatus> | null;
 }
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function AppointmentCalendar({ value, onChange }: AppointmentCalendarProps) {
+export function AppointmentCalendar({ value, onChange, days: statuses }: AppointmentCalendarProps) {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
   const lead = getDay(days[0]);
@@ -55,7 +57,12 @@ export function AppointmentCalendar({ value, onChange }: AppointmentCalendarProp
           <ChevronRightIcon className="h-4 w-4" />
         </button>
       </div>
-      <div className="mt-4 grid grid-cols-7 gap-1 text-center" role="grid" aria-label="Choose a date">
+      <div
+        className="mt-4 grid grid-cols-7 gap-1 text-center"
+        role="grid"
+        aria-label="Choose a date"
+        aria-busy={!statuses}
+      >
         {weekdays.map((d) => (
           <span key={d} className="pb-2 text-[11px] font-semibold text-subtle">
             {d}
@@ -66,7 +73,7 @@ export function AppointmentCalendar({ value, onChange }: AppointmentCalendarProp
         ))}
         {days.map((d) => {
           const key = toISODate(d);
-          const status = getDateStatus(d);
+          const status = statuses?.[key] ?? 'unavailable';
           const selectable = status === 'available';
           const selected = value === key;
           return (
@@ -98,7 +105,7 @@ export function AppointmentCalendar({ value, onChange }: AppointmentCalendarProp
           <span className="h-1.5 w-1.5 rounded-full bg-pink" /> Available
         </span>
         <span className="line-through">Fully booked</span>
-        <span className="text-muted">Closed on Sundays</span>
+        <span className="text-muted">Closed</span>
       </div>
     </div>
   );

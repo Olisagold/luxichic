@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { CalendarIcon } from 'lucide-react';
 import type { Appointment } from '@/types/salon';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -48,6 +49,12 @@ export function AppointmentList({ appointments, compact }: { appointments: Appoi
               <p className="text-xs text-subtle">
                 Ref {a.reference} · {a.personnelName ?? 'Specialist to be assigned'}
               </p>
+              <Link
+                href={`/salon/appointment/${a.reference}`}
+                className="mt-1 inline-block text-xs font-semibold text-pink-deep underline-offset-4 hover:underline"
+              >
+                View details
+              </Link>
             </div>
             {!compact && (
               <WhatsAppButton

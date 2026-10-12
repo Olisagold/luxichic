@@ -5,23 +5,21 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PackageIcon, SparklesIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
 import { OrderHistoryTable } from '@/components/account/OrderHistoryTable';
 import { AppointmentList } from '@/components/account/AppointmentList';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { toISODate } from '@/lib/utils/dates';
 import type { Order } from '@/types/order';
+import type { Appointment } from '@/types/salon';
 
-export function AccountOverview({ orders }: { orders: Order[] }) {
+export function AccountOverview({ orders, appointments }: { orders: Order[]; appointments: Appointment[] }) {
   const { user } = useAuth();
-  // Appointments stay on the prototype until Phase 6.
-  const { appointmentsForAccount } = useOrders();
   const params = useSearchParams();
   if (!user) return null;
 
   const today = toISODate(new Date());
-  const upcoming = appointmentsForAccount(user.email)
+  const upcoming = appointments
     .filter((a) => a.date >= today && a.status !== 'Cancelled')
     .sort((a, b) => a.date.localeCompare(b.date));
   const stats = [

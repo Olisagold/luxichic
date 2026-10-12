@@ -51,7 +51,7 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-3">
           <StepLabel n={++n}>Pick a date</StepLabel>
-          <AppointmentCalendar value={b.date} onChange={b.selectDate} />
+          <AppointmentCalendar value={b.date} onChange={b.selectDate} days={b.days} />
           {b.errors.date && (
             <p className="text-xs text-red-700" role="alert">
               {b.errors.date}
@@ -65,6 +65,14 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
               {!b.serviceSlug
                 ? 'Choose a service first to see available times.'
                 : 'Choose a date to see available times.'}
+            </p>
+          ) : b.loadingTimes ? (
+            <p className="rounded-2xl border border-dashed border-line p-6 text-sm text-subtle" aria-busy="true">
+              Checking available times…
+            </p>
+          ) : !b.slots.some((s) => s.available) ? (
+            <p className="rounded-2xl border border-dashed border-line p-6 text-sm text-subtle">
+              No times left on {formatLongDate(b.date)}. Please choose another day.
             </p>
           ) : (
             <>
@@ -173,6 +181,11 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
         <p>No payment is needed to book. You only pay after your service has been provided.</p>
       </div>
 
+      {b.errors.form && (
+        <p className="text-sm text-red-700" role="alert">
+          {b.errors.form}
+        </p>
+      )}
       <Button type="submit" size="lg" fullWidth loading={b.submitting}>
         Request Appointment
       </Button>

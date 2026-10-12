@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOrders } from '@/contexts/OrdersContext';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
-import { slotsFor } from '@/lib/utils/availability';
+import { bookAppointment, getAvailability } from '@/lib/salon/actions';
+import type { Availability } from '@/lib/salon/availability';
 import { isValidEmail, isValidPhone } from '@/lib/utils/validation';
 
 export function useAppointmentBooking(initialService?: string) {
-  const { user, isBlockedEmail } = useAuth();
-  const { bookAppointment } = useOrders();
+  const { user } = useAuth();
   const router = useRouter();
   const { findService } = useCatalog();
 
@@ -41,11 +40,26 @@ export function useAppointmentBooking(initialService?: string) {
   }, [user?.id]);
 
   const service = findService(serviceSlug);
-  const slots = useMemo(
-    () => (date && serviceSlug ? slotsFor(date, serviceSlug, personnelId || null) : []),
-    [date, serviceSlug, personnelId],
-  );
 
+  // Days and times are worked out on the server from the specialists' hours and existing bookings.
+  const [availability, setAvailability] = useState<Availability | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  useEffect(() => {
+    let stale = false;
+    setAvailability(null);
+    getAvailability(serviceSlug || null, personnelId || null)
+      .then((a) => !stale && setAvailability(a ?? { days: {}, slots: {} }))
+      .catch(() => !stale && setAvailability({ days: {}, slots: {} }));
+    return () => {
+      stale = true;
+    };
+  }, [serviceSlug, personnelId, reloadKey]);
+  const slots = useMemo(() => (date && availability ? (availability.slots[date] ?? []) : []), [date, availability]);
+
+  const selectPersonnel = (id: string) => {
+    setPersonnelId(id);
+    setTime(null);
+  };
   const selectService = (slug: string) => {
     setServiceSlug(slug);
     setTime(null);
@@ -65,24 +79,28 @@ export function useAppointmentBooking(initialService?: string) {
     if (contact.fullName.trim().length < 2) errs.fullName = 'Please enter your full name.';
     if (!isValidPhone(contact.phone)) errs.phone = 'Please enter a valid phone number.';
     if (!isValidEmail(contact.email)) errs.email = 'Please enter a valid email address.';
-    else if (isBlockedEmail(contact.email))
-      errs.email = 'This account can’t book appointments right now. Please contact LUXICHIC.';
     setErrors(errs);
     if (Object.keys(errs).length || !service || !date || !time) return;
     setSubmitting(true);
-    const person = service.personnel.find((p) => p.id === personnelId);
-    const appt = await bookAppointment({
-      serviceSlug: service.slug,
-      serviceName: service.name,
-      date,
-      time,
-      personnelId: person?.id,
-      personnelName: person?.name,
-      customer: { fullName: contact.fullName.trim(), phone: contact.phone.trim(), email: contact.email.trim() },
-      notes: notes.trim() || undefined,
-      accountEmail: user?.email,
-    });
-    router.push(`/salon/appointment/${appt.reference}`);
+    try {
+      const res = await bookAppointment({
+        serviceSlug: service.slug,
+        date,
+        time,
+        specialistId: personnelId || null,
+        customer: { fullName: contact.fullName.trim(), phone: contact.phone.trim(), email: contact.email.trim() },
+        notes: notes.trim() || undefined,
+      });
+      if (res.ok && res.reference) return router.push(`/salon/appointment/${res.reference}`);
+      if (res.taken) {
+        setTime(null);
+        setReloadKey((k) => k + 1);
+        setErrors({ time: res.error ?? 'That time is no longer available. Please choose another.' });
+      } else setErrors({ form: res.error ?? 'We could not book your appointment. Please try again.' });
+    } catch {
+      setErrors({ form: 'We could not book your appointment. Please check your connection and try again.' });
+    }
+    setSubmitting(false);
   };
 
   return {
@@ -94,8 +112,10 @@ export function useAppointmentBooking(initialService?: string) {
     time,
     setTime,
     slots,
+    days: availability?.days ?? null,
+    loadingTimes: !!serviceSlug && !availability,
     personnelId,
-    setPersonnelId,
+    setPersonnelId: selectPersonnel,
     contact,
     setContact,
     notes,
