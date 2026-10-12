@@ -244,11 +244,32 @@ Notes:
   not-found results with status 200); unknown routes return a real 404.
 - The ratings and review counts on products are prototype numbers. Phase 7 recalculates them from real reviews.
 
-## Phase 4: Cart and wishlist
+## Phase 4: Cart and wishlist ✅
 
-1. Guests keep the cart in `localStorage` (as today). When a guest signs in, their cart merges into `cart_items`.
-2. Wishlist stored in the database for signed-in users; guests are asked to sign in.
-3. Recalculate prices on the server from the database. Never trust prices sent by the client.
+Done 2026-10-12. No migration needed: `carts`, `cart_items` and `wishlists` came with Phase 1.
+
+1. ✅ Cart (`lib/cart/actions.ts`, `contexts/CartContext.tsx`). Guests keep it in `localStorage`; signed-in
+   customers keep it in `carts` / `cart_items`. On sign-in (password or Google) the guest cart merges into the
+   account: a line in both keeps the larger quantity, and a line the guest added is moved out of "saved for
+   later". After signing out the browser shows an empty guest cart, so a shared device doesn't show the account's
+   cart.
+2. ✅ Wishlist (`lib/wishlist/actions.ts`, `contexts/WishlistContext.tsx`) lives only in `wishlists`. A guest who
+   taps the heart is asked to sign in, and that product is saved once they do (the prototype's browser wishlist
+   merges the same way). `/wishlist` asks guests to sign in. Only published products can be saved.
+3. ✅ Prices come from the server. The browser only sends product id, option selection and quantity
+   (`lib/cart/items.ts`). The server prices each line from the catalog (`getStorefrontData()`, refreshed when
+   the admin saves in Phase 8), and drops lines that can no longer be bought (product removed or unpublished, an
+   option withdrawn), telling the customer. Guest carts are repriced each time a page loads.
+
+Notes:
+
+- Tested end to end in a browser against `luxichic-dev` with a throwaway customer (23 checks): guest cart,
+  tampered prices and a fake product in `localStorage`, merge on sign-in, quantity / save for later / remove
+  stored, signed-out cart empty and restored on sign-in, guest wishlist prompt and save-after-sign-in, wishlist
+  add and remove, signed-out wishlist.
+- Promo codes, delivery fees and "Buy Now" stay on the prototype until Phase 5. Stock is only checked when adding
+  to the cart; `placeOrder` (Phase 5) re-reads prices and stock straight from the database, not the cached
+  catalog.
 
 ## Phase 5: Checkout and orders
 
