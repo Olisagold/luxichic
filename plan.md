@@ -237,8 +237,10 @@ when it switches to the database, and the admin replaces items in Phase 8.
 Notes:
 
 - `pnpm db:load-catalog` loaded the catalog into prod on 2026-10-10 (42 products, 68 categories, 11 services,
-  6 specialists, content, FAQs, policies, delivery fees, email templates; no bank details: **enter the real bank
-  account in the admin before Phase 5 goes live**).
+  6 specialists, content, FAQs, policies, delivery fees, email templates; no bank details).
+- Prod payment settings set on 2026-10-12 with `pnpm db:set-payments` (until the admin Payments page saves to the
+  database in Phase 8): bank transfer to MONIE POINT, LUXICHIC HAIRS, 5108508288; **Pay on Delivery off at
+  launch**.
 - Database reads run one at a time: parallel queries stalled on Supabase's transaction pooler (see `db/index.ts`).
 - Unknown product/category/service slugs show the not-found page marked `noindex` (Next.js serves cached
   not-found results with status 200); unknown routes return a real 404.
