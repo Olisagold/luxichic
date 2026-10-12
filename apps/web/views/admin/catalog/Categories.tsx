@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { FolderTreeIcon, PencilIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import type { Category, Division } from '@/types/product';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { deleteCategory, saveCategory } from '@/lib/mock-db/catalog';
+import { useRouter } from 'next/navigation';
+import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
+import { deleteCategory, saveCategory } from '@/lib/catalog/category-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -14,15 +14,15 @@ import { AdminEmpty } from '@/components/admin/ui/AdminEmpty';
 import { AdminInput, AdminTextarea } from '@/components/admin/ui/AdminField';
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
-import { readImageFile } from '@/lib/utils/images';
+import { uploadAdminImage } from '@/lib/media/upload-client';
 import { slugify } from '@/lib/utils/text';
 
 const blank: Category = { slug: '', name: '', description: '', group: '', image: '' };
 
+/** Store categories, loaded on the server; changes go through permission-checked server actions. */
 export function Categories() {
-  const actor = useActor();
-  const categories = useDb((s) => s.categories);
-  const products = useDb((s) => s.products);
+  const router = useRouter();
+  const { categories, products } = useAdminCatalog();
   const [division, setDivision] = useState<Division>('hairs');
   const [editing, setEditing] = useState<{ cat: Category; original?: string } | null>(null);
   const [removing, setRemoving] = useState<Category | null>(null);
@@ -116,23 +116,29 @@ export function Categories() {
       <CategoryDialog
         key={editing?.original ?? (editing ? 'new' : 'closed')}
         editing={editing}
+        division={division}
         groups={groups}
         existing={list}
         onClose={() => setEditing(null)}
-        onSave={(cat, original) => {
-          saveCategory(actor, division, cat, original);
+        onSave={async (cat, original) => {
+          const res = await saveCategory(division, cat, original).catch(() => null);
+          if (!res?.ok) return res?.error ?? 'Could not save the category.';
           toast.success(original ? 'Category updated' : 'Category added');
           setEditing(null);
+          router.refresh();
         }}
       />
 
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        onConfirm={() => {
-          if (removing) deleteCategory(actor, division, removing.slug);
+        onConfirm={async () => {
+          if (!removing) return;
+          const res = await deleteCategory(division, removing.slug).catch(() => null);
           setRemoving(null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not delete the category.');
           toast.success('Category deleted');
+          router.refresh();
         }}
         title={`Delete “${removing?.name}”?`}
         tone="danger"
@@ -149,30 +155,34 @@ export function Categories() {
 
 function CategoryDialog({
   editing,
+  division,
   groups,
   existing,
   onClose,
   onSave,
 }: {
   editing: { cat: Category; original?: string } | null;
+  division: Division;
   groups: string[];
   existing: Category[];
   onClose: () => void;
-  onSave: (c: Category, original?: string) => void;
+  /** Saves; resolves to an error message if it couldn't. */
+  onSave: (c: Category, original?: string) => Promise<string | void>;
 }) {
   const [cat, setCat] = useState<Category>(editing?.cat ?? blank);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
   const upload = async (f?: File) => {
     if (!f) return;
     try {
       setCat((c) => ({ ...c, image: '' }));
-      const url = await readImageFile(f);
+      const url = await uploadAdminImage(f, 'category', division === 'hairs' ? 'hairs' : 'hair_tools');
       setCat((c) => ({ ...c, image: url }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not read image');
     }
   };
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const slug = cat.slug.trim() || slugify(cat.name);
     const errs: Record<string, string> = {};
@@ -181,8 +191,11 @@ function CategoryDialog({
       errs.slug = 'Another category already uses this URL.';
     if (!cat.group.trim()) errs.group = 'Choose or type a group.';
     setErrors(errs);
-    if (!Object.keys(errs).length)
-      onSave({ ...cat, name: cat.name.trim(), group: cat.group.trim(), slug }, editing?.original);
+    if (Object.keys(errs).length) return;
+    setSaving(true);
+    const error = await onSave({ ...cat, name: cat.name.trim(), group: cat.group.trim(), slug }, editing?.original);
+    setSaving(false);
+    if (error) setErrors({ form: error });
   };
   return (
     <Modal
@@ -254,11 +267,16 @@ function CategoryDialog({
             )}
           </div>
         </div>
+        {errors.form && (
+          <p className="text-xs text-red-700" role="alert">
+            {errors.form}
+          </p>
+        )}
         <div className="flex justify-end gap-2">
           <AdminButton variant="ghost" onClick={onClose}>
             Cancel
           </AdminButton>
-          <AdminButton type="submit" variant="primary">
+          <AdminButton type="submit" variant="primary" loading={saving}>
             Save category
           </AdminButton>
         </div>

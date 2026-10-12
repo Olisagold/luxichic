@@ -20,8 +20,9 @@ import type { Result } from '@/types/user';
 type Folder = (typeof mediaFolder.enumValues)[number];
 
 /** Who may upload for what. */
-const PURPOSE: Record<'product' | 'content', Permission[]> = {
+const PURPOSE: Record<'product' | 'category' | 'content', Permission[]> = {
   product: ['products.create', 'products.edit'],
+  category: ['categories.manage'],
   content: ['content.homepage', 'content.pages', 'content.media'],
 };
 const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/heic', 'image/heif', 'image/gif'];

@@ -4,9 +4,8 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { PencilIcon, PercentIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import type { Discount } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { deleteDiscount, saveDiscount } from '@/lib/mock-db/catalog';
+import { useRouter } from 'next/navigation';
+import { deleteDiscount, saveDiscount } from '@/lib/checkout/discount-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminEmpty } from '@/components/admin/ui/AdminEmpty';
@@ -44,9 +43,9 @@ function state(d: Discount): string {
 }
 const scopeLabel = { all: 'Whole store', hairs: 'LUXICHIC Hairs', tools: 'Hair Tools & Essentials' };
 
-export function Discounts() {
-  const actor = useActor();
-  const discounts = useDb((s) => s.discounts);
+/** Promo codes, loaded on the server; changes go through permission-checked server actions. */
+export function Discounts({ discounts }: { discounts: Discount[] }) {
+  const router = useRouter();
   const [editing, setEditing] = useState<Discount | null>(null);
   const [removing, setRemoving] = useState<Discount | null>(null);
 
@@ -137,19 +136,24 @@ export function Discounts() {
         discount={editing}
         existing={discounts}
         onClose={() => setEditing(null)}
-        onSave={(d) => {
-          saveDiscount(actor, d);
+        onSave={async (d) => {
+          const res = await saveDiscount(d).catch(() => null);
+          if (!res?.ok) return res?.error ?? 'Could not save the promo code.';
           toast.success('Promo code saved');
           setEditing(null);
+          router.refresh();
         }}
       />
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        onConfirm={() => {
-          if (removing) deleteDiscount(actor, removing.id);
+        onConfirm={async () => {
+          if (!removing) return;
+          const res = await deleteDiscount(removing.id).catch(() => null);
           setRemoving(null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not delete the promo code.');
           toast.success('Promo code deleted');
+          router.refresh();
         }}
         title={`Delete ${removing?.code}?`}
         tone="danger"
@@ -169,12 +173,14 @@ function DiscountDialog({
   discount: Discount | null;
   existing: Discount[];
   onClose: () => void;
-  onSave: (d: Discount) => void;
+  /** Saves; resolves to an error message if it couldn't. */
+  onSave: (d: Discount) => Promise<string | void>;
 }) {
   const [d, setD] = useState<Discount>(discount ?? blank());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
   const num = (v: string) => Math.max(0, Number(v.replace(/[^\d]/g, '')) || 0);
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = d.code.trim().toUpperCase();
     const errs: Record<string, string> = {};
@@ -184,7 +190,12 @@ function DiscountDialog({
       errs.value = d.type === 'percent' ? 'Enter 1–99%.' : 'Enter an amount above ₦0.';
     if (d.endsAt && d.startsAt && d.endsAt < d.startsAt) errs.endsAt = 'End date is before the start date.';
     setErrors(errs);
-    if (!Object.keys(errs).length) onSave({ ...d, code, id: d.id || generateId('disc') });
+    if (Object.keys(errs).length) return;
+    setSaving(true);
+    // New codes get their id from the server.
+    const error = await onSave({ ...d, code, id: d.id || generateId('disc') });
+    setSaving(false);
+    if (error) setErrors({ form: error });
   };
   return (
     <Modal
@@ -271,11 +282,16 @@ function DiscountDialog({
           checked={d.active}
           onChange={(v) => setD({ ...d, active: v })}
         />
+        {errors.form && (
+          <p className="text-xs text-red-700" role="alert">
+            {errors.form}
+          </p>
+        )}
         <div className="flex justify-end gap-2">
           <AdminButton variant="ghost" onClick={onClose}>
             Cancel
           </AdminButton>
-          <AdminButton type="submit" variant="primary">
+          <AdminButton type="submit" variant="primary" loading={saving}>
             Save code
           </AdminButton>
         </div>
