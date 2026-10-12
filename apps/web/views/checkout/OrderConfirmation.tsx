@@ -100,8 +100,8 @@ export function OrderConfirmation({ order }: { order: Order | null }) {
         )}
         {!user && !order.accountEmail && (
           <p className="rounded-2xl bg-blush/60 p-5 text-sm leading-relaxed text-ink">
-            Create a LUXICHIC account with {order.customer.email} and this order will be waiting in it, so you can
-            follow it any time.
+            Create a LUXICHIC account with {order.customer.email} to follow your orders in one place. Once that email is
+            verified (or you sign in with Google), this order appears in your account.
           </p>
         )}
       </div>
