@@ -30,6 +30,8 @@ interface CartContextValue {
   applyPromo: (code: string) => Promise<Result>;
   removePromo: () => void;
   clearActive: () => void;
+  /** Re-reads the cart from the server with current prices. */
+  refresh: () => void;
   /** Single item used by "Buy Now" — checked out without touching the cart. */
   buyNowItem: CartItem | null;
   setBuyNowItem: (item: CartItem | null) => void;
@@ -107,12 +109,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [ready, guestLoaded, user?.id, apply]);
 
   // After a failed save, show what the server actually has.
-  const reload = () => {
+  // Re-reads the cart with current prices (after a failed save, or when checkout finds prices changed).
+  const reload = useCallback(() => {
     const v = ++version.current;
-    syncCart([])
+    syncCart(guestRef.current.map(toCartLine))
       .then((res) => apply(res, v))
       .catch(() => {});
-  };
+  }, [apply]);
 
   const change = (next: (prev: CartItem[]) => CartItem[], save: () => Promise<CartResult>) => {
     const v = ++version.current;
@@ -192,6 +195,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         applyPromo,
         removePromo: () => setPromo(null),
         clearActive,
+        refresh: reload,
         buyNowItem,
         setBuyNowItem,
       }}

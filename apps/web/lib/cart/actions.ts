@@ -6,11 +6,15 @@ import { db } from '@/db';
 import { cartItems, carts } from '@/db/schema';
 import { authReady } from '@/lib/auth/helpers';
 import { getCustomer } from '@/lib/auth/session';
+import { cartLineSchema } from '@/lib/cart/schema';
 import { MAX_QUANTITY, clampQuantity, priceLine, selectionFromKey, type CartLine } from '@/lib/cart/items';
-import { findProductById } from '@/lib/storefront/catalog';
+import { env } from '@/lib/env';
 import { getStorefrontData } from '@/lib/storefront/data';
+import { loadLiveProducts } from '@/lib/storefront/source';
 import { priceForSelection } from '@/lib/utils/products';
+import { isUuid } from '@/lib/utils/validation';
 import type { CartItem } from '@/types/order';
+import type { Product } from '@/types/product';
 import type { Result } from '@/types/user';
 
 /**
@@ -26,12 +30,7 @@ export type CartResult = Result & {
   removed: number;
 };
 
-const lineSchema = z.object({
-  productId: z.string().min(1).max(64),
-  selection: z.record(z.string().max(100)).refine((s) => Object.keys(s).length <= 10),
-  quantity: z.number().int(),
-  savedForLater: z.boolean().optional(),
-});
+const lineSchema = cartLineSchema;
 const linesSchema = z.array(lineSchema).max(100);
 const keySchema = z.string().min(1).max(1000);
 
@@ -65,12 +64,23 @@ async function cartIdFor(userId: string): Promise<string> {
   return row.id;
 }
 
+/**
+ * The products for `ids` as they are now, straight from the database: the same prices and stock `placeOrder`
+ * uses, so the cart and checkout always agree. Without a database (a fresh clone), the prototype catalog.
+ */
+async function productsFor(ids: string[]): Promise<Map<string, Product>> {
+  const list = env.DATABASE_URL
+    ? await loadLiveProducts([...new Set(ids)].filter(isUuid))
+    : (await getStorefrontData()).products;
+  return new Map(list.map((p) => [p.id, p]));
+}
+
 /** Prices `lines` against the catalog, dropping any that can't be bought. */
 async function priceLines(lines: CartLine[]): Promise<{ items: CartItem[]; removed: number }> {
-  const data = await getStorefrontData();
+  const products = await productsFor(lines.map((l) => l.productId));
   const items: CartItem[] = [];
   for (const line of lines) {
-    const item = priceLine(findProductById(data, line.productId), line);
+    const item = priceLine(products.get(line.productId), line);
     if (item && !items.some((i) => i.key === item.key)) items.push(item);
   }
   return { items, removed: lines.length - items.length };
@@ -92,11 +102,11 @@ async function readCart(userId: string): Promise<CartResult> {
     .where(eq(carts.userId, userId))
     .orderBy(desc(cartItems.createdAt));
 
-  const data = await getStorefrontData();
+  const products = await productsFor(rows.map((r) => r.productId));
   const items: CartItem[] = [];
   const gone: string[] = [];
   for (const r of rows) {
-    const item = priceLine(findProductById(data, r.productId), {
+    const item = priceLine(products.get(r.productId), {
       productId: r.productId,
       selection: r.variants,
       quantity: r.quantity,
@@ -122,8 +132,8 @@ async function readCart(userId: string): Promise<CartResult> {
 /** A line from a cart item key, priced; null if the product or option is gone. */
 async function lineForKey(key: string): Promise<CartItem | null> {
   const productId = key.split('|')[0];
-  const data = await getStorefrontData();
-  return priceLine(findProductById(data, productId), { productId, selection: selectionFromKey(key), quantity: 1 });
+  const products = await productsFor([productId]);
+  return priceLine(products.get(productId), { productId, selection: selectionFromKey(key), quantity: 1 });
 }
 
 /**
@@ -169,8 +179,7 @@ export async function addCartItem(line: CartLine): Promise<CartResult> {
   if (!userId) return SIGNED_OUT;
   const parsed = lineSchema.safeParse(line);
   if (!parsed.success) return INVALID(true);
-  const data = await getStorefrontData();
-  const product = findProductById(data, parsed.data.productId);
+  const product = (await productsFor([parsed.data.productId])).get(parsed.data.productId);
   const item = priceLine(product, parsed.data);
   if (!product || !item) return INVALID(true);
   if (priceForSelection(product, parsed.data.selection).stock <= 0) {
@@ -236,4 +245,10 @@ export async function clearCart(): Promise<CartResult> {
   const cartId = await cartIdFor(userId);
   await db.delete(cartItems).where(and(eq(cartItems.cartId, cartId), eq(cartItems.savedForLater, false)));
   return readCart(userId);
+}
+
+/** Prices lines without saving them (Buy Now at checkout). */
+export async function priceCartLines(lines: CartLine[]): Promise<CartItem[]> {
+  const parsed = linesSchema.safeParse(lines);
+  return parsed.success ? (await priceLines(parsed.data)).items : [];
 }

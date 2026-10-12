@@ -1,10 +1,10 @@
 import 'server-only';
-import { asc, getTableColumns } from 'drizzle-orm';
+import { asc, getTableColumns, inArray, type AnyColumn } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import type { AdminProduct, AdminService, SiteContent, SocialLink, Specialist, StoreSettings } from '@/types/admin';
-import type { Category, VariantGroup } from '@/types/product';
-import type { StorefrontSource } from '@/lib/storefront/derive';
+import type { Category, Product, VariantGroup } from '@/types/product';
+import { toStorefrontProduct, type StorefrontSource } from '@/lib/storefront/derive';
 
 const orUndefined = <T>(v: T | null): T | undefined => (v === null ? undefined : v);
 const hhmm = (t: string) => t.slice(0, 5);
@@ -27,18 +27,38 @@ function groupBy<T, K>(rows: T[], key: (r: T) => K): Map<K, T[]> {
   return out;
 }
 
-async function loadProducts(categoryById: Map<string, { slug: string }>): Promise<AdminProduct[]> {
+/** Products with stock, images, categories and options; all of them, or only `ids`. */
+async function loadProducts(categoryById: Map<string, { slug: string }>, ids?: string[]): Promise<AdminProduct[]> {
+  if (ids && !ids.length) return [];
   // The search document is only used inside the database (lib/storefront/search.ts).
   const { searchDocument: _search, ...productColumns } = getTableColumns(s.products);
   const rows = await db
     .select(productColumns)
     .from(s.products)
+    .where(ids ? inArray(s.products.id, ids) : undefined)
     .orderBy(asc(s.products.division), asc(s.products.featuredRank), asc(s.products.createdAt));
-  const stock = await db.select().from(s.inventory);
-  const images = await db.select().from(s.productImages).orderBy(asc(s.productImages.sortOrder));
-  const links = await db.select().from(s.productCategories);
-  const options = await db.select().from(s.productOptions).orderBy(asc(s.productOptions.sortOrder));
-  const values = await db.select().from(s.productOptionValues).orderBy(asc(s.productOptionValues.sortOrder));
+  const only = <T extends AnyColumn>(col: T) => (ids ? inArray(col, ids) : undefined);
+  const stock = await db.select().from(s.inventory).where(only(s.inventory.productId));
+  const images = await db
+    .select()
+    .from(s.productImages)
+    .where(only(s.productImages.productId))
+    .orderBy(asc(s.productImages.sortOrder));
+  const links = await db.select().from(s.productCategories).where(only(s.productCategories.productId));
+  const options = await db
+    .select()
+    .from(s.productOptions)
+    .where(only(s.productOptions.productId))
+    .orderBy(asc(s.productOptions.sortOrder));
+  const optionIds = options.map((o) => o.id);
+  const values =
+    ids && !optionIds.length
+      ? []
+      : await db
+          .select()
+          .from(s.productOptionValues)
+          .where(ids ? inArray(s.productOptionValues.optionId, optionIds) : undefined)
+          .orderBy(asc(s.productOptionValues.sortOrder));
   const stockBy = new Map(stock.map((r) => [r.productId, r]));
   const imagesBy = groupBy(images, (r) => r.productId);
   const linksBy = groupBy(links, (r) => r.productId);
@@ -296,4 +316,16 @@ export async function loadStorefrontSource(): Promise<StorefrontSource> {
     content,
     settings,
   };
+}
+
+/**
+ * The given products straight from the database, as customers would see them now (no cache). Unpublished or
+ * hidden products are left out. For checkout, which must never price from a stale copy.
+ */
+export async function loadLiveProducts(ids: string[]): Promise<Product[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const products = await loadProducts(new Map(), ids);
+  return products
+    .filter((p) => p.status === 'published' && !(p.outOfStockBehaviour === 'hide' && p.trackInventory && p.stock <= 0))
+    .map((p) => toStorefrontProduct(p, today));
 }
