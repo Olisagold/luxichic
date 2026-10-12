@@ -371,16 +371,22 @@ Notes:
   review still visible to its author, audit log), delete. pgTAP: `review_ratings.test.sql`.
 - Photos from abandoned review drafts stay in storage; a cleanup can come with the media library in Phase 8.
 
-## Phase 8: Admin back office
+## Phase 8: Admin back office (in progress)
 
 Connect each admin section to the database through server actions. Each action checks a permission and writes to
-`audit_logs`.
+`audit_logs`. Done section by section.
 
-1. Orders: list, filters, detail, status changes, cancellations.
-   - **Confirm Payment** action (permission-checked) moves `pending_verification` to `payment_confirmed`.
-   - It writes to the audit log and sends the payment-confirmed email.
-   - Filter for orders awaiting verification. The transaction reference is searchable, so it can be matched
-     against the bank statement.
+1. ✅ **Orders** (2026-10-12; `lib/orders/admin-actions.ts`, `admin-queries.ts`): list and detail from the
+   database, "Payment verification" tab, transaction reference searchable.
+   - **Confirm Payment** (`orders.confirmPayment`) moves a pending bank transfer to `payment_confirmed` and the
+     order to Confirmed, recording the admin and time on the payment and in `audit_logs`.
+   - Status only moves forward, filling in skipped timeline steps; a transfer can't move on until its payment is
+     confirmed; Pay on Delivery becomes Paid when delivered.
+   - Cancelling needs a reason and returns the stock and the promo-code use; deleting does too unless the order
+     was cancelled or delivered. Bulk changes report the orders left unchanged. Internal notes in `admin_notes`.
+   - Tested in a browser against dev (17 checks) with real orders placed through the shop, then cleaned up.
+   - Still to come: the payment-confirmed and status emails (Phase 9); the dashboard, sidebar badges and the
+     customer pages' order history still read the prototype until their sections are done.
 2. Products: list, product editor (images upload to Supabase Storage), inventory, low-stock flags.
 3. Catalog: categories, discounts (review moderation is done, Phase 7).
 4. Customers: list, detail, block and unblock, customer activity.
