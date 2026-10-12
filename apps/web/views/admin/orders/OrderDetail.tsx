@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -15,12 +15,14 @@ import {
   XCircleIcon,
 } from 'lucide-react';
 import type { OrderStatus } from '@/types/order';
-import { useOrders } from '@/contexts/OrdersContext';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useAdminOps } from '@/hooks/useAdminOps';
-import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { addNote } from '@/lib/mock-db/settings';
+import {
+  addOrderNote,
+  confirmPayment as confirmPaymentAction,
+  deleteOrder,
+  setOrderStatus,
+} from '@/lib/orders/admin-actions';
+import type { AdminOrder, OrderActivity, OrderNote } from '@/lib/orders/admin-queries';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -40,16 +42,18 @@ const nextStep: Partial<Record<OrderStatus, { status: OrderStatus; label: string
   Shipped: { status: 'Delivered', label: 'Mark delivered', icon: <CheckCircle2Icon className="h-4 w-4" /> },
 };
 
-export function OrderDetail() {
-  const { orderNumber } = useParams<{ orderNumber: string }>();
+/** One order, loaded on the server with its notes and admin activity; `data` is null if it doesn't exist. */
+export function OrderDetail({
+  data,
+}: {
+  data: { order: AdminOrder; notes: OrderNote[]; activity: OrderActivity[] } | null;
+}) {
   const router = useRouter();
-  const { getOrder } = useOrders();
   const { can } = useAdminAuth();
-  const actor = useActor();
-  const ops = useAdminOps();
-  const order = getOrder(orderNumber);
-  const notes = useDb((s) => s.orderNotes[orderNumber] ?? []);
-  const activity = useDb((s) => s.activity.filter((a) => a.target?.includes(orderNumber)));
+  const order = data?.order;
+  const notes = data?.notes ?? [];
+  const activity = data?.activity ?? [];
+  const [busy, setBusy] = useState(false);
   const [dialog, setDialog] = useState<'confirm' | 'cancel' | 'delete' | 'pod' | null>(null);
   const [justConfirmed, setJustConfirmed] = useState(false);
   const [email, setEmail] = useState<EmailPreview | null>(null);
@@ -84,19 +88,26 @@ export function OrderDetail() {
       : 'Create your LUXICHIC account: https://luxichic.example/create-account?token=•••• (expires in 72 hours)',
   };
 
-  const confirmPayment = () => {
-    if (ops.confirmPayment(order.orderNumber)) {
-      setDialog(null);
-      setJustConfirmed(true);
-      toast.success('Payment confirmed', { description: `${order.orderNumber} is now confirmed.` });
+  /** Runs a server action, then shows the result and reloads the order. */
+  const run = async (action: () => Promise<{ ok: boolean; error?: string }>, success: string) => {
+    setBusy(true);
+    const res = await action().catch(() => null);
+    setBusy(false);
+    setDialog(null);
+    if (!res?.ok) {
+      toast.error(res?.error ?? 'Something went wrong. Please try again.');
+      return false;
     }
+    toast.success(success);
+    router.refresh();
+    return true;
   };
 
-  const confirmPod = () => {
-    ops.setOrderStatus(order.orderNumber, 'Confirmed');
-    setDialog(null);
-    toast.success('Order confirmed');
+  const confirmPayment = async () => {
+    if (await run(() => confirmPaymentAction(order.orderNumber), 'Payment confirmed')) setJustConfirmed(true);
   };
+
+  const confirmPod = () => run(() => setOrderStatus(order.orderNumber, 'Confirmed'), 'Order confirmed');
 
   return (
     <div>
@@ -131,10 +142,10 @@ export function OrderDetail() {
               <AdminButton
                 variant="primary"
                 icon={step.icon}
-                onClick={() => {
-                  ops.setOrderStatus(order.orderNumber, step.status);
-                  toast.success(`Marked ${step.status.toLowerCase()}`);
-                }}
+                disabled={busy}
+                onClick={() =>
+                  run(() => setOrderStatus(order.orderNumber, step.status), `Marked ${step.status.toLowerCase()}`)
+                }
               >
                 {step.label}
               </AdminButton>
@@ -205,8 +216,8 @@ export function OrderDetail() {
                 <div className="min-w-0 flex-1 text-[13px]">
                   <p className="font-semibold text-emerald-900">Payment confirmed and order moved to Confirmed</p>
                   <p className="text-emerald-800">
-                    Recorded in the activity log under your name. The confirmation email
-                    {order.accountEmail ? '' : ' with an account-creation link'} would be sent by the backend.
+                    Recorded in the activity log under your name. Confirmation emails start in Phase 9; until then, let
+                    the customer know on WhatsApp.
                   </p>
                 </div>
                 <AdminButton
@@ -249,12 +260,10 @@ export function OrderDetail() {
 
           <Panel title="Internal notes" description="Only visible to admins.">
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 if (!note.trim()) return;
-                addNote(actor, 'orderNotes', order.orderNumber, note.trim());
-                setNote('');
-                toast.success('Note added');
+                if (await run(() => addOrderNote(order.orderNumber, note), 'Note added')) setNote('');
               }}
               className="flex gap-2"
             >
@@ -393,23 +402,23 @@ export function OrderDetail() {
       <ConfirmDialog
         open={dialog === 'cancel'}
         onClose={() => setDialog(null)}
-        onConfirm={(reason) => {
-          ops.setOrderStatus(order.orderNumber, 'Cancelled', reason);
-          setDialog(null);
-          toast.success('Order cancelled');
-        }}
+        onConfirm={(reason) => run(() => setOrderStatus(order.orderNumber, 'Cancelled', reason), 'Order cancelled')}
         title="Cancel this order?"
         tone="danger"
         confirmLabel="Cancel order"
-        message="The customer would receive a cancellation email with your reason."
+        message="The items go back into stock and any promo-code use is given back."
         requireReason={{ label: 'Reason', placeholder: 'e.g. Payment not received within 48 hours' }}
       />
 
       <ConfirmDialog
         open={dialog === 'delete'}
         onClose={() => setDialog(null)}
-        onConfirm={() => {
-          ops.deleteOrder(order.orderNumber);
+        onConfirm={async () => {
+          setBusy(true);
+          const res = await deleteOrder(order.orderNumber).catch(() => null);
+          setBusy(false);
+          setDialog(null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not delete the order.');
           toast.success('Order deleted');
           router.push('/admin/orders');
         }}

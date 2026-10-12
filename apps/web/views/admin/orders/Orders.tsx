@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { DownloadIcon, ShoppingBagIcon } from 'lucide-react';
 import type { Order, OrderStatus } from '@/types/order';
-import { useOrders } from '@/contexts/OrdersContext';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useAdminOps } from '@/hooks/useAdminOps';
+import { setOrdersStatus } from '@/lib/orders/admin-actions';
+import type { AdminOrder } from '@/lib/orders/admin-queries';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -33,10 +33,9 @@ const divisionOf = (o: Order) => {
   return set.size > 1 ? 'Both' : set.has('hairs') ? 'Hairs' : 'Tools';
 };
 
-export function Orders() {
-  const { orders } = useOrders();
+/** Every order, loaded on the server. Changes go through permission-checked server actions. */
+export function Orders({ orders }: { orders: AdminOrder[] }) {
   const { can } = useAdminAuth();
-  const ops = useAdminOps();
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -109,12 +108,18 @@ export function Orders() {
     toast.success(`Exported ${filtered.length} orders`);
   };
 
-  const applyBulk = () => {
+  const applyBulk = async (reason: string) => {
     if (!bulk) return;
-    selected.forEach((n) => ops.setOrderStatus(n, bulk));
-    toast.success(`${selected.length} order${selected.length > 1 ? 's' : ''} marked ${bulk.toLowerCase()}`);
-    setSelected([]);
+    const res = await setOrdersStatus(selected, bulk, reason).catch(() => null);
     setBulk(null);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not update the orders.');
+    const plural = (n: number) => `${n} order${n === 1 ? '' : 's'}`;
+    if (res.updated) toast.success(`${plural(res.updated)} marked ${bulk.toLowerCase()}`);
+    if (res.skipped.length) {
+      toast.warning(`${plural(res.skipped.length)} left unchanged`, { description: res.skipped.slice(0, 3).join(' ') });
+    }
+    setSelected([]);
+    router.refresh();
   };
 
   const setTab = (v: Tab) => {
@@ -331,9 +336,10 @@ export function Orders() {
         title={`Mark ${selected.length} order${selected.length > 1 ? 's' : ''} as ${bulk?.toLowerCase()}?`}
         message={
           bulk === 'Cancelled'
-            ? 'Cancelled orders stop processing. Customers would be emailed by the backend.'
-            : 'Each order’s timeline will be updated and customers would be notified by the backend.'
+            ? 'Cancelled orders stop processing and their items go back into stock.'
+            : 'Each order’s timeline is updated. Orders still waiting for a bank transfer to be confirmed are skipped.'
         }
+        requireReason={bulk === 'Cancelled' ? { label: 'Reason', placeholder: 'e.g. Out of stock' } : undefined}
         tone={bulk === 'Cancelled' ? 'danger' : 'default'}
         confirmLabel="Apply"
       />

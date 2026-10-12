@@ -43,7 +43,7 @@ const TRANSFER_STEPS: TimelineStep[] = [
 const DELIVERY_STEPS: TimelineStep[] = ['Order Placed', 'Processing', 'Shipped', 'Delivered'];
 
 /** Orders matching `where`, newest first, with items, payment and timeline. One query per table. */
-async function loadOrders(where: SQL | undefined): Promise<Order[]> {
+export async function loadOrders(where: SQL | undefined): Promise<(Order & { id: string })[]> {
   const rows = await db.select().from(s.orders).where(where).orderBy(desc(s.orders.createdAt));
   if (!rows.length) return [];
   const ids = rows.map((r) => r.id);
@@ -65,6 +65,7 @@ async function loadOrders(where: SQL | undefined): Promise<Order[]> {
     const payment = payments.find((p) => p.orderId === o.id);
 
     return {
+      id: o.id,
       orderNumber: o.orderNumber,
       reference: o.transactionReference,
       createdAt: o.createdAt.toISOString(),
@@ -111,7 +112,7 @@ async function loadOrders(where: SQL | undefined): Promise<Order[]> {
   });
 }
 
-const byNumber = (orderNumber: string) => sql`upper(${s.orders.orderNumber}) = upper(${orderNumber.trim()})`;
+export const byNumber = (orderNumber: string) => sql`upper(${s.orders.orderNumber}) = upper(${orderNumber.trim()})`;
 
 /**
  * An order for the confirmation page: only for the account that placed it or the browser that placed it
