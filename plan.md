@@ -443,7 +443,14 @@ Connect each admin section to the database through server actions. Each action c
    - **WhatsApp** stays visible with a "Coming soon" note; its fields are disabled and nothing is saved.
    - Tested in a browser against dev (15 checks, including checkout showing the new fee and bank and refusing a
      state switched off), with the settings snapshotted and restored afterwards.
-8. Administration: admin users (invite through Supabase Auth), roles and permissions, activity log.
+8. ✅ **Administration** (2026-10-13; `lib/admins/admin-actions.ts`): admin users, roles page and activity log
+   (`audit_logs`, with filters and CSV) from the database.
+   - Add an admin with a role, permissions and a **temporary password** (a Supabase Auth login). Until the email
+     setup at launch there's no invitation email; Phase 11 switches this to an emailed invite.
+   - Edit, suspend (refused at sign-in), reset password, delete. Server rules: the owner can't be changed; nobody
+     changes their own permissions or status or deletes themselves; only the owner can grant `admins.manage`.
+   - Tested in a browser against dev (13 checks: new admin signs in with only their permissions, suspended one is
+     refused, reset password works, a non-owner can't escalate), then cleaned up.
 9. Settings: general, business, social, security (password change and login history).
 10. Dashboard and analytics read real aggregates (SQL views or queries) instead of `lib/utils/adminAnalytics.ts`
     over mock data.
