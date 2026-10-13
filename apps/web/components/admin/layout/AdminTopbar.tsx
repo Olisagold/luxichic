@@ -15,8 +15,8 @@ import {
   ShieldCheckIcon,
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useDb } from '@/lib/mock-db/db';
-import { markNotifications } from '@/lib/mock-db/settings';
+import { useAdminBadges } from '@/components/admin/AdminBadgesProvider';
+import { markNotifications } from '@/lib/settings/admin-actions';
 import { quickActions } from '@/data/adminNav';
 import { initials } from '@/lib/utils/text';
 import { formatDateTime } from '@/lib/utils/dates';
@@ -58,8 +58,8 @@ function useOutside(open: boolean, close: () => void) {
 export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }: AdminTopbarProps) {
   const { admin, logout, can } = useAdminAuth();
   const router = useRouter();
-  const notifications = useDb((s) => s.notifications);
-  const unread = notifications.filter((n) => !n.read).length;
+  const { notifications, counts } = useAdminBadges();
+  const unread = counts.unread;
   const [menu, setMenu] = useState<'none' | 'notifications' | 'profile' | 'quick'>('none');
   const close = React.useCallback(() => setMenu('none'), []);
   const ref = useOutside(menu !== 'none', close);
@@ -149,7 +149,10 @@ export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }:
                   <p className="text-sm font-semibold text-ink">Notifications</p>
                   {unread > 0 && (
                     <button
-                      onClick={() => markNotifications('all')}
+                      onClick={async () => {
+                        await markNotifications('all');
+                        router.refresh();
+                      }}
                       className="text-xs font-semibold text-pink-deep hover:underline"
                     >
                       Mark all as read
@@ -160,10 +163,11 @@ export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }:
                   {notifications.slice(0, 8).map((n) => (
                     <li key={n.id}>
                       <button
-                        onClick={() => {
-                          markNotifications([n.id]);
+                        onClick={async () => {
                           close();
+                          if (!n.read) await markNotifications([n.id]);
                           if (n.link) router.push(n.link);
+                          else router.refresh();
                         }}
                         className="flex w-full gap-3 border-b border-line/60 px-4 py-3 text-left last:border-0 hover:bg-canvas/60"
                       >

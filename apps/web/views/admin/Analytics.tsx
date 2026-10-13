@@ -1,105 +1,31 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowDownRightIcon, ArrowUpRightIcon, DownloadIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { useOrders } from '@/contexts/OrdersContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { usePeriodParam } from '@/hooks/usePeriodParam';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { RangePicker } from '@/components/admin/ui/RangePicker';
 import { RevenueChart } from '@/components/admin/charts/RevenueChart';
 import { DonutChart } from '@/components/admin/charts/DonutChart';
-import {
-  compactNaira,
-  countsAsRevenue,
-  inRange,
-  pctChange,
-  previousRange,
-  resolveRange,
-  revenueSeries,
-  salesByDivision,
-  topProducts,
-  type RangeKey,
-} from '@/lib/utils/adminAnalytics';
+import { compactNaira } from '@/lib/utils/adminAnalytics';
 import { formatNaira } from '@/lib/utils/currency';
 import { downloadCsv } from '@/lib/utils/text';
+import type { AnalyticsData } from '@/lib/analytics/types';
 import { cn } from '@/lib/utils/cn';
 
-export function Analytics() {
-  const { orders, appointments } = useOrders();
-  const { users } = useAuth();
-  const [range, setRange] = useState<RangeKey>('30d');
-  const [custom, setCustom] = useState({ from: '', to: '' });
+/** Figures are aggregated on the server for the range in the URL (lib/analytics/admin-queries.ts). */
+export function Analytics({ data }: { data: AnalyticsData }) {
+  const { range, setRange, custom, setCustom, pending } = usePeriodParam(data.period);
   const [metric, setMetric] = useState<'revenue' | 'orders'>('revenue');
-
-  const r = useMemo(() => resolveRange(range, custom), [range, custom]);
-  const prev = useMemo(() => previousRange(r), [r]);
-
-  const data = useMemo(() => {
-    const cur = orders.filter((o) => inRange(o.createdAt, r));
-    const before = orders.filter((o) => inRange(o.createdAt, prev));
-    const rev = (l: typeof cur) => l.filter(countsAsRevenue).reduce((s, o) => s + o.total, 0);
-    const paid = (l: typeof cur) => l.filter(countsAsRevenue);
-    const appts = appointments.filter((a) => inRange(a.createdAt, r));
-    const apptsPrev = appointments.filter((a) => inRange(a.createdAt, prev));
-    const signups = users.filter((u) => inRange(u.createdAt, r)).length;
-    const signupsPrev = users.filter((u) => inRange(u.createdAt, prev)).length;
-    const revenue = rev(cur);
-    const aov = paid(cur).length ? Math.round(revenue / paid(cur).length) : 0;
-    const aovPrev = paid(before).length ? Math.round(rev(before) / paid(before).length) : 0;
-    const byService = Object.entries(
-      appts.reduce<Record<string, number>>((m, a) => ({ ...m, [a.serviceName]: (m[a.serviceName] ?? 0) + 1 }), {}),
-    ).sort((a, b) => b[1] - a[1]);
-    const statuses = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((s) => ({
-      s,
-      n: cur.filter((o) => o.status === s).length,
-    }));
-    const methods = [
-      { name: 'Bank transfer', value: cur.filter((o) => o.paymentMethod === 'bank_transfer').length, color: '#0A0A0A' },
-      {
-        name: 'Pay on Delivery',
-        value: cur.filter((o) => o.paymentMethod === 'pay_on_delivery').length,
-        color: '#F0288C',
-      },
-    ];
-
-    const states = Object.entries(
-      cur.reduce<Record<string, number>>(
-        (m, o) => ({ ...m, [o.address.state]: (m[o.address.state] ?? 0) + o.total }),
-        {},
-      ),
-    )
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6);
-    return {
-      cur,
-      revenue,
-      aov,
-      signups,
-      byService,
-      statuses,
-      methods,
-      states,
-      kpis: [
-        { label: 'Revenue', value: formatNaira(revenue), change: pctChange(revenue, rev(before)) },
-        { label: 'Orders', value: String(cur.length), change: pctChange(cur.length, before.length) },
-        { label: 'Average order', value: aov ? formatNaira(aov) : '—', change: pctChange(aov, aovPrev) },
-        { label: 'Appointments', value: String(appts.length), change: pctChange(appts.length, apptsPrev.length) },
-        { label: 'New accounts', value: String(signups), change: pctChange(signups, signupsPrev) },
-      ],
-    };
-  }, [orders, appointments, users, r, prev]);
-
-  const series = useMemo(() => revenueSeries(orders, r), [orders, r]);
-  const top = useMemo(() => topProducts(data.cur, 8), [data.cur]);
-  const split = useMemo(() => salesByDivision(data.cur), [data.cur]);
+  const { series, top, division: split, period } = data;
   const maxService = Math.max(1, ...data.byService.map(([, n]) => n));
   const maxState = Math.max(1, ...data.states.map(([, n]) => n));
 
   const exportCsv = () => {
-    downloadCsv(`luxichic-sales-${range}.csv`, [
+    downloadCsv(`luxichic-sales-${period.from}-to-${period.to}.csv`, [
       ['Period', 'Revenue (NGN)', 'Orders'],
       ...series.map((p) => [p.label, p.revenue, p.orders]),
     ]);
@@ -107,7 +33,7 @@ export function Analytics() {
   };
 
   return (
-    <div>
+    <div className={cn('transition-opacity', pending && 'opacity-60')} aria-busy={pending}>
       <PageHeader
         title="Analytics"
         description="How the stores and salon are performing, compared with the previous period."
@@ -193,7 +119,7 @@ export function Analytics() {
               </thead>
               <tbody className="divide-y divide-line">
                 {top.map((p) => (
-                  <tr key={p.productId}>
+                  <tr key={p.productId ?? p.name}>
                     <td className="px-5 py-2">
                       <span className="flex items-center gap-2.5">
                         <img src={p.image} alt="" className="h-8 w-8 rounded object-cover" />

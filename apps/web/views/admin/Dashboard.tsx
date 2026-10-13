@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRightIcon,
@@ -11,11 +11,8 @@ import {
   TrendingDownIcon,
   TrendingUpIcon,
 } from 'lucide-react';
-import { useOrders } from '@/contexts/OrdersContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useDb } from '@/lib/mock-db/db';
-import { stockState } from '@/lib/mock-db/catalog';
+import { usePeriodParam } from '@/hooks/usePeriodParam';
 import { quickActions } from '@/data/adminNav';
 import { Panel } from '@/components/admin/ui/Panel';
 import { CountUp } from '@/components/admin/ui/CountUp';
@@ -24,90 +21,23 @@ import { RevenueChart } from '@/components/admin/charts/RevenueChart';
 import { DonutChart } from '@/components/admin/charts/DonutChart';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { formatNaira } from '@/lib/utils/currency';
-import { formatSlot, toISODate } from '@/lib/utils/dates';
-import {
-  compactNaira,
-  countsAsRevenue,
-  inRange,
-  pctChange,
-  previousRange,
-  resolveRange,
-  revenueSeries,
-  salesByDivision,
-  topProducts,
-  type RangeKey,
-} from '@/lib/utils/adminAnalytics';
+import { formatSlot } from '@/lib/utils/dates';
+import { compactNaira } from '@/lib/utils/adminAnalytics';
+import type { DashboardData } from '@/lib/analytics/types';
 import { cn } from '@/lib/utils/cn';
 
-export function Dashboard() {
+/** Figures are aggregated on the server for the range in the URL (lib/analytics/admin-queries.ts). */
+export function Dashboard({ data }: { data: DashboardData }) {
   const { admin, can } = useAdminAuth();
-  const { orders, appointments } = useOrders();
-  const { users } = useAuth();
-  const products = useDb((s) => s.products);
-  const [range, setRange] = useState<RangeKey>('30d');
-  const [custom, setCustom] = useState({ from: '', to: '' });
+  const { range, setRange, custom, setCustom, pending } = usePeriodParam(data.period);
   const [metric, setMetric] = useState<'revenue' | 'orders'>('revenue');
 
-  const today = toISODate(new Date());
-  const data = useMemo(() => {
-    const r = resolveRange(range, custom);
-    const prev = previousRange(r);
-    const cur = orders.filter((o) => countsAsRevenue(o) && inRange(o.createdAt, r));
-    const before = orders.filter((o) => countsAsRevenue(o) && inRange(o.createdAt, prev));
-    const revenue = cur.reduce((s, o) => s + o.total, 0);
-    const prevRevenue = before.reduce((s, o) => s + o.total, 0);
-    const awaiting = orders.filter((o) => o.paymentStatus === 'Pending Verification' && o.status === 'Pending');
-    const confirmed = orders.filter((o) => ['Confirmed', 'Processing', 'Shipped', 'Delivered'].includes(o.status));
-    const low = products
-      .filter((p) => p.status !== 'archived' && p.trackInventory && stockState(p) !== 'In Stock')
-      .sort((a, b) => a.stock - b.stock);
-    const todayAppts = appointments
-      .filter((a) => a.date === today && !['Rejected', 'Cancelled'].includes(a.status))
-      .sort((a, b) => a.time.localeCompare(b.time));
-    const pendingAppts = appointments.filter((a) => a.status === 'Pending');
-    const apptCounts = (['Pending', 'Confirmed', 'Rescheduled', 'Completed', 'Rejected', 'Cancelled'] as const).map(
-      (s) => ({ status: s, count: appointments.filter((a) => a.status === s).length }),
-    );
-    const serviceCounts = Object.entries(
-      appointments.reduce<Record<string, number>>(
-        (m, a) => ({ ...m, [a.serviceName]: (m[a.serviceName] ?? 0) + 1 }),
-        {},
-      ),
-    )
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-    const newUsers = users.filter((u) => inRange(u.createdAt, r)).length;
-    return {
-      r,
-      revenue,
-      revenueChange: pctChange(revenue, prevRevenue),
-      orderCount: cur.length,
-      ordersChange: pctChange(cur.length, before.length),
-      awaiting,
-      awaitingTotal: awaiting.reduce((s, o) => s + o.total, 0),
-      confirmed,
-      confirmedRevenue: confirmed.reduce((s, o) => s + o.total, 0),
-      low,
-      todayAppts,
-      pendingAppts,
-      apptCounts,
-      serviceCounts,
-      newUsers,
-      series: revenueSeries(orders, r),
-      division: salesByDivision(cur),
-      top: topProducts(cur),
-      pendingOrders: orders.filter((o) => o.status === 'Pending').length,
-      upcoming: appointments.filter((a) => a.date > today && ['Pending', 'Confirmed', 'Rescheduled'].includes(a.status))
-        .length,
-    };
-  }, [orders, appointments, users, products, range, custom, today]);
-
   const actions = quickActions.filter((a) => !a.permission || can(a.permission));
-  const apptMax = Math.max(1, ...data.apptCounts.map((a) => a.count));
+  const apptMax = Math.max(1, ...data.appointmentsByStatus.map((a) => a.count));
   const hour = new Date().getHours();
 
   return (
-    <div className="space-y-5">
+    <div className={cn('space-y-5 transition-opacity', pending && 'opacity-60')} aria-busy={pending}>
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[13px] text-subtle">
@@ -133,27 +63,31 @@ export function Dashboard() {
             icon={<LandmarkIcon className="h-4 w-4" />}
             to="/admin/orders?status=awaiting"
             label="Transfers awaiting verification"
-            value={<CountUp value={data.awaiting.length} />}
-            sub={`${formatNaira(data.awaitingTotal)} to check against the bank`}
-            urgent={data.awaiting.length > 0}
+            value={<CountUp value={data.awaiting.count} />}
+            sub={`${formatNaira(data.awaiting.total)} to check against the bank`}
+            urgent={data.awaiting.count > 0}
           />
 
           <AttentionItem
             icon={<CalendarClockIcon className="h-4 w-4" />}
             to="/admin/appointments?status=Pending"
             label="Appointment requests to confirm"
-            value={<CountUp value={data.pendingAppts.length} />}
-            sub={`${data.todayAppts.length} appointment${data.todayAppts.length === 1 ? '' : 's'} on today’s schedule`}
-            urgent={data.pendingAppts.length > 0}
+            value={<CountUp value={data.pendingAppointments} />}
+            sub={`${data.todayAppointments.length} appointment${data.todayAppointments.length === 1 ? '' : 's'} on today’s schedule`}
+            urgent={data.pendingAppointments > 0}
           />
 
           <AttentionItem
             icon={<BoxesIcon className="h-4 w-4" />}
             to="/admin/inventory?filter=low"
             label="Products low or out of stock"
-            value={<CountUp value={data.low.length} />}
-            sub={data.low[0] ? `${data.low[0].name}: ${data.low[0].stock} left` : 'Stock levels are healthy'}
-            urgent={data.low.length > 0}
+            value={<CountUp value={data.lowStock.count} />}
+            sub={
+              data.lowStock.items[0]
+                ? `${data.lowStock.items[0].name}: ${data.lowStock.items[0].stock} left`
+                : 'Stock levels are healthy'
+            }
+            urgent={data.lowStock.count > 0}
           />
         </div>
       </section>
@@ -203,11 +137,11 @@ export function Dashboard() {
           }
           bodyClassName="p-0"
         >
-          {data.todayAppts.length === 0 ? (
+          {data.todayAppointments.length === 0 ? (
             <p className="px-5 py-10 text-center text-[13px] text-subtle">No appointments today.</p>
           ) : (
             <ul className="max-h-[300px] divide-y divide-line overflow-y-auto">
-              {data.todayAppts.map((a) => (
+              {data.todayAppointments.map((a) => (
                 <li key={a.reference}>
                   <Link
                     href={`/admin/appointments?ref=${a.reference}`}
@@ -219,8 +153,8 @@ export function Dashboard() {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-semibold text-ink">{a.serviceName}</span>
                       <span className="block truncate text-xs text-subtle">
-                        {a.customer.fullName}
-                        {a.personnelName ? ` · ${a.personnelName}` : ''}
+                        {a.customerName}
+                        {a.specialistName ? ` · ${a.specialistName}` : ''}
                       </span>
                     </span>
                     <StatusBadge status={a.status} />
@@ -240,31 +174,31 @@ export function Dashboard() {
         <Metric label="Orders" value={data.orderCount} sub={`${data.pendingOrders} pending`} to="/admin/orders" />
         <Metric
           label="Confirmed orders"
-          value={data.confirmed.length}
-          sub={compactNaira(data.confirmedRevenue)}
+          value={data.confirmed.count}
+          sub={compactNaira(data.confirmed.revenue)}
           to="/admin/orders?status=Confirmed"
         />
         <Metric
           label="Customers"
-          value={users.length}
-          sub={`${data.newUsers} new · ${users.filter((u) => u.status === 'blocked').length} blocked`}
+          value={data.customers.total}
+          sub={`${data.customers.new} new · ${data.customers.blocked} blocked`}
           to="/admin/customers"
         />
         <Metric
           label="Active products"
-          value={products.filter((p) => p.status === 'published').length}
-          sub={`${products.filter((p) => p.status === 'archived').length} archived · ${products.filter((p) => p.stock <= 0).length} sold out`}
+          value={data.products.published}
+          sub={`${data.products.archived} archived · ${data.products.soldOut} sold out`}
           to="/admin/products"
         />
         <Metric
           label="Upcoming appointments"
-          value={data.upcoming}
-          sub={`${data.todayAppts.length} today`}
+          value={data.upcomingAppointments}
+          sub={`${data.todayAppointments.length} today`}
           to="/admin/appointments"
         />
         <Metric
           label="Completed services"
-          value={appointments.filter((a) => a.status === 'Completed').length}
+          value={data.completedAppointments}
           sub="All time"
           to="/admin/appointments?status=Completed"
         />
@@ -283,7 +217,7 @@ export function Dashboard() {
           }
         >
           <ul className="space-y-2.5">
-            {data.apptCounts.map((a) => (
+            {data.appointmentsByStatus.map((a) => (
               <li key={a.status} className="flex items-center gap-3 text-[13px]">
                 <span className="w-24 shrink-0 text-charcoal">{a.status}</span>
                 <span className="h-2 flex-1 overflow-hidden rounded-full bg-canvas">
@@ -297,9 +231,10 @@ export function Dashboard() {
             ))}
           </ul>
         </Panel>
-        <Panel title="Most-booked services">
+        <Panel title="Most-booked services" description="All time">
+          {data.topServices.length === 0 && <p className="text-[13px] text-subtle">No bookings yet.</p>}
           <ol className="space-y-2.5">
-            {data.serviceCounts.map(([name, count], i) => (
+            {data.topServices.map(([name, count], i) => (
               <li key={name} className="flex items-center gap-3 text-[13px]">
                 <span className="w-4 text-xs font-semibold text-muted">{i + 1}</span>
                 <span className="flex-1 truncate text-charcoal">{name}</span>
@@ -314,9 +249,9 @@ export function Dashboard() {
         <Panel title="Best-selling products" description="By revenue in range" bodyClassName="p-0">
           <ul className="divide-y divide-line">
             {data.top.map((p) => (
-              <li key={p.productId}>
+              <li key={p.productId ?? p.name}>
                 <Link
-                  href={`/admin/products/${p.productId}`}
+                  href={p.productId ? `/admin/products/${p.productId}` : '/admin/products'}
                   className="flex items-center gap-3 px-5 py-2.5 hover:bg-canvas/60"
                 >
                   <img src={p.image} alt="" className="h-9 w-9 rounded-md object-cover" />
@@ -343,13 +278,13 @@ export function Dashboard() {
           bodyClassName="p-0"
         >
           <ul className="divide-y divide-line">
-            {data.low.slice(0, 6).map((p) => (
+            {data.lowStock.items.map((p) => (
               <li key={p.id}>
                 <Link
                   href={`/admin/inventory?q=${encodeURIComponent(p.name)}`}
                   className="flex items-center gap-3 px-5 py-2.5 hover:bg-canvas/60"
                 >
-                  <img src={p.images[0]} alt="" className="h-9 w-9 rounded-md object-cover" />
+                  <img src={p.image} alt="" className="h-9 w-9 rounded-md object-cover" />
                   <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">{p.name}</span>
                   <span
                     className={cn(
@@ -362,7 +297,7 @@ export function Dashboard() {
                 </Link>
               </li>
             ))}
-            {data.low.length === 0 && (
+            {data.lowStock.count === 0 && (
               <li className="px-5 py-8 text-center text-[13px] text-subtle">Nothing needs restocking.</li>
             )}
           </ul>

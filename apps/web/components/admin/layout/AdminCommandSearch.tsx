@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CalendarClockIcon,
@@ -12,132 +12,55 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { useOrders } from '@/contexts/OrdersContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useReviews } from '@/contexts/ReviewsContext';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useDb } from '@/lib/mock-db/db';
-import { formatNaira } from '@/lib/utils/currency';
+import { adminSearch, type AdminSearchHit } from '@/lib/search/admin-search';
 import { cn } from '@/lib/utils/cn';
 
-interface Result {
-  group: string;
-  icon: React.ElementType;
-  title: string;
-  meta: string;
-  to: string;
-}
+const ICONS: Record<AdminSearchHit['group'], React.ElementType> = {
+  Orders: ShoppingBagIcon,
+  Customers: UserIcon,
+  Products: PackageIcon,
+  Appointments: CalendarClockIcon,
+  Reviews: StarIcon,
+  Specialists: SparklesIcon,
+};
 
-/** ⌘K search across orders, customers, products, reviews, appointments and specialists. */
+type Result = AdminSearchHit & { icon: React.ElementType };
+
+/** ⌘K search across orders, customers, products, reviews, appointments and specialists (searched on the server). */
 export function AdminCommandSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
+  const [results, setResults] = useState<Result[]>([]);
+  const [searching, setSearching] = useState(false);
+  const latest = useRef(0);
   const router = useRouter();
-  const { orders, appointments } = useOrders();
-  const { users } = useAuth();
-  const { all: reviews } = useReviews();
-  const { can } = useAdminAuth();
-  const products = useDb((s) => s.products);
-  const specialists = useDb((s) => s.specialists);
 
   useEffect(() => {
     if (open) {
       setQ('');
       setActive(0);
+      setResults([]);
     }
   }, [open]);
 
-  const results = useMemo<Result[]>(() => {
-    const t = q.trim().toLowerCase();
-    if (t.length < 2) return [];
-    const has = (...fields: (string | undefined)[]) => fields.some((f) => f?.toLowerCase().includes(t));
-    const out: Result[] = [];
-    if (can('orders.view')) {
-      orders
-        .filter((o) => has(o.orderNumber, o.reference, o.customer.fullName, o.customer.email, o.customer.phone))
-        .slice(0, 5)
-        .forEach((o) =>
-          out.push({
-            group: 'Orders',
-            icon: ShoppingBagIcon,
-            title: `${o.orderNumber} · ${o.customer.fullName}`,
-            meta: `Ref ${o.reference} · ${formatNaira(o.total)} · ${o.status}`,
-            to: `/admin/orders/${o.orderNumber}`,
-          }),
-        );
+  useEffect(() => {
+    const term = q.trim();
+    const id = ++latest.current;
+    if (term.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
     }
-    if (can('customers.view')) {
-      users
-        .filter((u) => has(u.fullName, u.email, u.phone))
-        .slice(0, 5)
-        .forEach((u) =>
-          out.push({
-            group: 'Customers',
-            icon: UserIcon,
-            title: u.fullName,
-            meta: `${u.email} · ${u.phone}`,
-            to: `/admin/customers/${u.id}`,
-          }),
-        );
-    }
-    if (can('products.view')) {
-      products
-        .filter((p) => has(p.name, p.sku, p.slug))
-        .slice(0, 5)
-        .forEach((p) =>
-          out.push({
-            group: 'Products',
-            icon: PackageIcon,
-            title: p.name,
-            meta: `${p.sku} · ${formatNaira(p.price)} · ${p.stock} in stock`,
-            to: `/admin/products/${p.id}`,
-          }),
-        );
-    }
-    if (can('appointments.view')) {
-      appointments
-        .filter((a) => has(a.reference, a.customer.fullName, a.customer.email, a.serviceName))
-        .slice(0, 5)
-        .forEach((a) =>
-          out.push({
-            group: 'Appointments',
-            icon: CalendarClockIcon,
-            title: `${a.reference} · ${a.serviceName}`,
-            meta: `${a.customer.fullName} · ${a.date} ${a.time} · ${a.status}`,
-            to: `/admin/appointments?ref=${a.reference}`,
-          }),
-        );
-    }
-    if (can('reviews.view')) {
-      reviews
-        .filter((r) => has(r.title, r.body, r.authorName))
-        .slice(0, 3)
-        .forEach((r) =>
-          out.push({
-            group: 'Reviews',
-            icon: StarIcon,
-            title: r.title,
-            meta: `${r.authorName} · ${r.rating}★`,
-            to: `/admin/reviews?q=${encodeURIComponent(r.title)}`,
-          }),
-        );
-    }
-    if (can('salon.specialists')) {
-      specialists
-        .filter((s) => has(s.name, s.title, ...s.specialties))
-        .slice(0, 3)
-        .forEach((s) =>
-          out.push({
-            group: 'Specialists',
-            icon: SparklesIcon,
-            title: s.name,
-            meta: s.title,
-            to: '/admin/salon/specialists',
-          }),
-        );
-    }
-    return out;
-  }, [q, orders, users, products, appointments, reviews, specialists, can]);
+    setSearching(true);
+    const timer = window.setTimeout(async () => {
+      const hits = await adminSearch(term).catch(() => []);
+      if (id !== latest.current) return; // a newer search has started
+      setResults(hits.map((h) => ({ ...h, icon: ICONS[h.group] })));
+      setActive(0);
+      setSearching(false);
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [q]);
 
   const go = (r: Result) => {
     onClose();
@@ -183,7 +106,9 @@ export function AdminCommandSearch({ open, onClose }: { open: boolean; onClose: 
             Try an order number (LXC-…), an 8-digit reference, a customer email or a product name.
           </p>
         ) : results.length === 0 ? (
-          <p className="px-3 py-6 text-center text-[13px] text-subtle">No results for “{q}”.</p>
+          <p className="px-3 py-6 text-center text-[13px] text-subtle" aria-live="polite">
+            {searching ? 'Searching…' : `No results for “${q}”.`}
+          </p>
         ) : (
           results.map((r, i) => {
             const header = r.group !== lastGroup ? r.group : null;

@@ -6,7 +6,7 @@ import { NavLink } from '@/components/ui/NavLink';
 import { ChevronsLeftIcon, ExternalLinkIcon } from 'lucide-react';
 import { adminNav } from '@/data/adminNav';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { useAdminBadges } from '@/hooks/useAdminBadges';
+import { useAdminBadges } from '@/components/admin/AdminBadgesProvider';
 import { Logo } from '@/components/ui/Logo';
 import { cn } from '@/lib/utils/cn';
 
@@ -20,7 +20,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed, onToggleCollapse, onNavigate, mobile }: AdminSidebarProps) {
   const { can } = useAdminAuth();
-  const badges = useAdminBadges();
+  const { counts } = useAdminBadges();
   const isCollapsed = collapsed && !mobile;
 
   return (
@@ -70,7 +70,7 @@ export function AdminSidebar({ collapsed, onToggleCollapse, onNavigate, mobile }
               )}
               <ul className="space-y-0.5">
                 {items.map((item) => {
-                  const count = item.badge ? badges[item.badge] : 0;
+                  const count = item.badge ? counts[item.badge] : 0;
                   return (
                     <li key={item.to}>
                       <NavLink

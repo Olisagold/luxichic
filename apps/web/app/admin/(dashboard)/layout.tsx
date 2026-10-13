@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { AdminLayout } from '@/components/admin/layout/AdminLayout';
 import { AdminAuthProvider } from '@/contexts/AdminAuthContext';
+import { AdminBadgesProvider } from '@/components/admin/AdminBadgesProvider';
+import { loadBadges } from '@/lib/analytics/admin-queries';
 import { getAdmin } from '@/lib/auth/session';
 import { loadSecurity } from '@/lib/settings/store';
 
@@ -11,7 +13,9 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
   const { sessionTimeoutMinutes } = await loadSecurity();
   return (
     <AdminAuthProvider admin={admin} idleMinutes={sessionTimeoutMinutes}>
-      <AdminLayout>{children}</AdminLayout>
+      <AdminBadgesProvider value={await loadBadges()}>
+        <AdminLayout>{children}</AdminLayout>
+      </AdminBadgesProvider>
     </AdminAuthProvider>
   );
 }
