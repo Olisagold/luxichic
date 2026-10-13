@@ -385,8 +385,7 @@ Connect each admin section to the database through server actions. Each action c
    - Cancelling needs a reason and returns the stock and the promo-code use; deleting does too unless the order
      was cancelled or delivered. Bulk changes report the orders left unchanged. Internal notes in `admin_notes`.
    - Tested in a browser against dev (17 checks) with real orders placed through the shop, then cleaned up.
-   - Still to come: the payment-confirmed and status emails (Phase 9); the dashboard, sidebar badges and the
-     customer pages' order history still read the prototype until their sections are done.
+   - Still to come: the payment-confirmed and status emails (Phase 9).
 2. ✅ **Products** (2026-10-12; `lib/catalog/admin-actions.ts`): list, editor and inventory read the catalog on the
    server (every status, uncached) and save through permission-checked actions that write `audit_logs` and refresh
    the storefront at once. Products are stored the same way as the catalog loader stores them
@@ -460,8 +459,16 @@ Connect each admin section to the database through server actions. Each action c
      after inactivity across tabs; login alert emails are sent from Phase 9.
    - Tested in a browser against dev (21 checks, including the old password refused after a change and an idle
      sign-out at 15 minutes), with the settings snapshotted and restored afterwards.
-10. Dashboard and analytics read real aggregates (SQL views or queries) instead of `lib/utils/adminAnalytics.ts`
-    over mock data.
+10. ✅ **Dashboard and analytics** (2026-10-13; `lib/analytics/admin-queries.ts`): figures are aggregated in
+    Postgres for the range in the URL (`?range=30d`, or `custom` with from/to; Lagos days, compared with the
+    previous period). Revenue excludes cancelled orders.
+    - Sidebar badges (pending orders and appointments, low stock, unread) and the topbar bell come from the
+      admin layout; marking notifications read is saved.
+    - The ⌘K search runs on the server and only searches sections the admin may see. Fixed the dialog taking
+      focus away from the search box.
+    - Tested in a browser against dev (16 checks, each figure compared with SQL), then cleaned up.
+    - Left on prototype data for later phases: the email preview dialog (Phase 9) and the unused
+      `hooks/useAdminOps.ts` (cleanup in Phase 10).
 
 ## Phase 9: Notifications
 
