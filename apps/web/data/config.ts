@@ -45,7 +45,7 @@ export const businessConfig = {
     email: 'hello@luxichic.example',
     phone: '+234 000 000 0000',
     address: '[Store address — to be provided], Nigeria',
-    hours: 'Mon – Sat, 9:00am – 7:00pm',
+    hours: 'Mon – Sun, 9:00am – 7:00pm',
   },
 
   delivery: {
@@ -63,8 +63,8 @@ export const businessConfig = {
   accountLinkExpiryHours: 72,
 
   salon: {
-    /** 0 = Sunday. Days the salon is closed. */
-    closedWeekdays: [0],
+    /** 0 = Sunday. Days the salon is closed (open every day). */
+    closedWeekdays: [] as number[],
     slots: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
     bookingWindowDays: 60,
     /** Admin-defined unavailable dates/times. */
