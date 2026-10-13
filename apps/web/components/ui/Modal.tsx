@@ -65,7 +65,10 @@ export function Modal({ open, onClose, title, hideTitle, side = 'center', dark, 
       }
     };
     document.addEventListener('keydown', onKey);
-    const t = setTimeout(() => panelRef.current?.focus(), 20);
+    // Move focus into the dialog, unless a field inside already has it (autoFocus).
+    const t = setTimeout(() => {
+      if (!panelRef.current?.contains(document.activeElement)) panelRef.current?.focus();
+    }, 20);
     return () => {
       document.body.style.overflow = original;
       document.removeEventListener('keydown', onKey);
