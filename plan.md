@@ -528,6 +528,10 @@ Connect each admin section to the database through server actions. Each action c
   parallel; (3) move the original into place instead of uploading it twice; (4) resize in parallel with a lighter
   WebP setting; (5) upload several images at once in the editor. All in `lib/media/admin-upload.ts`,
   `upload-client.ts` and the editor's images section.
+- **Google sign-in shows the Supabase address** ("continue to dfiqnpqhyeittcmgjdrk.supabase.co"). Decided
+  2026-10-14: fix after launch with (1) Google brand verification (app name LUXICHIC and logo on the consent
+  screen) and/or (3) Google's own sign-in button on our pages (`signInWithIdToken`), whichever works best then.
+  **No paid Supabase plan or custom-domain add-on**, now or later.
 - Online payments (Paystack or Flutterwave), if manual verification becomes a bottleneck.
 - WhatsApp Cloud API for customer messages.
 - Marketing analytics (GA4) with a consent banner.
