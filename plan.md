@@ -425,7 +425,7 @@ Connect each admin section to the database through server actions. Each action c
      status; deleting refused while they have upcoming bookings).
    - Tested in a browser against dev (14 checks, including a closed day showing as fully booked to customers and
      a new service live on the salon pages), then cleaned up. A new service's default WhatsApp number still comes
-     from the prototype config until the Settings section.
+     from the prototype config until the Settings section (now the business WhatsApp number).
 6. ✅ **Website content** (2026-10-12; `lib/content/admin-actions.ts`): homepage, About, FAQs, contact and
    policies load on the server and save only what changed (blocks in `site_content`; announcements,
    testimonials, FAQs and policies in their tables), with `content.homepage` / `content.pages` checked per part;
@@ -451,7 +451,15 @@ Connect each admin section to the database through server actions. Each action c
      changes their own permissions or status or deletes themselves; only the owner can grant `admins.manage`.
    - Tested in a browser against dev (13 checks: new admin signs in with only their permissions, suspended one is
      refused, reset password works, a non-owner can't escalate), then cleaned up.
-9. Settings: general, business, social, security (password change and login history).
+9. ✅ **Settings** (2026-10-13; `lib/settings/admin-actions.ts`), each permission-checked and logged:
+   - General and business details (`settings.general`): the storefront footer, contact details and WhatsApp
+     button follow at once; a new salon service defaults to this WhatsApp number.
+   - Social links: saved to `social_links` in order (URL checked per platform), with the floating chat number.
+   - Security (every admin): change password, recent sign-ins from `login_history` (own, or everyone's for the
+     owner and `admins.manage`). Sign-in protection (`settings.general`): the idle timeout signs admins out
+     after inactivity across tabs; login alert emails are sent from Phase 9.
+   - Tested in a browser against dev (21 checks, including the old password refused after a change and an idle
+     sign-out at 15 minutes), with the settings snapshotted and restored afterwards.
 10. Dashboard and analytics read real aggregates (SQL views or queries) instead of `lib/utils/adminAnalytics.ts`
     over mock data.
 
@@ -465,6 +473,7 @@ Connect each admin section to the database through server actions. Each action c
    - Appointment requested, confirmed or cancelled
    - Welcome
    - Admin invite
+   - Admin login alert (when "Email me when someone signs in" is on under Settings → Security)
 
    Sends happen from server actions. The admin email templates screen edits the subject and body.
 
