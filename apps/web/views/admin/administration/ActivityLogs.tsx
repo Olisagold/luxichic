@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { DownloadIcon, HistoryIcon } from 'lucide-react';
 import type { ActivitySection } from '@/types/admin';
-import { useDb } from '@/lib/mock-db/db';
+import { useAdminTeam } from '@/components/admin/AdminTeamProvider';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -19,8 +19,7 @@ import { cn } from '@/lib/utils/cn';
 const PAGE = 30;
 
 export function ActivityLogs() {
-  const activity = useDb((s) => s.activity);
-  const admins = useDb((s) => s.admins);
+  const { activity, admins } = useAdminTeam();
   const [q, setQ] = useState('');
   const [section, setSection] = useState<'' | ActivitySection>('');
   const [adminId, setAdminId] = useState('');

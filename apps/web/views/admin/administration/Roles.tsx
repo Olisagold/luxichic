@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDb } from '@/lib/mock-db/db';
+import { useAdminTeam } from '@/components/admin/AdminTeamProvider';
 import { permissionGroups, rolePresets } from '@/data/adminSeed';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
@@ -21,7 +21,7 @@ const descriptions: Record<Preset, string> = {
 
 /** Role presets are starting points. Each admin’s permissions can be adjusted individually. */
 export function Roles() {
-  const admins = useDb((s) => s.admins);
+  const { admins } = useAdminTeam();
   const presets = Object.keys(rolePresets) as Preset[];
   const [active, setActive] = useState<Preset>('Order Manager');
   const total = permissionGroups.reduce((s, g) => s + g.items.length, 0);

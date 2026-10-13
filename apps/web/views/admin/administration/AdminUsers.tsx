@@ -5,8 +5,9 @@ import { toast } from 'sonner';
 import { KeyRoundIcon, PencilIcon, ShieldCheckIcon, TrashIcon, UserPlusIcon } from 'lucide-react';
 import type { AdminUser, Permission } from '@/types/admin';
 import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { createAdmin, deleteAdmin, resetAdminPassword, updateAdmin } from '@/lib/mock-db/admins';
+import { useRouter } from 'next/navigation';
+import { useAdminTeam } from '@/components/admin/AdminTeamProvider';
+import { createAdmin, deleteAdmin, resetAdminPassword, updateAdmin } from '@/lib/admins/admin-actions';
 import { rolePresets } from '@/data/adminSeed';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -31,7 +32,8 @@ const roles: AdminUser['role'][] = [
 
 export function AdminUsers() {
   const actor = useActor();
-  const admins = useDb((s) => s.admins);
+  const router = useRouter();
+  const { admins } = useAdminTeam();
   const [editing, setEditing] = useState<AdminUser | 'new' | null>(null);
   const [resetting, setResetting] = useState<AdminUser | null>(null);
   const [removing, setRemoving] = useState<AdminUser | null>(null);
@@ -111,8 +113,10 @@ export function AdminUsers() {
       <ResetPasswordDialog
         admin={resetting}
         onClose={() => setResetting(null)}
-        onDone={(pw) => {
-          if (resetting) resetAdminPassword(actor, resetting.id, pw);
+        onDone={async (pw) => {
+          if (!resetting) return;
+          const res = await resetAdminPassword(resetting.id, pw).catch(() => null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not reset the password.');
           toast.success('Password reset', {
             description: 'Share it with them securely. They should change it after signing in.',
           });
@@ -122,10 +126,13 @@ export function AdminUsers() {
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        onConfirm={() => {
-          if (removing) deleteAdmin(actor, removing.id);
+        onConfirm={async () => {
+          if (!removing) return;
+          const res = await deleteAdmin(removing.id).catch(() => null);
           setRemoving(null);
+          if (!res?.ok) return toast.error(res?.error ?? 'Could not remove the admin.');
           toast.success('Admin removed');
+          router.refresh();
         }}
         title={`Remove ${removing?.fullName}?`}
         tone="danger"
@@ -137,7 +144,8 @@ export function AdminUsers() {
 }
 
 function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; onClose: () => void }) {
-  const actor = useActor();
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
   const isNew = editing === 'new';
   const base = editing && editing !== 'new' ? editing : null;
   const [form, setForm] = useState({
@@ -155,7 +163,7 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
     setForm((f) => ({ ...f, role, permissions: role === 'Custom' ? f.permissions : rolePresets[role] }));
   const setPerms = (permissions: Permission[]) => setForm((f) => ({ ...f, permissions, role: 'Custom' }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!form.fullName.trim()) errs.fullName = 'Enter their name.';
@@ -167,22 +175,31 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
     if (!form.permissions.length) errs.permissions = 'Choose at least one permission.';
     setErrors(errs);
     if (Object.keys(errs).length) return;
+    setSaving(true);
     if (isNew) {
-      const res = createAdmin(actor, { ...form, fullName: form.fullName.trim(), email: form.email.trim() });
-      if (!res.ok) return setErrors({ email: res.error ?? 'Could not create admin.' });
-      toast.success('Admin created', { description: `${form.fullName} can now sign in at /admin/login.` });
+      const res = await createAdmin({ ...form, fullName: form.fullName.trim(), email: form.email.trim() }).catch(
+        () => null,
+      );
+      setSaving(false);
+      if (!res?.ok) return setErrors({ form: res?.error ?? 'Could not create admin.' });
+      toast.success('Admin created', {
+        description: `${form.fullName} can now sign in at /admin/login with the temporary password.`,
+      });
     } else if (base) {
-      updateAdmin(actor, base.id, {
+      const res = await updateAdmin(base.id, {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         username: form.username || undefined,
         role: form.role,
         status: form.status,
         permissions: form.permissions,
-      });
+      }).catch(() => null);
+      setSaving(false);
+      if (!res?.ok) return setErrors({ form: res?.error ?? 'Could not save the admin.' });
       toast.success('Admin updated');
     }
     onClose();
+    router.refresh();
   };
 
   return (
@@ -252,11 +269,16 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
           {errors.permissions && <p className="mb-2 text-xs text-red-700">{errors.permissions}</p>}
           <PermissionMatrix value={form.permissions} onChange={setPerms} />
         </div>
+        {errors.form && (
+          <p className="text-xs text-red-700" role="alert">
+            {errors.form}
+          </p>
+        )}
         <div className="flex justify-end gap-2">
           <AdminButton variant="ghost" onClick={onClose}>
             Cancel
           </AdminButton>
-          <AdminButton type="submit" variant="primary">
+          <AdminButton type="submit" variant="primary" loading={saving}>
             {isNew ? 'Create admin' : 'Save changes'}
           </AdminButton>
         </div>
@@ -272,7 +294,7 @@ function ResetPasswordDialog({
 }: {
   admin: AdminUser | null;
   onClose: () => void;
-  onDone: (pw: string) => void;
+  onDone: (pw: string) => void | Promise<unknown>;
 }) {
   const [pw, setPw] = useState('');
   const [error, setError] = useState('');
