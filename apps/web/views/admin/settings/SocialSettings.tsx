@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   ChevronDownIcon,
@@ -12,10 +13,9 @@ import {
   Trash2Icon,
 } from 'lucide-react';
 import type { SocialDivision, SocialLink, SocialPlatform } from '@/types/admin';
-import { useActor } from '@/hooks/useActor';
-import { getDb } from '@/lib/mock-db/db';
-import { updateSettings } from '@/lib/mock-db/settings';
-import { defaultSocialLinks, socialDivisions, socialPlatforms } from '@/data/socialLinks';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { saveSocialLinks } from '@/lib/settings/admin-actions';
+import { socialDivisions, socialPlatforms } from '@/data/socialLinks';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminInput, AdminSelect } from '@/components/admin/ui/AdminField';
@@ -34,13 +34,14 @@ interface FormState {
 }
 
 export function SocialSettings() {
-  const actor = useActor();
-  const s = getDb().settings;
-  const initial: FormState = { links: s.socialLinks ?? defaultSocialLinks, chatNumber: s.business.whatsapp };
+  const router = useRouter();
+  const { settings: s } = useAdminSettings();
+  const initial: FormState = { links: s.socialLinks ?? [], chatNumber: s.business.whatsapp };
   const [form, setForm] = useState<FormState>(initial);
   const [baseline, setBaseline] = useState(JSON.stringify(initial));
   const [editing, setEditing] = useState<SocialLink | null>(null);
   const [removing, setRemoving] = useState<SocialLink | null>(null);
+  const [saving, setSaving] = useState(false);
   const dirty = JSON.stringify(form) !== baseline;
   const { links } = form;
 
@@ -60,27 +61,15 @@ export function SocialSettings() {
     setLinks(next);
   };
 
-  const save = () => {
+  const save = async () => {
     if (form.chatNumber && !/^\d{10,15}$/.test(form.chatNumber))
       return toast.error('Floating chat number: use international format digits, e.g. 2348012345678.');
-    updateSettings(
-      actor,
-      'socialLinks',
-      links,
-      'Settings',
-      'Updated footer social links',
-      `${links.filter((l) => l.enabled).length} visible`,
-    );
-    const business = getDb().settings.business;
-    if (business.whatsapp !== form.chatNumber)
-      updateSettings(
-        actor,
-        'business',
-        { ...business, whatsapp: form.chatNumber },
-        'Settings',
-        'Updated WhatsApp chat number',
-      );
+    setSaving(true);
+    const res = await saveSocialLinks(links, form.chatNumber).catch(() => null);
+    setSaving(false);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not save the social links.');
     setBaseline(JSON.stringify(form));
+    router.refresh();
     toast.success('Social links published', { description: 'The footer updates right away.' });
   };
 
@@ -278,7 +267,7 @@ export function SocialSettings() {
         message="It disappears from the footer after you publish. Switch it off instead if you may need it again."
       />
 
-      <SaveBar dirty={dirty} onSave={save} onReset={() => setForm(JSON.parse(baseline))} />
+      <SaveBar dirty={dirty} saving={saving} onSave={save} onReset={() => setForm(JSON.parse(baseline))} />
     </div>
   );
 }

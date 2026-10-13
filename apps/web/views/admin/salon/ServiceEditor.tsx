@@ -8,7 +8,6 @@ import type { AdminService } from '@/types/admin';
 import { useAdminSalon } from '@/components/admin/AdminSalonProvider';
 import { assignSpecialist, deleteService, saveService, setServiceStatus } from '@/lib/salon/admin-actions';
 import { uploadAdminImage } from '@/lib/media/upload-client';
-import { businessConfig } from '@/data/config';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -18,7 +17,7 @@ import { Toggle } from '@/components/admin/ui/Toggle';
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 import { slugify } from '@/lib/utils/text';
 
-const blank = (): AdminService => ({
+const blank = (whatsapp: string): AdminService => ({
   slug: '',
   name: '',
   category: 'Beauty',
@@ -29,7 +28,7 @@ const blank = (): AdminService => ({
   duration: null,
   image: '',
   personnel: [],
-  whatsapp: businessConfig.whatsapp.general,
+  whatsapp,
   status: 'draft',
   durationMinutes: 60,
   bookable: true,
@@ -38,7 +37,7 @@ const blank = (): AdminService => ({
 export function ServiceEditor() {
   const { slug } = useParams<{ slug: string }>();
   const isNew = !slug || slug === 'new';
-  const { services } = useAdminSalon();
+  const { services, whatsapp } = useAdminSalon();
   const existing = isNew ? undefined : services.find((s) => s.slug === slug);
   if (!isNew && !existing) {
     return (
@@ -51,7 +50,7 @@ export function ServiceEditor() {
       </div>
     );
   }
-  return <Editor key={slug ?? 'new'} initial={existing ?? blank()} isNew={isNew} />;
+  return <Editor key={slug ?? 'new'} initial={existing ?? blank(whatsapp)} isNew={isNew} />;
 }
 
 function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {

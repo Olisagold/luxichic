@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import type { AdminUser, Permission } from '@/types/admin';
 import type { Result } from '@/types/user';
 import { adminChangePassword, adminSignIn, adminSignOut } from '@/lib/auth/admin-actions';
@@ -23,13 +24,60 @@ interface AdminAuthValue {
 
 const AdminAuthContext = createContext<AdminAuthValue | null>(null);
 
-export function AdminAuthProvider({ admin, children }: { admin: AdminUser | null; children: React.ReactNode }) {
+const ACTIVE_KEY = 'lx_admin_active';
+
+export function AdminAuthProvider({
+  admin,
+  idleMinutes,
+  children,
+}: {
+  admin: AdminUser | null;
+  /** Settings → Security: sign out after this long without activity in any admin tab. */
+  idleMinutes?: number;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
 
   const logout = async () => {
     await adminSignOut();
     router.refresh();
   };
+
+  const lastActive = useRef(0);
+  useEffect(() => {
+    if (!admin || !idleMinutes) return;
+    const read = () => {
+      try {
+        return Number(localStorage.getItem(ACTIVE_KEY)) || 0;
+      } catch {
+        return 0;
+      }
+    };
+    const touch = () => {
+      const now = Date.now();
+      if (now - lastActive.current < 10_000) return;
+      lastActive.current = now;
+      try {
+        localStorage.setItem(ACTIVE_KEY, String(now));
+      } catch {}
+    };
+    lastActive.current = 0;
+    touch();
+    const events = ['pointerdown', 'keydown', 'scroll', 'mousemove', 'touchstart'] as const;
+    events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
+    // Other tabs share the timestamp, so working in one tab keeps the others signed in.
+    const timer = window.setInterval(async () => {
+      if (Date.now() - Math.max(lastActive.current, read()) < idleMinutes * 60_000) return;
+      window.clearInterval(timer);
+      await adminSignOut();
+      toast.info('Signed out', { description: 'You were inactive for a while. Please sign in again.' });
+      router.refresh();
+    }, 30_000);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, touch));
+      window.clearInterval(timer);
+    };
+  }, [admin, idleMinutes, router]);
 
   const can = (p: Permission) => !!admin && (admin.isOwner || admin.permissions.includes(p));
 

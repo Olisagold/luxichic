@@ -9,7 +9,7 @@ import { loadSalon } from '@/lib/storefront/source';
 import type { AdminSalon } from '@/components/admin/AdminSalonProvider';
 import type { AvailabilityBlock, Permission } from '@/types/admin';
 
-const EMPTY: AdminSalon = { appointments: [], services: [], specialists: [], blocks: [] };
+const EMPTY: AdminSalon = { appointments: [], services: [], specialists: [], blocks: [], whatsapp: '' };
 const hhmm = (t: string | null) => (t ? t.slice(0, 5) : null);
 
 /** Closed days and hours from today on, in the shape the admin screens use. */
@@ -39,10 +39,15 @@ export async function salonFor(permission: Permission): Promise<AdminSalon> {
   const admin = await getAdmin();
   if (!admin || !hasPermission(admin, permission)) return EMPTY;
   const { services, specialists } = await loadSalon();
+  const [business] = await db
+    .select({ value: s.settings.value })
+    .from(s.settings)
+    .where(eq(s.settings.key, 'business'));
   return {
     appointments: await loadAppointments(undefined),
     services,
     specialists,
     blocks: await upcomingBlocks(),
+    whatsapp: (business?.value as { whatsapp?: string } | undefined)?.whatsapp ?? '',
   };
 }

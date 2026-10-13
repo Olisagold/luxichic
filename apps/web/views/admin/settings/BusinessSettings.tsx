@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useActor } from '@/hooks/useActor';
-import { getDb } from '@/lib/mock-db/db';
-import { updateSettings } from '@/lib/mock-db/settings';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { saveBusiness } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminInput, AdminTextarea } from '@/components/admin/ui/AdminField';
@@ -15,26 +15,27 @@ type Mode = 'general' | 'business';
 
 /** General (store identity) and Business information share the same settings record. */
 export function BusinessSettings({ mode = 'business' }: { mode?: Mode }) {
-  const actor = useActor();
-  const [b, setB] = useState(getDb().settings.business);
+  const router = useRouter();
+  const { settings } = useAdminSettings();
+  const [b, setB] = useState(settings.business);
   const [baseline, setBaseline] = useState(JSON.stringify(b));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
   const dirty = JSON.stringify(b) !== baseline;
 
-  const save = () => {
+  const save = async () => {
     const errs: Record<string, string> = {};
     if (!b.name.trim()) errs.name = 'Enter the business name.';
     if (!isValidEmail(b.email)) errs.email = 'Enter a valid email.';
+    if (b.whatsapp && !/^\d{10,15}$/.test(b.whatsapp)) errs.whatsapp = 'Use international format, e.g. 2348012345678.';
     setErrors(errs);
     if (Object.keys(errs).length) return toast.error('Please fix the highlighted fields.');
-    updateSettings(
-      actor,
-      'business',
-      b,
-      'Settings',
-      mode === 'general' ? 'Updated general settings' : 'Updated business information',
-    );
+    setSaving(true);
+    const res = await saveBusiness(b, mode).catch(() => null);
+    setSaving(false);
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not save the settings.');
     setBaseline(JSON.stringify(b));
+    router.refresh();
     toast.success('Settings saved', { description: 'Shown across the storefront, footer and emails.' });
   };
 
@@ -87,6 +88,7 @@ export function BusinessSettings({ mode = 'business' }: { mode?: Mode }) {
                   id="b-wa"
                   label="WhatsApp (international format)"
                   value={b.whatsapp}
+                  error={errors.whatsapp}
                   onChange={(e) => setB({ ...b, whatsapp: e.target.value.replace(/[^\d]/g, '') })}
                   hint="e.g. 2348012345678"
                 />
@@ -109,7 +111,7 @@ export function BusinessSettings({ mode = 'business' }: { mode?: Mode }) {
           </div>
         </>
       )}
-      <SaveBar dirty={dirty} onSave={save} onReset={() => setB(JSON.parse(baseline))} />
+      <SaveBar dirty={dirty} saving={saving} onSave={save} onReset={() => setB(JSON.parse(baseline))} />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 'use server';
 
-import { inArray, isNull, sql } from 'drizzle-orm';
+import { eq, inArray, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { socialPlatforms } from '@/data/socialLinks';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { ActionError, adminAction, audit } from '@/lib/auth/admin-action';
@@ -12,11 +13,12 @@ import { STOREFRONT_TAG } from '@/lib/storefront/data';
 import { sendTelegramMessage } from '@/lib/telegram/client';
 import { fillTemplate } from '@/lib/utils/text';
 import { isUuid, isValidEmail } from '@/lib/utils/validation';
-import type { AdminUser, StoreSettings } from '@/types/admin';
+import type { AdminUser, SocialLink, StoreSettings } from '@/types/admin';
 import type { Result } from '@/types/user';
 
 /**
- * Operations settings: payments, delivery, email, notifications and Telegram alerts. Each action checks its
+ * Store settings: business details, social links and security, plus the operations settings (payments, delivery,
+ * email, notifications and Telegram alerts). Each action checks its
  * permission on the server and writes to `audit_logs`. Settings customers see (bank details, Pay on Delivery,
  * delivery fees) refresh the storefront at once.
  */
@@ -32,6 +34,124 @@ async function writeSetting(tx: Tx | typeof db, key: string, value: unknown, adm
       target: s.settings.key,
       set: { value, updatedByAdminId: admin.id, updatedAt: new Date() },
     });
+}
+
+/* ------------------------------------------------------------------ */
+/* Business, social links and security                                 */
+/* ------------------------------------------------------------------ */
+
+const whatsappNumber = z
+  .string()
+  .regex(/^(\d{10,15})?$/, 'WhatsApp: use international format digits, e.g. 2348012345678.');
+
+const businessSchema = z.object({
+  name: z.string().trim().min(2, 'Enter the business name.').max(80),
+  email: z.string().trim().refine(isValidEmail, 'Enter a valid email.'),
+  phone: z.string().trim().max(40),
+  whatsapp: whatsappNumber,
+  address: z.string().trim().max(300),
+  hours: z.string().trim().max(200),
+});
+
+async function currentBusiness(tx: Tx) {
+  const [row] = await tx.select({ value: s.settings.value }).from(s.settings).where(eq(s.settings.key, 'business'));
+  return (row?.value ?? {}) as Partial<StoreSettings['business']>;
+}
+
+/** The store name and contact details shown on the Contact page, footer, emails and WhatsApp buttons. */
+export async function saveBusiness(
+  business: StoreSettings['business'],
+  mode: 'general' | 'business' = 'business',
+): Promise<Result> {
+  return adminAction(
+    'settings.general',
+    async (admin) => {
+      const parsed = businessSchema.safeParse(business);
+      if (!parsed.success) throw new ActionError(parsed.error.issues[0]?.message ?? 'Please check the details.');
+      await db.transaction(async (tx) => {
+        await writeSetting(tx, 'business', parsed.data, admin);
+        await audit(tx, admin, {
+          section: 'Settings',
+          action: mode === 'general' ? 'Updated general settings' : 'Updated business information',
+        });
+      });
+      return { ok: true };
+    },
+    { revalidate: [STOREFRONT_TAG] },
+  );
+}
+
+const socialSchema = z
+  .array(
+    z.object({
+      platform: z.enum(Object.keys(socialPlatforms) as [SocialLink['platform'], ...SocialLink['platform'][]]),
+      division: z.enum(['main', 'hairs', 'salon', 'tools']),
+      handle: z.string().trim().max(80),
+      url: z.string().trim().min(1).max(500),
+      enabled: z.boolean(),
+    }),
+  )
+  .max(60);
+
+/** Replaces the footer social links (in the order given) and sets the floating WhatsApp chat number. */
+export async function saveSocialLinks(links: SocialLink[], chatNumber: string): Promise<Result> {
+  return adminAction(
+    'settings.general',
+    async (admin) => {
+      const parsed = socialSchema.safeParse(links);
+      if (!parsed.success) throw new ActionError('Please check the social links.');
+      const bad = parsed.data.find((l) => {
+        const pattern = socialPlatforms[l.platform].pattern;
+        return pattern && !pattern.test(l.url);
+      });
+      if (bad) throw new ActionError(`Check the ${socialPlatforms[bad.platform].label} link (${bad.url}).`);
+      const chat = whatsappNumber.safeParse(String(chatNumber ?? ''));
+      if (!chat.success) throw new ActionError('Floating chat number: use international format digits.');
+      await db.transaction(async (tx) => {
+        await tx.delete(s.socialLinks);
+        if (parsed.data.length) {
+          await tx.insert(s.socialLinks).values(parsed.data.map((l, i) => ({ ...l, sortOrder: i })));
+        }
+        const business = await currentBusiness(tx);
+        if ((business.whatsapp ?? '') !== chat.data) {
+          await writeSetting(tx, 'business', { ...business, whatsapp: chat.data }, admin);
+        }
+        await audit(tx, admin, {
+          section: 'Settings',
+          action: 'Updated footer social links',
+          target: `${parsed.data.filter((l) => l.enabled).length} visible`,
+        });
+      });
+      return { ok: true };
+    },
+    { revalidate: [STOREFRONT_TAG] },
+  );
+}
+
+const SESSION_TIMEOUTS = [15, 30, 60, 240, 1440] as const;
+
+/** Sign-in alerts and how long an idle admin stays signed in. */
+export async function saveSecuritySettings(security: StoreSettings['security']): Promise<Result> {
+  return adminAction('settings.general', async (admin) => {
+    const minutes = Number(security?.sessionTimeoutMinutes);
+    if (!(SESSION_TIMEOUTS as readonly number[]).includes(minutes)) throw new ActionError('Choose a timeout.');
+    const value = { sessionTimeoutMinutes: minutes, loginAlerts: !!security?.loginAlerts };
+    await db.transaction(async (tx) => {
+      const [row] = await tx.select({ value: s.settings.value }).from(s.settings).where(eq(s.settings.key, 'security'));
+      const before = row?.value as StoreSettings['security'] | undefined;
+      await writeSetting(tx, 'security', value, admin);
+      await audit(tx, admin, {
+        section: 'Security',
+        action:
+          before && before.loginAlerts !== value.loginAlerts
+            ? value.loginAlerts
+              ? 'Enabled login alerts'
+              : 'Disabled login alerts'
+            : 'Changed session timeout',
+      });
+    });
+    return { ok: true };
+  });
 }
 
 /* ------------------------------------------------------------------ */

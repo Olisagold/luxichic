@@ -11,6 +11,8 @@ export interface AdminSalon {
   specialists: Specialist[];
   /** Closed days and hours, today onwards. */
   blocks: AvailabilityBlock[];
+  /** The business WhatsApp number (Settings → Business), the default for a new service. */
+  whatsapp: string;
 }
 
 const AdminSalonContext = createContext<AdminSalon | null>(null);

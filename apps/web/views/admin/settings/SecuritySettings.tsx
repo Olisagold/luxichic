@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { MonitorSmartphoneIcon } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useActor } from '@/hooks/useActor';
-import { useDb } from '@/lib/mock-db/db';
-import { updateSettings } from '@/lib/mock-db/settings';
+import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { saveSecuritySettings } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -19,12 +20,12 @@ import { passwordError } from '@/lib/utils/validation';
 export function SecuritySettings() {
   const { changePassword, can } = useAdminAuth();
   const actor = useActor();
-  const security = useDb((s) => s.settings.security);
-  const logins = useDb((s) => s.loginHistory);
+  const router = useRouter();
+  const { settings, logins } = useAdminSettings();
+  const [security, setSecurity] = useState(settings.security);
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  const mine = actor.isOwner || can('admins.manage') ? logins : logins.filter((l) => l.adminId === actor.id);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +45,17 @@ export function SecuritySettings() {
     toast.success('Password changed');
   };
 
-  const setSec = (patch: Partial<typeof security>, action: string) => {
-    updateSettings(actor, 'security', { ...security, ...patch }, 'Security', action);
+  const setSec = async (patch: Partial<typeof security>) => {
+    const before = security;
+    const next = { ...security, ...patch };
+    setSecurity(next);
+    const res = await saveSecuritySettings(next).catch(() => null);
+    if (!res?.ok) {
+      setSecurity(before);
+      return toast.error(res?.error ?? 'Could not save.');
+    }
     toast.success('Saved');
+    router.refresh();
   };
 
   return (
@@ -92,13 +101,13 @@ export function SecuritySettings() {
                 label="Email me when someone signs in"
                 description="Sends a login alert with the date, time and device."
                 checked={security.loginAlerts}
-                onChange={(v) => setSec({ loginAlerts: v }, v ? 'Enabled login alerts' : 'Disabled login alerts')}
+                onChange={(v) => setSec({ loginAlerts: v })}
               />
               <AdminSelect
                 id="sec-timeout"
                 label="Sign out after inactivity"
                 value={String(security.sessionTimeoutMinutes)}
-                onChange={(e) => setSec({ sessionTimeoutMinutes: Number(e.target.value) }, 'Changed session timeout')}
+                onChange={(e) => setSec({ sessionTimeoutMinutes: Number(e.target.value) })}
                 options={[
                   ['15', '15 minutes'],
                   ['30', '30 minutes'],
@@ -109,18 +118,19 @@ export function SecuritySettings() {
               />
 
               <p className="rounded-lg bg-canvas px-3 py-2 text-xs text-subtle">
-                Sessions, timeouts and alerts are enforced by the server in production.
+                Admins are signed out after this long without activity. Login alert emails start with the email setup
+                (Phase 9).
               </p>
             </div>
           </Panel>
         )}
 
         <Panel title="Recent logins" bodyClassName="p-0" className="lg:col-span-2">
-          {mine.length === 0 ? (
+          {logins.length === 0 ? (
             <p className="px-5 py-6 text-[13px] text-subtle">No logins recorded.</p>
           ) : (
             <ul className="divide-y divide-line">
-              {mine.slice(0, 15).map((l) => (
+              {logins.slice(0, 15).map((l) => (
                 <li key={l.id} className="flex items-center gap-3 px-5 py-3 text-[13px]">
                   <MonitorSmartphoneIcon className="h-4 w-4 shrink-0 text-subtle" aria-hidden />
                   <div className="min-w-0 flex-1">

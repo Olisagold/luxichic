@@ -1,5 +1,5 @@
 import 'server-only';
-import { asc, desc } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import type { AdminNotification, EmailTemplate, StoreSettings } from '@/types/admin';
@@ -117,7 +117,11 @@ export async function loadStoreSettings(): Promise<{
       newAppointment: true,
       newReview: true,
     },
-    security: value<StoreSettings['security']>(rows, 'security') ?? { sessionTimeoutMinutes: 60, loginAlerts: true },
+    security: {
+      sessionTimeoutMinutes: 60,
+      loginAlerts: true,
+      ...value<Partial<StoreSettings['security']>>(rows, 'security'),
+    },
   };
   return {
     settings,
@@ -127,6 +131,16 @@ export async function loadStoreSettings(): Promise<{
       replyTo: email.replyTo ?? '',
     },
     telegram: { ...DEFAULT_TELEGRAM, ...(value<Partial<TelegramSettings>>(rows, 'telegram') ?? {}) },
+  };
+}
+
+/** Sign-in alerts and the idle timeout (read by the admin layout on every page). */
+export async function loadSecurity(): Promise<StoreSettings['security']> {
+  const [row] = await db.select({ value: s.settings.value }).from(s.settings).where(eq(s.settings.key, 'security'));
+  return {
+    sessionTimeoutMinutes: 60,
+    loginAlerts: true,
+    ...((row?.value ?? {}) as Partial<StoreSettings['security']>),
   };
 }
 

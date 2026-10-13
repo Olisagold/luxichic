@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext } from 'react';
-import type { AdminNotification, EmailTemplate, StoreSettings } from '@/types/admin';
+import type { AdminNotification, EmailTemplate, LoginEntry, StoreSettings } from '@/types/admin';
 
 export interface AdminSettings {
   settings: StoreSettings;
@@ -21,6 +21,8 @@ export interface AdminSettings {
     /** TELEGRAM_ADMIN_CHAT_ID, used when no chat is saved here. */
     envChatId: boolean;
   };
+  /** Recent sign-ins (Security page only): the admin's own, or everyone's for the owner and `admins.manage`. */
+  logins: LoginEntry[];
 }
 
 const AdminSettingsContext = createContext<AdminSettings | null>(null);
