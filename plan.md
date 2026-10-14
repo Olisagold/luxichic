@@ -496,8 +496,9 @@ Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bo
    with the customer as reply-to; a hidden field catches bots; 3 messages an hour per address.
 5. ✅ **Newsletter**: sign-ups saved (validated, one per address); Admin → Customers → Newsletter lists, searches,
    exports CSV and removes. No email marketing tool at launch.
-6. Tested in a browser against dev, with emails sent to Resend's test inboxes (`delivered+…@resend.dev`): 28 checks
-   across alerts, every email above, reminders, contact and newsletter, then cleaned up.
+6. ✅ Tested in a browser against dev (2026-10-14), with emails sent to Resend's test inboxes
+   (`delivered+…@resend.dev`): 29 checks across alerts (8), emails and reminders (10), contact and newsletter (11),
+   then cleaned up.
 
 ## Phase 10: Quality
 
