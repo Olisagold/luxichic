@@ -2,12 +2,14 @@
 
 import { randomInt } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
+import { after } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { rememberDeviceRecord } from '@/lib/auth/device-records';
 import { authReady } from '@/lib/auth/helpers';
 import { getCustomer } from '@/lib/auth/session';
+import { alertAppointmentChanged, alertNewAppointment } from '@/lib/notify/team';
 import {
   computeAvailability,
   freeSpecialists,
@@ -139,6 +141,7 @@ export async function bookAppointment(
           return row.id;
         });
         await rememberDeviceRecord('lx_appointments', id);
+        after(() => alertNewAppointment(id));
         return { ok: true, reference };
       } catch (e) {
         const { code, constraint } = pgError(e);
@@ -191,6 +194,7 @@ export async function cancelAppointment(reference: string): Promise<Result> {
       .where(eq(s.appointments.id, appt.id));
     await tx.insert(s.appointmentEvents).values({ appointmentId: appt.id, label: 'Cancelled by customer' });
   });
+  after(() => alertAppointmentChanged(appt.id, 'cancelled'));
   return { ok: true };
 }
 
@@ -236,6 +240,7 @@ export async function rescheduleAppointment(
           note: `From ${from} to ${formatLongDate(date)} at ${formatSlot(time)}`,
         });
       });
+      after(() => alertAppointmentChanged(appt.id, 'rescheduled'));
       return { ok: true };
     } catch (e) {
       if (pgError(e).code === DOUBLE_BOOKED) continue;

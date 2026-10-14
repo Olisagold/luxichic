@@ -19,6 +19,7 @@
     "db:load-catalog": "tsx --tsconfig apps/web/tsconfig.json scripts/database/load-catalog.ts",
     "db:media": "tsx --tsconfig apps/web/tsconfig.json scripts/database/media.ts",
     "db:set-payments": "tsx --tsconfig apps/web/tsconfig.json scripts/database/set-payments.ts",
+    "telegram:webhook": "tsx --tsconfig apps/web/tsconfig.json scripts/setup/telegram-webhook.ts",
     "db:set-promo": "tsx --tsconfig apps/web/tsconfig.json scripts/database/set-promo.ts"
   },
   "devDependencies": {

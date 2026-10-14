@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
+import { after } from 'next/server';
 import { and, eq, ne, notInArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db';
@@ -15,6 +16,7 @@ import { findProductById } from '@/lib/storefront/catalog';
 import { STOREFRONT_TAG, getStorefrontData } from '@/lib/storefront/data';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isUuid } from '@/lib/utils/validation';
+import { alertReview } from '@/lib/notify/team';
 import type { Result, Review } from '@/types/user';
 
 /**
@@ -134,6 +136,7 @@ export async function saveReview(input: z.input<typeof reviewSchema>): Promise<R
       set: { ...content, updatedAt: new Date() },
     });
   refreshCaches();
+  after(() => alertReview(d.productId, d.rating, me.fullName));
   return { ok: true };
 }
 

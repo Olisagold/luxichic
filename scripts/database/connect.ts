@@ -17,7 +17,7 @@ export function arg(name: string): string | undefined {
   return i > -1 ? process.argv[i + 1] : undefined;
 }
 
-function readEnvFile(path: string): Record<string, string> {
+export function readEnvFile(path: string): Record<string, string> {
   const full = resolve(process.cwd(), path);
   if (!existsSync(full)) throw new Error(`Env file not found: ${full}`);
   const out: Record<string, string> = {};

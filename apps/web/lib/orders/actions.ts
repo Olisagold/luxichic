@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
+import { after } from 'next/server';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db';
@@ -23,6 +24,7 @@ import { loadLiveProducts } from '@/lib/storefront/source';
 import { formatNaira } from '@/lib/utils/currency';
 import { priceForSelection } from '@/lib/utils/products';
 import { isUuid, isValidEmail, isValidPhone } from '@/lib/utils/validation';
+import { alertNewOrder } from '@/lib/notify/team';
 import type { CartItem, Order } from '@/types/order';
 import type { Product } from '@/types/product';
 import type { Result } from '@/types/user';
@@ -354,6 +356,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       await rememberPlacedOrder(placed.id);
       // Stock and sales counts changed.
       revalidateTag(STOREFRONT_TAG);
+      after(() => alertNewOrder(placed.id));
       return { ok: true, orderNumber: placed.orderNumber };
     } catch (e) {
       if (e instanceof CheckoutError) return { ok: false, error: e.message, ...e.extra };
