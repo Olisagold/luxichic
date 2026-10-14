@@ -7,7 +7,9 @@ import { SelectField, TextAreaField, TextField } from '@/components/ui/FormField
 import { Button } from '@/components/ui/Button';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useStorefront } from '@/components/storefront/StorefrontProvider';
-import { isValidEmail, isValidPhone, wait } from '@/lib/utils/validation';
+import { toast } from 'sonner';
+import { sendContactMessage } from '@/lib/contact/actions';
+import { isValidEmail, isValidPhone } from '@/lib/utils/validation';
 
 const subjects = ['Order enquiry', 'Product question', 'Salon appointment', 'Wholesale / business', 'Other'];
 const igLabels = { hairs: 'LUXICHIC Hairs', salon: 'Beauty Salon & Spa', tools: 'Hair Tools & Essentials' };
@@ -32,7 +34,13 @@ export function Contact() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setStatus('sending');
-    await wait(900);
+    const website = (e.currentTarget as HTMLFormElement).elements.namedItem('website') as HTMLInputElement | null;
+    const res = await sendContactMessage({ ...form, website: website?.value ?? '' }).catch(() => null);
+    if (!res?.ok) {
+      setStatus('idle');
+      toast.error(res?.error ?? 'Your message couldn’t be sent. Please try again or chat with us on WhatsApp.');
+      return;
+    }
     setStatus('sent');
   };
 
@@ -115,6 +123,15 @@ export function Contact() {
                 error={errors.message}
                 onChange={set('message')}
                 rows={6}
+              />
+              {/* Hidden from people; bots that fill every field give themselves away. */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute left-[-9999px] h-px w-px opacity-0"
               />
               <div className="sm:col-span-2">
                 <Button type="submit" size="lg" loading={status === 'sending'}>

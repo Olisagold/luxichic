@@ -19,6 +19,7 @@ import {
   KeyRoundIcon,
   LayoutDashboardIcon,
   MailIcon,
+  NewspaperIcon,
   MessageCircleIcon,
   PackageIcon,
   PercentIcon,
@@ -88,6 +89,7 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       { label: 'Customers', to: '/admin/customers', icon: UsersIcon, permission: 'customers.view' },
       { label: 'Customer Activity', to: '/admin/customer-activity', icon: ActivityIcon, permission: 'customers.view' },
+      { label: 'Newsletter', to: '/admin/newsletter', icon: NewspaperIcon, permission: 'customers.view' },
     ],
   },
   {

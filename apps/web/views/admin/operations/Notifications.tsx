@@ -108,7 +108,7 @@ export function Notifications() {
                       <span className={cn('block text-[13px]', n.read ? 'text-charcoal' : 'font-semibold text-ink')}>
                         {n.title}
                       </span>
-                      <span className="block text-xs text-subtle">{n.body}</span>
+                      <span className="block whitespace-pre-line text-xs text-subtle">{n.body}</span>
                     </span>
                     <span className="shrink-0 text-[11px] text-subtle">{formatDateTime(n.at)}</span>
                     {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-pink" aria-label="Unread" />}

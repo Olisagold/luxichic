@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { isValidEmail, wait } from '@/lib/utils/validation';
+import { subscribeToNewsletter } from '@/lib/newsletter/actions';
+import { isValidEmail } from '@/lib/utils/validation';
 
 export function NewsletterSection() {
   const [email, setEmail] = useState('');
@@ -19,7 +20,12 @@ export function NewsletterSection() {
       return;
     }
     setStatus('loading');
-    await wait(900);
+    const res = await subscribeToNewsletter(email, 'homepage').catch(() => null);
+    if (!res?.ok) {
+      setStatus('error');
+      setError(res?.error ?? 'Something went wrong. Please try again.');
+      return;
+    }
     setStatus('success');
   };
 

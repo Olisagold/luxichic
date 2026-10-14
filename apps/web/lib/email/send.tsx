@@ -31,6 +31,13 @@ export const EXTRA_TEMPLATES: (typeof s.emailTemplates.$inferInsert)[] = [
     variables: ['customer_name', 'order_number'],
   },
   {
+    key: 'contact_message',
+    name: 'Contact form message (to the team)',
+    subject: 'New message: {{subject}}',
+    body: '{{name}} sent a message through the contact page.\n\nEmail: {{email}}\nPhone: {{phone}}\n\n{{message}}\n\nReply to this email to answer them.',
+    variables: ['name', 'email', 'phone', 'subject', 'message'],
+  },
+  {
     key: 'appt_cancelled',
     name: 'Appointment cancelled',
     subject: 'Your {{service_name}} appointment was cancelled',
@@ -108,6 +115,7 @@ export async function sendTemplateEmail(
   to: string,
   values: Record<string, string>,
   content: Omit<EmailContent, 'body' | 'preview'> = {},
+  options: { replyTo?: string } = {},
 ): Promise<EmailResult> {
   if (!env.RESEND_API_KEY) return skip(key, 'RESEND_API_KEY is not set');
   const email = await renderTemplateEmail(key, values, content);
@@ -121,7 +129,7 @@ export async function sendTemplateEmail(
       subject: email.subject,
       html: email.html,
       text: toPlainText(email.html),
-      replyTo: email.replyTo,
+      replyTo: options.replyTo ?? email.replyTo,
     });
     if (error) {
       console.error(`[email] ${key} to ${to} failed:`, error.message);
