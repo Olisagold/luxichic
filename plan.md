@@ -472,29 +472,32 @@ Connect each admin section to the database through server actions. Each action c
 
 ## Phase 9: Notifications
 
-1. **Email (Resend):** React Email templates for:
-   - Order received
-   - Bank transfer instructions
-   - Payment verified
-   - Order status updates
-   - Appointment requested, confirmed or cancelled
-   - Welcome
-   - Admin invite
-   - Admin login alert (when "Email me when someone signs in" is on under Settings → Security)
+Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bought at Hostinger), the Telegram bot
+@luxichic_alerts_bot in the "Luxichic Team" group, and their keys in `.env.local` and Vercel.
 
-   Sends happen from server actions. The admin email templates screen edits the subject and body.
-
-2. **Telegram bot:**
-   - Fill `lib/telegram/*`.
-   - Register the bot webhook (`app/api/webhooks/telegram`) with a secret token.
-   - Send new-order and new-appointment alerts to the team chat, using the toggles and templates from
-     `/admin/telegram`.
-3. In-app admin notifications (the `notifications` table) and the topbar badge counts.
-4. Contact form: messages are stored in the database and emailed to the business address through Resend.
-5. Newsletter: sign-ups are saved to `newsletter_subscribers`.
-   - Duplicates are ignored and the email is validated.
-   - The admin can view and export subscribers as CSV.
-   - No email marketing tool at launch.
+1. ✅ **Email (Resend)** (`lib/email/*`): a branded layout (logo, details, items, button, contact footer) around each
+   template's text, which the admin edits under Email → Templates; the sender comes from Email → Sender. Sent after
+   the response (`after()`), never blocking the change:
+   - Checkout: bank-transfer instructions (with the bank details) or order received (Pay on Delivery).
+   - Payment confirmed, order confirmed, shipped, delivered, cancelled (Processing sends nothing).
+   - Appointment requested (also when the customer moves it), confirmed, rejected, cancelled, rescheduled, and a
+     reminder the day before (Vercel Cron at 08:00 UTC, `CRON_SECRET`; noted in the appointment's history so it's
+     sent once).
+   - Welcome once per account (flag in the login's app metadata); admin sign-in alert when switched on.
+   - The order and appointment "Preview email" shows the real email as sent, and says if sending is off.
+   - Still for Phase 11: the admin invite email (replaces temporary passwords) and Supabase's own auth emails
+     (confirm email, password reset) through Resend SMTP, which is free on the Supabase plan.
+2. ✅ **Telegram** (`lib/notify/team.ts`, `lib/telegram/*`): new-order and new-appointment alerts to the team chat
+   (toggles and templates from `/admin/telegram`), plus the customer's own cancel or reschedule. The webhook
+   (`pnpm telegram:webhook`, registered for luxichic.vercel.app) answers `/start` and `/chatid` with the chat ID.
+3. ✅ **In-app notifications**: new orders, appointments (and customer changes), reviews, and low-stock/sold-out
+   when an order takes a product to its threshold, each following its switch under Notifications.
+4. ✅ **Contact form**: kept as a team notification (full text in Notifications) and emailed to the business address
+   with the customer as reply-to; a hidden field catches bots; 3 messages an hour per address.
+5. ✅ **Newsletter**: sign-ups saved (validated, one per address); Admin → Customers → Newsletter lists, searches,
+   exports CSV and removes. No email marketing tool at launch.
+6. Tested in a browser against dev, with emails sent to Resend's test inboxes (`delivered+…@resend.dev`): 28 checks
+   across alerts, every email above, reminders, contact and newsletter, then cleaned up.
 
 ## Phase 10: Quality
 
