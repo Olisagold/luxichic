@@ -49,19 +49,6 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
     return true;
   };
 
-  const values = (x: Appointment, extra: Record<string, string> = {}) => ({
-    customer_name: x.customer.fullName,
-    service_name: x.serviceName,
-    appointment_date: formatLongDate(x.date),
-    appointment_time: formatSlot(x.time),
-    appointment_reference: x.reference,
-    specialist_name: x.personnelName ?? 'our team',
-    reason: x.reason ?? '',
-    original_date: x.original ? formatLongDate(x.original.date) : '',
-    original_time: x.original ? formatSlot(x.original.time) : '',
-    ...extra,
-  });
-
   const open = a && !['Completed', 'Rejected', 'Cancelled'].includes(a.status);
 
   return (
@@ -116,7 +103,7 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
                     disabled={busy}
                     onClick={async () => {
                       if (await run(() => confirmAppointment(a.reference), 'Appointment confirmed')) {
-                        setEmail({ templateId: 'appt_confirmed', to: a.customer.email, values: values(a) });
+                        setEmail({ appointment: a.reference, event: 'confirmed' });
                       }
                     }}
                   >
@@ -176,16 +163,17 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
               icon={<MailIcon className="h-3.5 w-3.5" />}
               onClick={() =>
                 setEmail({
-                  templateId:
+                  appointment: a.reference,
+                  event:
                     a.status === 'Rescheduled'
-                      ? 'appt_rescheduled'
+                      ? 'rescheduled'
                       : a.status === 'Rejected'
-                        ? 'appt_rejected'
-                        : a.status === 'Confirmed'
-                          ? 'appt_confirmed'
-                          : 'appt_booked',
-                  to: a.customer.email,
-                  values: values(a),
+                        ? 'rejected'
+                        : a.status === 'Cancelled'
+                          ? 'cancelled'
+                          : a.status === 'Confirmed' || a.status === 'Completed'
+                            ? 'confirmed'
+                            : 'booked',
                 })
               }
             >
@@ -203,11 +191,11 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
             title="Reject this appointment?"
             tone="danger"
             confirmLabel="Reject"
-            message="The customer would be emailed with your reason and invited to pick another time."
+            message="The customer is emailed your reason and invited to pick another time."
             requireReason={{ label: 'Reason', placeholder: 'e.g. Selected specialist unavailable' }}
             onConfirm={async (reason) => {
               if (await run(() => rejectAppointment(a.reference, reason), 'Appointment rejected')) {
-                setEmail({ templateId: 'appt_rejected', to: a.customer.email, values: values(a, { reason }) });
+                setEmail({ appointment: a.reference, event: 'rejected' });
               }
             }}
           />
@@ -218,7 +206,7 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
             title="Cancel this appointment?"
             tone="danger"
             confirmLabel="Cancel appointment"
-            message="The slot will be released."
+            message="The slot is released and the customer is emailed your reason."
             requireReason={{ label: 'Reason' }}
             onConfirm={(reason) => run(() => cancelAppointment(a.reference, reason), 'Appointment cancelled')}
           />
@@ -227,23 +215,11 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
             appointment={a}
             open={dialog === 'reschedule'}
             onClose={() => setDialog(null)}
-            onDone={(next) => {
+            onDone={() => {
               setDialog(null);
               toast.success('Appointment rescheduled');
               router.refresh();
-              setEmail({
-                templateId: 'appt_rescheduled',
-                to: a.customer.email,
-                values: {
-                  ...values(a),
-                  appointment_date: formatLongDate(next.date),
-                  appointment_time: formatSlot(next.time),
-                  specialist_name: next.personnelName ?? a.personnelName ?? 'our team',
-                  reason: next.reason,
-                  original_date: formatLongDate(a.date),
-                  original_time: formatSlot(a.time),
-                },
-              });
+              setEmail({ appointment: a.reference, event: 'rescheduled' });
             }}
           />
         </>

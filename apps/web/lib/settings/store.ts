@@ -1,6 +1,7 @@
 import 'server-only';
 import { asc, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
+import { ensureEmailTemplates } from '@/lib/email/send';
 import * as s from '@/db/schema';
 import type { AdminNotification, EmailTemplate, StoreSettings } from '@/types/admin';
 
@@ -145,6 +146,7 @@ export async function loadSecurity(): Promise<StoreSettings['security']> {
 }
 
 export async function loadEmailTemplates(): Promise<EmailTemplate[]> {
+  await ensureEmailTemplates();
   const rows = await db.select().from(s.emailTemplates).orderBy(asc(s.emailTemplates.name));
   return rows.map((t) => ({
     id: t.key,

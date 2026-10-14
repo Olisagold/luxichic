@@ -1,51 +1,78 @@
 'use client';
 
-import React from 'react';
-import { MailIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { MailCheckIcon, MailWarningIcon } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { useDb } from '@/lib/mock-db/db';
-import { fillTemplate } from '@/lib/utils/text';
+import { previewCustomerEmail, type EmailPreviewRequest, type EmailPreviewResult } from '@/lib/email/preview';
 
-export interface EmailPreview {
-  templateId: string;
-  to: string;
-  values: Record<string, string>;
-}
+export type EmailPreview = EmailPreviewRequest;
 
-/** Shows the email the backend WOULD send. Nothing is delivered in the prototype. */
+/** The email the customer gets for an order or appointment change, rendered on the server as it's sent. */
 export function EmailPreviewDialog({ preview, onClose }: { preview: EmailPreview | null; onClose: () => void }) {
-  const templates = useDb((s) => s.emailTemplates);
-  const t = preview ? templates.find((x) => x.id === preview.templateId) : undefined;
+  const [result, setResult] = useState<EmailPreviewResult | null>(null);
+
+  useEffect(() => {
+    if (!preview) return;
+    let live = true;
+    setResult(null);
+    previewCustomerEmail(preview)
+      .catch(() => ({ ok: false as const, error: 'Could not load the email.' }))
+      .then((r) => live && setResult(r));
+    return () => {
+      live = false;
+    };
+  }, [preview]);
 
   return (
-    <Modal open={!!preview && !!t} onClose={onClose} title="Email preview" className="max-w-lg rounded-2xl">
-      {preview && t && (
-        <div className="space-y-4 p-5">
-          <p className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
-            <MailIcon className="h-3.5 w-3.5" aria-hidden />
-            Prototype — this email would be sent by the backend (SMTP). Nothing has been sent.
+    <Modal open={!!preview} onClose={onClose} title="Customer email" className="max-w-2xl rounded-2xl">
+      <div className="space-y-4 p-5">
+        {!result ? (
+          <p className="py-10 text-center text-[13px] text-subtle" aria-busy="true">
+            Loading the email…
           </p>
-          <dl className="space-y-1 text-[13px]">
-            <div className="flex gap-2">
-              <dt className="w-16 text-subtle">To</dt>
-              <dd className="text-ink">{preview.to}</dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-16 text-subtle">Subject</dt>
-              <dd className="font-semibold text-ink">{fillTemplate(t.subject, preview.values)}</dd>
-            </div>
-          </dl>
-          <div className="whitespace-pre-line rounded-lg border border-line bg-canvas/50 p-4 text-[13px] leading-relaxed text-charcoal">
-            {fillTemplate(t.body, preview.values)}
-          </div>
-          <div className="flex justify-end">
-            <AdminButton variant="primary" onClick={onClose}>
-              Done
-            </AdminButton>
-          </div>
+        ) : !result.ok ? (
+          <p className="py-10 text-center text-[13px] text-red-700">{result.error}</p>
+        ) : (
+          <>
+            <p
+              className={
+                result.sent
+                  ? 'flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900'
+                  : 'flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900'
+              }
+            >
+              {result.sent ? (
+                <MailCheckIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              ) : (
+                <MailWarningIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              )}
+              {result.sent ? 'Sent to the customer automatically when this happens.' : result.reason}
+            </p>
+            <dl className="space-y-1 text-[13px]">
+              <div className="flex gap-2">
+                <dt className="w-16 text-subtle">To</dt>
+                <dd className="text-ink">{result.to}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="w-16 text-subtle">Subject</dt>
+                <dd className="font-semibold text-ink">{result.subject}</dd>
+              </div>
+            </dl>
+            <iframe
+              title="Email preview"
+              srcDoc={result.html}
+              sandbox=""
+              className="h-[60vh] w-full rounded-lg border border-line bg-white"
+            />
+          </>
+        )}
+        <div className="flex justify-end">
+          <AdminButton variant="primary" onClick={onClose}>
+            Done
+          </AdminButton>
         </div>
-      )}
+      </div>
     </Modal>
   );
 }

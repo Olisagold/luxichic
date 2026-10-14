@@ -9,6 +9,7 @@ import * as s from '@/db/schema';
 import { rememberDeviceRecord } from '@/lib/auth/device-records';
 import { authReady } from '@/lib/auth/helpers';
 import { getCustomer } from '@/lib/auth/session';
+import { emailAppointment } from '@/lib/email/customer';
 import { alertAppointmentChanged, alertNewAppointment } from '@/lib/notify/team';
 import {
   computeAvailability,
@@ -141,7 +142,10 @@ export async function bookAppointment(
           return row.id;
         });
         await rememberDeviceRecord('lx_appointments', id);
-        after(() => alertNewAppointment(id));
+        after(async () => {
+          await alertNewAppointment(id);
+          await emailAppointment(id, 'booked');
+        });
         return { ok: true, reference };
       } catch (e) {
         const { code, constraint } = pgError(e);
@@ -194,7 +198,10 @@ export async function cancelAppointment(reference: string): Promise<Result> {
       .where(eq(s.appointments.id, appt.id));
     await tx.insert(s.appointmentEvents).values({ appointmentId: appt.id, label: 'Cancelled by customer' });
   });
-  after(() => alertAppointmentChanged(appt.id, 'cancelled'));
+  after(async () => {
+    await alertAppointmentChanged(appt.id, 'cancelled');
+    await emailAppointment(appt.id, 'cancelled');
+  });
   return { ok: true };
 }
 
@@ -240,7 +247,11 @@ export async function rescheduleAppointment(
           note: `From ${from} to ${formatLongDate(date)} at ${formatSlot(time)}`,
         });
       });
-      after(() => alertAppointmentChanged(appt.id, 'rescheduled'));
+      after(async () => {
+        await alertAppointmentChanged(appt.id, 'rescheduled');
+        // Back to a request: the same email as a new booking, with the new time.
+        await emailAppointment(appt.id, 'booked');
+      });
       return { ok: true };
     } catch (e) {
       if (pgError(e).code === DOUBLE_BOOKED) continue;

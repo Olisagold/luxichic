@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
+import { after } from 'next/server';
 import { and, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { ActionError, adminAction, audit } from '@/lib/auth/admin-action';
+import { emailOrderUpdate, type OrderEmail } from '@/lib/email/customer';
 import { byNumber } from '@/lib/orders/queries';
 import { STOREFRONT_TAG } from '@/lib/storefront/data';
 import { formatNaira } from '@/lib/utils/currency';
@@ -14,7 +16,7 @@ import type { Result } from '@/types/user';
 
 /**
  * Admin order actions (plan.md → Payment flow). Each checks its permission on the server and writes to
- * `audit_logs`. Customer emails for these changes come in Phase 9.
+ * `audit_logs`, and emails the customer after the change (lib/email/customer.ts).
  */
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -109,7 +111,7 @@ async function restock(tx: Tx, order: typeof s.orders.$inferSelect) {
  */
 export async function confirmPayment(orderNumber: string): Promise<Result> {
   return adminAction('orders.confirmPayment', async (admin) => {
-    await db.transaction(async (tx) => {
+    const orderId = await db.transaction(async (tx) => {
       const { order, payment } = await lockOrder(tx, orderNumber);
       if (order.paymentMethod !== 'bank_transfer' || payment?.status !== 'pending_verification') {
         throw new ActionError('This order isn’t waiting for a bank transfer to be confirmed.');
@@ -123,13 +125,35 @@ export async function confirmPayment(orderNumber: string): Promise<Result> {
       await tx.update(s.orders).set({ status: 'confirmed', updatedAt: now }).where(eq(s.orders.id, order.id));
       await stamp(tx, order.id, ['payment_confirmed'], admin.id);
       await orderAudit(tx, admin, 'Confirmed payment', order.orderNumber, formatNaira(order.total));
+      return order.id;
     });
+    after(() => emailOrderUpdate(orderId, 'payment_confirmed'));
     return { ok: true };
   });
 }
 
-/** Moves one order forward (or cancels it). Returns a reason it can't instead of throwing. */
-async function changeStatus(tx: Tx, admin: AdminUser, orderNumber: string, status: OrderStatus, reason?: string) {
+/** Statuses the customer is emailed about (Processing isn't). */
+const EMAILED: Partial<Record<DbStatus, OrderEmail>> = {
+  confirmed: 'confirmed',
+  shipped: 'shipped',
+  delivered: 'delivered',
+  cancelled: 'cancelled',
+};
+
+/** Emails the customer about a status change, after the response. */
+function emailStatus(orderId: string, status: DbStatus) {
+  const event = EMAILED[status];
+  if (event) after(() => emailOrderUpdate(orderId, event));
+}
+
+/** Moves one order forward (or cancels it), returning the order's id. Throws an ActionError when it can't. */
+async function changeStatus(
+  tx: Tx,
+  admin: AdminUser,
+  orderNumber: string,
+  status: OrderStatus,
+  reason?: string,
+): Promise<string> {
   const { order, payment } = await lockOrder(tx, orderNumber);
   const target = toDb(status);
   if (order.status === 'cancelled' || order.status === 'delivered') {
@@ -147,7 +171,7 @@ async function changeStatus(tx: Tx, admin: AdminUser, orderNumber: string, statu
     await stamp(tx, order.id, ['cancelled'], admin.id);
     await restock(tx, order);
     await orderAudit(tx, admin, 'Cancelled order', order.orderNumber, why.slice(0, 200));
-    return;
+    return order.id;
   }
 
   const from = FLOW.indexOf(order.status);
@@ -165,13 +189,15 @@ async function changeStatus(tx: Tx, admin: AdminUser, orderNumber: string, statu
     await tx.update(s.payments).set({ status: 'paid', updatedAt: now }).where(eq(s.payments.id, payment.id));
   }
   await orderAudit(tx, admin, `Marked as ${target}`, order.orderNumber);
+  return order.id;
 }
 
 /** Confirms a Pay on Delivery order, moves an order on (Processing → Shipped → Delivered) or cancels it. */
 export async function setOrderStatus(orderNumber: string, status: OrderStatus, reason?: string): Promise<Result> {
   return adminAction('orders.edit', async (admin) => {
-    await db.transaction((tx) => changeStatus(tx, admin, orderNumber, status, reason));
+    const orderId = await db.transaction((tx) => changeStatus(tx, admin, orderNumber, status, reason));
     if (status === 'Cancelled') revalidateTag(STOREFRONT_TAG);
+    emailStatus(orderId, toDb(status));
     return { ok: true };
   });
 }
@@ -187,7 +213,8 @@ export async function setOrdersStatus(
   const res = await adminAction('orders.edit', async (admin) => {
     for (const orderNumber of orderNumbers.slice(0, 200)) {
       try {
-        await db.transaction((tx) => changeStatus(tx, admin, orderNumber, status, reason));
+        const orderId = await db.transaction((tx) => changeStatus(tx, admin, orderNumber, status, reason));
+        emailStatus(orderId, toDb(status));
         updated++;
       } catch (e) {
         if (!(e instanceof ActionError)) throw e;

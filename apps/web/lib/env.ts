@@ -22,6 +22,8 @@ const serverSchema = z.object({
   TELEGRAM_ADMIN_CHAT_ID: optional(z.string().min(1)),
   // Resend (Phase 9)
   RESEND_API_KEY: optional(z.string().startsWith('re_')),
+  // Vercel Cron sends it as a Bearer token to /api/cron/* (Phase 9)
+  CRON_SECRET: optional(z.string().min(16, 'Use at least 16 characters')),
 });
 
 const clientSchema = z

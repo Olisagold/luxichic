@@ -1,11 +1,13 @@
 'use server';
 
 import { and, eq, inArray, max, sql } from 'drizzle-orm';
+import { after } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { ActionError, adminAction, audit } from '@/lib/auth/admin-action';
 import { getAdmin, hasPermission } from '@/lib/auth/session';
+import { emailAppointment, type AppointmentEmail } from '@/lib/email/customer';
 import { computeAvailability, freeSpecialists, toMinutes, type Slot } from '@/lib/salon/availability';
 import { ACTIVE_STATUSES, loadSchedule } from '@/lib/salon/schedule';
 import { STOREFRONT_TAG } from '@/lib/storefront/data';
@@ -17,8 +19,8 @@ import type { Result } from '@/types/user';
 
 /**
  * Admin salon actions. Each checks its permission on the server and writes to `audit_logs`. Services,
- * specialists and closed days also refresh the storefront (they shape what customers can book). Customer emails
- * about appointment changes come in Phase 9.
+ * specialists and closed days also refresh the storefront (they shape what customers can book). Customers are
+ * emailed about changes to their appointment (lib/email/customer.ts).
  */
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -57,6 +59,13 @@ async function logAppointment(tx: Tx, admin: AdminUser, action: string, referenc
   });
 }
 
+/** Changes the customer is emailed about (completing a visit isn't). */
+const EMAILED: Partial<Record<Status, AppointmentEmail>> = {
+  confirmed: 'confirmed',
+  rejected: 'rejected',
+  cancelled: 'cancelled',
+};
+
 /** Moves an appointment from one of `from` to `to`, with a history entry and an audit entry. */
 async function decide(
   permission: 'appointments.confirm' | 'appointments.reject',
@@ -69,7 +78,7 @@ async function decide(
   return adminAction(permission, async (admin) => {
     const why = reason === undefined ? undefined : String(reason).trim().slice(0, 500);
     if (why !== undefined && why.length < 3) throw new ActionError('Please give a reason.');
-    await db.transaction(async (tx) => {
+    const id = await db.transaction(async (tx) => {
       const a = await lockAppointment(tx, reference);
       if (!from.includes(a.status)) throw new ActionError(`This appointment is ${a.status} and can’t be ${to} now.`);
       await tx
@@ -78,7 +87,10 @@ async function decide(
         .where(eq(s.appointments.id, a.id));
       await tx.insert(s.appointmentEvents).values({ appointmentId: a.id, label, note: why, adminId: admin.id });
       await logAppointment(tx, admin, `${label} appointment`, a.reference, why);
+      return a.id;
     });
+    const email = EMAILED[to];
+    if (email) after(() => emailAppointment(id, email));
     return { ok: true };
   });
 }
@@ -133,9 +145,11 @@ export async function rescheduleAppointment(
     if (!DATE.test(String(next?.date)) || !TIME.test(String(next?.time)))
       throw new ActionError('Choose a date and time.');
     if (reason.length < 3) throw new ActionError('Please give a reason.');
+    let id = '';
     try {
       await db.transaction(async (tx) => {
         const a = await lockAppointment(tx, reference);
+        id = a.id;
         if (!(ACTIVE_STATUSES as readonly string[]).includes(a.status)) {
           throw new ActionError(`This appointment is ${a.status} and can’t be moved.`);
         }
@@ -184,6 +198,7 @@ export async function rescheduleAppointment(
       if (pgCode(e) === DOUBLE_BOOKED) throw new ActionError('That specialist is already booked at that time.');
       throw e;
     }
+    after(() => emailAppointment(id, 'rescheduled'));
     return { ok: true };
   });
 }

@@ -1,12 +1,14 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { after } from 'next/server';
 import { and, eq, ne } from 'drizzle-orm';
 import { db } from '@/db';
 import { addresses, profiles } from '@/db/schema';
 import { authErrorMessage, authReady, NOT_CONFIGURED, passwordMatches, siteOrigin } from '@/lib/auth/helpers';
 import { getCustomer } from '@/lib/auth/session';
 import { linkGuestRecords } from '@/lib/auth/guest-records';
+import { emailWelcomeOnce } from '@/lib/email/customer';
 import { REMEMBER_COOKIE } from '@/lib/supabase/cookies';
 import { createClient } from '@/lib/supabase/server';
 import { isValidEmail, isValidPhone, passwordError } from '@/lib/utils/validation';
@@ -80,6 +82,11 @@ export async function signUp(data: {
   // With email confirmation on, Supabase hides existing accounts by returning a user with no identities.
   if (res.user && res.user.identities?.length === 0) {
     return { ok: false, exists: true, error: authErrorMessage({ code: 'user_already_exists' }) };
+  }
+  // With email confirmation on (launch), the welcome waits for the confirmed sign-in (app/auth/callback).
+  if (res.session && res.user) {
+    const id = res.user.id;
+    after(() => emailWelcomeOnce(id));
   }
   return { ok: true, needsConfirmation: !res.session };
 }

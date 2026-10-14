@@ -77,15 +77,21 @@ export function OrderDetail({
     order.status === 'Pending';
   const pendingPod = order.paymentMethod === 'pay_on_delivery' && order.status === 'Pending';
   const step = nextStep[order.status];
-  const values = {
-    customer_name: order.customer.fullName,
-    order_number: order.orderNumber,
-    transaction_reference: order.reference,
-    total_amount: formatNaira(order.total),
-    reason: order.cancelReason ?? '',
-    account_link: order.accountEmail
-      ? ''
-      : 'Create your LUXICHIC account: https://luxichic.example/create-account?token=•••• (expires in 72 hours)',
+  /** The customer's latest email for this order. */
+  const latestEmail: EmailPreview = {
+    order: order.orderNumber,
+    event:
+      order.status === 'Pending'
+        ? 'placed'
+        : order.status === 'Cancelled'
+          ? 'cancelled'
+          : order.status === 'Shipped'
+            ? 'shipped'
+            : order.status === 'Delivered'
+              ? 'delivered'
+              : order.paymentMethod === 'bank_transfer'
+                ? 'payment_confirmed'
+                : 'confirmed',
   };
 
   /** Runs a server action, then shows the result and reloads the order. */
@@ -121,21 +127,7 @@ export function OrderDetail({
         description={`Placed ${formatDateTime(order.createdAt)} · ${order.accountEmail ? 'Registered customer' : 'Guest checkout'}`}
         actions={
           <>
-            <AdminButton
-              icon={<MailIcon className="h-4 w-4" />}
-              onClick={() =>
-                setEmail({
-                  templateId:
-                    order.status === 'Pending'
-                      ? 'order_placed'
-                      : order.status === 'Cancelled'
-                        ? 'order_cancelled'
-                        : 'order_confirmed',
-                  to: order.customer.email,
-                  values,
-                })
-              }
-            >
+            <AdminButton icon={<MailIcon className="h-4 w-4" />} onClick={() => setEmail(latestEmail)}>
               Preview email
             </AdminButton>
             {step && can('orders.edit') && (
@@ -216,13 +208,13 @@ export function OrderDetail({
                 <div className="min-w-0 flex-1 text-[13px]">
                   <p className="font-semibold text-emerald-900">Payment confirmed and order moved to Confirmed</p>
                   <p className="text-emerald-800">
-                    Recorded in the activity log under your name. Confirmation emails start in Phase 9; until then, let
-                    the customer know on WhatsApp.
+                    Recorded in the activity log under your name. The customer has been emailed that their payment was
+                    received.
                   </p>
                 </div>
                 <AdminButton
                   size="sm"
-                  onClick={() => setEmail({ templateId: 'order_confirmed', to: order.customer.email, values })}
+                  onClick={() => setEmail({ order: order.orderNumber, event: 'payment_confirmed' })}
                 >
                   See email
                 </AdminButton>
@@ -396,7 +388,7 @@ export function OrderDetail({
         onClose={() => setDialog(null)}
         onConfirm={confirmPod}
         title="Confirm this Pay on Delivery order?"
-        message="The customer would receive an order-confirmation email. Payment is collected on delivery."
+        message="The customer is emailed that their order is confirmed. Payment is collected on delivery."
         confirmLabel="Confirm order"
       />
       <ConfirmDialog

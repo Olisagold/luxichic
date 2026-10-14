@@ -1,12 +1,15 @@
 'use server';
 
 import { cookies, headers } from 'next/headers';
+import { after } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { admins, auditLogs, loginHistory } from '@/db/schema';
+import { emailAdminLogin } from '@/lib/email/customer';
 import { authErrorMessage, authReady, NOT_CONFIGURED, passwordMatches } from '@/lib/auth/helpers';
 import { getAdmin } from '@/lib/auth/session';
 import { REMEMBER_COOKIE } from '@/lib/supabase/cookies';
+import { loadSecurity } from '@/lib/settings/store';
 import { createClient } from '@/lib/supabase/server';
 import { isValidEmail, passwordError } from '@/lib/utils/validation';
 import type { Result } from '@/types/user';
@@ -92,6 +95,7 @@ export async function adminSignIn(email: string, password: string, remember: boo
       target: `${browser} · ${device}`,
     });
   });
+  if ((await loadSecurity()).loginAlerts) after(() => emailAdminLogin(admin, `${browser} on ${device}`));
   return { ok: true };
 }
 
