@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 
 /**
- * Sticky bar that appears when a form has unsaved edits. While it shows, reloading or closing the tab asks first,
- * so edits aren't lost by accident.
+ * Sticky bar that appears when a form has unsaved edits. While it shows, leaving the page (a link, reload or
+ * closing the tab) asks first, so edits aren't lost by accident.
  */
 export function SaveBar({
   dirty,
@@ -21,12 +22,7 @@ export function SaveBar({
   saving?: boolean;
   label?: string;
 }) {
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
+  useUnsavedGuard(dirty);
 
   return (
     <AnimatePresence>

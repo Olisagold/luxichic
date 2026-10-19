@@ -16,6 +16,7 @@ import { AdminInput, AdminSelect, AdminTextarea } from '@/components/admin/ui/Ad
 import { Toggle } from '@/components/admin/ui/Toggle';
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 import { slugify } from '@/lib/utils/text';
+import { SaveBar } from '@/components/admin/content/SaveBar';
 
 const blank = (whatsapp: string): AdminService => ({
   slug: '',
@@ -60,6 +61,8 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
   const categories = Array.from(new Set(salon.services.map((x) => x.category)));
   const [saving, setSaving] = useState(false);
   const [s, setS] = useState<AdminService>(initial);
+  const [baseline, setBaseline] = useState(JSON.stringify(initial));
+  const dirty = JSON.stringify(s) !== baseline;
   const [include, setInclude] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -80,6 +83,7 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
     );
     setSaving(false);
     if (!res?.ok) return toast.error(res?.error ?? 'Could not save the service.');
+    setBaseline(JSON.stringify(s));
     toast.success(isNew ? 'Service created' : 'Service saved', {
       description: s.status === 'published' ? 'Visible on the salon pages.' : 'Saved as draft.',
     });
@@ -97,7 +101,7 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
   };
 
   return (
-    <div className="pb-10">
+    <div className="pb-24">
       <PageHeader
         back={{ to: '/admin/salon/services', label: 'Services' }}
         title={isNew ? 'Add service' : s.name || 'Untitled service'}
@@ -110,6 +114,7 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
                   const res = await setServiceStatus(s.slug, 'archived').catch(() => null);
                   if (!res?.ok) return toast.error(res?.error ?? 'Could not archive the service.');
                   set({ status: 'archived' });
+                  setBaseline(JSON.stringify({ ...s, status: 'archived' }));
                   toast.success('Service archived');
                   router.refresh();
                 }}
@@ -337,6 +342,13 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
         tone="danger"
         confirmLabel="Delete service"
         message="Existing appointments keep their details, but customers can no longer book this service. Archive instead to keep it for later."
+      />
+      <SaveBar
+        dirty={dirty}
+        saving={saving}
+        onSave={save}
+        onReset={() => setS(JSON.parse(baseline))}
+        label={isNew ? 'New service — not saved yet' : 'Unsaved changes'}
       />
     </div>
   );

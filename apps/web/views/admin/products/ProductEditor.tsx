@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ChevronLeftIcon, ExternalLinkIcon, PackageXIcon } from 'lucide-react';
 import type { Division } from '@/types/product';
 import { useProductEditor } from '@/hooks/useProductEditor';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
 import { BasicsSection } from '@/components/admin/product-editor/BasicsSection';
@@ -55,6 +56,9 @@ function Editor({ id }: { id?: string }) {
   const editor = useProductEditor(id, (params.get('division') as Division) || 'hairs');
   const { draft, dirty, saving, save, isNew, errors } = editor;
   const canSave = isNew ? can('products.create') : can('products.edit');
+
+  // Asks before any link, reload or tab close while there are unsaved changes.
+  useUnsavedGuard(dirty);
 
   const leave = () => {
     if (dirty && !window.confirm('You have unsaved changes. Leave without saving?')) return;
