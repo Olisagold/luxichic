@@ -15,6 +15,7 @@ const descriptions: Record<Preset, string> = {
   'Order Manager': 'Confirms payments and moves orders through delivery.',
   'Product Manager': 'Adds and edits products, stock, categories and promo codes.',
   'Salon Manager': 'Runs appointments, services, specialists and availability.',
+  Specialist: 'Sees, confirms and reschedules their own bookings (link the login to their specialist profile).',
   'Content Manager': 'Edits the homepage, pages and media library.',
   'Customer Support': 'Helps customers, moderates reviews and views orders.',
 };

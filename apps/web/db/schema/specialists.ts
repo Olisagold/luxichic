@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { admins } from './admins';
 import { services } from './services';
 import { createdAt, publicRead, specialistStatus, updatedAt } from './_shared';
 
@@ -41,3 +42,25 @@ export const specialistServices = pgTable(
     ),
   ],
 );
+
+/**
+ * The private side of a specialist, never shown on the website (RLS on, no policies: server only):
+ * - the admin login that belongs to them (an admin linked here sees only their own bookings), and
+ * - their Telegram chat, for private booking alerts. A specialist connects by opening a one-time link to the bot
+ *   (`telegramToken`, created from Admin → Telegram); the bot then stores their chat here.
+ */
+export const specialistAccounts = pgTable('specialist_accounts', {
+  specialistId: uuid('specialist_id')
+    .primaryKey()
+    .references(() => specialists.id, { onDelete: 'cascade' }),
+  adminId: uuid('admin_id')
+    .unique()
+    .references(() => admins.id, { onDelete: 'set null' }),
+  telegramChatId: text('telegram_chat_id'),
+  /** The Telegram name shown in the admin, e.g. "Ada (@ada_nails)". */
+  telegramName: text('telegram_name'),
+  telegramConnectedAt: timestamp('telegram_connected_at', { withTimezone: true }),
+  /** One-time code in the connect link; cleared once used. */
+  telegramToken: text('telegram_token').unique(),
+  telegramTokenCreatedAt: timestamp('telegram_token_created_at', { withTimezone: true }),
+}).enableRLS();

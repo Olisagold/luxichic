@@ -176,6 +176,8 @@ export const rolePresets: Record<Exclude<AdminUser['role'], 'Custom'>, Permissio
     'salon.specialists',
     'salon.availability',
   ],
+  /** A stylist or technician: their own bookings only (when their admin login is linked to their specialist profile). */
+  Specialist: ['appointments.view', 'appointments.confirm', 'appointments.reschedule'],
   'Content Manager': ['dashboard.view', 'content.homepage', 'content.pages', 'content.media'],
   'Customer Support': [
     'dashboard.view',
