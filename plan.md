@@ -510,6 +510,10 @@ Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bo
    - Admin verifies a payment
 3. Run lint, typecheck, unit tests and E2E in CI; use the Vercel preview for manual QA.
 4. Accessibility and performance pass (Lighthouse, Vercel Speed Insights / Web Vitals).
+5. Investigate a local-only build message: after dev sessions, `next build` logs "TypeError … reading 'toISOString'"
+   in Drizzle's `mapFromDriverValue` while refreshing a stale `storefront-data-v2` cache entry (builds still pass;
+   clearing `.next/cache/fetch-cache` removes it; Vercel's per-deployment cache key avoids it). Make sure the hourly
+   storefront refresh on the live site can't hit the same error.
 
 ## Phase 11: Launch
 
