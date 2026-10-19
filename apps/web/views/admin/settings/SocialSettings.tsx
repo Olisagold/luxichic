@@ -28,25 +28,39 @@ import { SocialIcon, socialHref } from '@/components/ui/SocialIcon';
 import { generateId } from '@/lib/utils/references';
 import { cn } from '@/lib/utils/cn';
 
-interface FormState {
-  links: SocialLink[];
-  chatNumber: string;
-}
-
+/**
+ * Footer social links. Each change to the list (add, edit, remove, show/hide, reorder) is published at once; the
+ * floating chat number is a typed field, so it uses the save bar.
+ */
 export function SocialSettings() {
   const router = useRouter();
   const { settings: s } = useAdminSettings();
-  const initial: FormState = { links: s.socialLinks ?? [], chatNumber: s.business.whatsapp };
-  const [form, setForm] = useState<FormState>(initial);
-  const [baseline, setBaseline] = useState(JSON.stringify(initial));
+  const [links, setLinksState] = useState<SocialLink[]>(s.socialLinks ?? []);
+  const [chatNumber, setChatNumber] = useState(s.business.whatsapp);
+  const [savedChat, setSavedChat] = useState(s.business.whatsapp);
   const [editing, setEditing] = useState<SocialLink | null>(null);
   const [removing, setRemoving] = useState<SocialLink | null>(null);
   const [saving, setSaving] = useState(false);
-  const dirty = JSON.stringify(form) !== baseline;
-  const { links } = form;
+  const dirty = chatNumber !== savedChat;
 
-  const setLinks = (next: SocialLink[]) => setForm((f) => ({ ...f, links: next }));
-  const patch = (id: string, p: Partial<SocialLink>) => setLinks(links.map((l) => (l.id === id ? { ...l, ...p } : l)));
+  /** Shows the new list straight away and publishes it; puts the old one back if saving fails. */
+  const publish = async (next: SocialLink[], done: string) => {
+    const before = links;
+    setLinksState(next);
+    const res = await saveSocialLinks(next, savedChat).catch(() => null);
+    if (!res?.ok) {
+      setLinksState(before);
+      return toast.error(res?.error ?? 'Could not save the social links.');
+    }
+    toast.success(done, { description: 'The footer shows it now.' });
+    router.refresh();
+  };
+
+  const patch = (link: SocialLink, p: Partial<SocialLink>) =>
+    publish(
+      links.map((l) => (l.id === link.id ? { ...l, ...p } : l)),
+      p.enabled === false ? 'Hidden from the footer' : 'Shown in the footer',
+    );
 
   /** Swap with the neighbouring link in the same division. */
   const move = (link: SocialLink, dir: -1 | 1) => {
@@ -58,24 +72,28 @@ export function SocialSettings() {
     const b = links.indexOf(other);
     const next = links.slice();
     [next[a], next[b]] = [next[b], next[a]];
-    setLinks(next);
+    publish(next, 'Order saved');
   };
 
-  const save = async () => {
-    if (form.chatNumber && !/^\d{10,15}$/.test(form.chatNumber))
+  const saveChat = async () => {
+    if (chatNumber && !/^\d{10,15}$/.test(chatNumber))
       return toast.error('Floating chat number: use international format digits, e.g. 2348012345678.');
     setSaving(true);
-    const res = await saveSocialLinks(links, form.chatNumber).catch(() => null);
+    const res = await saveSocialLinks(links, chatNumber).catch(() => null);
     setSaving(false);
-    if (!res?.ok) return toast.error(res?.error ?? 'Could not save the social links.');
-    setBaseline(JSON.stringify(form));
+    if (!res?.ok) return toast.error(res?.error ?? 'Could not save the chat number.');
+    setSavedChat(chatNumber);
     router.refresh();
-    toast.success('Social links published', { description: 'The footer updates right away.' });
+    toast.success('Chat number saved', { description: 'The WhatsApp button uses it now.' });
   };
 
   const upsert = (link: SocialLink) => {
-    setLinks(links.some((l) => l.id === link.id) ? links.map((l) => (l.id === link.id ? link : l)) : [...links, link]);
+    const exists = links.some((l) => l.id === link.id);
     setEditing(null);
+    publish(
+      exists ? links.map((l) => (l.id === link.id ? link : l)) : [...links, link],
+      exists ? 'Link updated' : 'Link added',
+    );
   };
 
   const blank = (division: SocialDivision = 'hairs'): SocialLink => ({
@@ -185,7 +203,7 @@ export function SocialSettings() {
                               srOnlyLabel
                               label={`Show ${socialPlatforms[l.platform].label} in footer`}
                               checked={l.enabled}
-                              onChange={(v) => patch(l.id, { enabled: v })}
+                              onChange={(v) => patch(l, { enabled: v })}
                             />
                           </span>
                         </div>
@@ -239,10 +257,10 @@ export function SocialSettings() {
               id="chat-num"
               label="Floating chat button number"
               inputMode="numeric"
-              value={form.chatNumber}
+              value={chatNumber}
               placeholder="2348012345678"
               hint="The green WhatsApp button on every page."
-              onChange={(e) => setForm({ ...form, chatNumber: e.target.value.replace(/\D/g, '') })}
+              onChange={(e) => setChatNumber(e.target.value.replace(/\D/g, ''))}
             />
           </section>
         </aside>
@@ -258,16 +276,26 @@ export function SocialSettings() {
         open={!!removing}
         onClose={() => setRemoving(null)}
         onConfirm={() => {
-          if (removing) setLinks(links.filter((l) => l.id !== removing.id));
+          if (removing)
+            publish(
+              links.filter((l) => l.id !== removing.id),
+              'Link removed',
+            );
           setRemoving(null);
         }}
         title={`Remove this ${removing ? socialPlatforms[removing.platform].label : ''} link?`}
         tone="danger"
         confirmLabel="Remove"
-        message="It disappears from the footer after you publish. Switch it off instead if you may need it again."
+        message="It disappears from the footer straight away. Switch it off instead if you may need it again."
       />
 
-      <SaveBar dirty={dirty} saving={saving} onSave={save} onReset={() => setForm(JSON.parse(baseline))} />
+      <SaveBar
+        dirty={dirty}
+        saving={saving}
+        onSave={saveChat}
+        onReset={() => setChatNumber(savedChat)}
+        label="The chat number isn’t saved yet"
+      />
     </div>
   );
 }

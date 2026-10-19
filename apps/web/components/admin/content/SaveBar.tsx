@@ -1,10 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 
-/** Sticky bar that appears when a content form has unsaved edits. */
+/**
+ * Sticky bar that appears when a form has unsaved edits. While it shows, reloading or closing the tab asks first,
+ * so edits aren't lost by accident.
+ */
 export function SaveBar({
   dirty,
   onSave,
@@ -18,6 +21,13 @@ export function SaveBar({
   saving?: boolean;
   label?: string;
 }) {
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
   return (
     <AnimatePresence>
       {dirty && (
