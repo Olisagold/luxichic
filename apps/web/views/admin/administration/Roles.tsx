@@ -67,8 +67,8 @@ export function Roles() {
         <Panel title={active} description={`${rolePresets[active].length} of ${total} permissions`}>
           <PermissionMatrix value={rolePresets[active]} disabled />
           <p className="mt-4 rounded-lg bg-canvas px-3 py-2 text-xs text-subtle">
-            Permissions are checked in this prototype to show the experience. The backend must enforce them on every
-            request.
+            The server checks these permissions on every request, so hidden pages and buttons can’t be reached another
+            way. Each admin’s own permissions are set under Admin users.
           </p>
         </Panel>
       </div>

@@ -15,6 +15,9 @@ import { Toggle } from '@/components/admin/ui/Toggle';
 import { fillTemplate } from '@/lib/utils/text';
 import { cn } from '@/lib/utils/cn';
 
+const site = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://luxichic.vercel.app').replace(/\/$/, '');
+
+/** Example values for the preview, matching what the real emails fill in. */
 const sample: Record<string, string> = {
   customer_name: 'Chioma Eze',
   order_number: 'LXC-482913',
@@ -27,8 +30,14 @@ const sample: Record<string, string> = {
   original_time: '11:00 AM',
   specialist_name: 'Specialist A',
   reason: 'Selected specialist unavailable',
-  account_link: 'https://luxichic.example/create-account?token=•••',
-  reset_link: 'https://luxichic.example/reset-password?token=•••',
+  account_link: `Create an account to follow your orders: ${site}/register`,
+  reset_link: `${site}/reset-password`,
+  delivery_state: 'Lagos',
+  name: 'Chioma Eze',
+  email: 'chioma@example.com',
+  phone: '0803 000 0000',
+  subject: 'Product question',
+  message: 'Do you have the 22 inch body wave in stock?',
   admin_name: 'LUXICHIC Admin',
   admin_email: 'demoadmin@luxichic.com',
   login_date: '3 October 2026',

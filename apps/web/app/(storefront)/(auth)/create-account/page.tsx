@@ -1,8 +1,6 @@
-import type { Metadata } from 'next';
-import { CreateAccount } from '@/views/auth/CreateAccount';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Create your account' };
-
+/** Old prototype address for "create an account after your order"; accounts are created on Register now. */
 export default function CreateAccountPage() {
-  return <CreateAccount />;
+  redirect('/register');
 }
