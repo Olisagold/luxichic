@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -59,6 +60,12 @@ export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }:
   const { admin, logout, can } = useAdminAuth();
   const router = useRouter();
   const { notifications, counts } = useAdminBadges();
+  /** Marks notifications read; says so if the server refused. */
+  const markRead = async (ids: string[] | 'all') => {
+    const res = await markNotifications(ids).catch(() => null);
+    if (!res?.ok) toast.error(res?.error ?? 'Could not mark the notifications as read. Please try again.');
+    return !!res?.ok;
+  };
   const unread = counts.unread;
   const [menu, setMenu] = useState<'none' | 'notifications' | 'profile' | 'quick'>('none');
   const close = React.useCallback(() => setMenu('none'), []);
@@ -150,8 +157,7 @@ export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }:
                   {unread > 0 && (
                     <button
                       onClick={async () => {
-                        await markNotifications('all');
-                        router.refresh();
+                        if (await markRead('all')) router.refresh();
                       }}
                       className="text-xs font-semibold text-pink-deep hover:underline"
                     >
@@ -165,8 +171,10 @@ export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }:
                       <button
                         onClick={async () => {
                           close();
-                          if (!n.read) await markNotifications([n.id]);
-                          if (n.link) router.push(n.link);
+                          if (!n.read) await markRead([n.id]);
+                          // Contact messages link to the customer's email address, not an admin page.
+                          if (n.link?.startsWith('/')) router.push(n.link);
+                          else if (n.link) window.location.href = n.link;
                           else router.refresh();
                         }}
                         className="flex w-full gap-3 border-b border-line/60 px-4 py-3 text-left last:border-0 hover:bg-canvas/60"
