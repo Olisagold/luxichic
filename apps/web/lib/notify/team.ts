@@ -11,10 +11,12 @@ import { fillTemplate } from '@/lib/utils/text';
 import type { StoreSettings } from '@/types/admin';
 
 /**
- * Tells the team about new activity: an in-app notification (topbar bell, /admin/notifications) and, for new
- * orders and appointments, a Telegram message to the team chat. Each follows its switch under Notifications and
- * Telegram. Run these after the customer's request has finished (`after()`); a failure is logged, never shown to
- * the customer.
+ * Tells the team about new activity: an in-app notification (the bell, /admin/notifications) and Telegram:
+ * - new orders go to the orders group only;
+ * - bookings go to the appointments group (new bookings and the customer's own changes), and privately to the
+ *   specialist they're for (new bookings and every change to them, including the salon's).
+ * Each follows its switch under Notifications and Telegram. Run these after the request has finished
+ * (`after()`); a failure is logged, never shown to the customer.
  */
 
 type Kind = (typeof s.notificationKind.enumValues)[number];
@@ -36,15 +38,29 @@ async function loadTeamSettings() {
   };
 }
 
-async function notify(kind: Kind, title: string, body: string, link: string) {
-  await db.insert(s.notifications).values({ kind, title, body, link });
+/** A bell notification; `specialistId` also shows an appointment one to that specialist's own login. */
+async function notify(kind: Kind, title: string, body: string, link: string, specialistId?: string | null) {
+  await db.insert(s.notifications).values({ kind, title, body, link, specialistId: specialistId ?? null });
 }
 
-async function telegram(settings: TelegramSettings, template: string, values: Record<string, string>) {
-  const chatId = settings.chatId || env.TELEGRAM_ADMIN_CHAT_ID;
+async function send(chatId: string | undefined | null, text: string, label: string) {
   if (!chatId || !env.TELEGRAM_BOT_TOKEN) return;
-  const res = await sendTelegramMessage(chatId, fillTemplate(template, values));
-  if (!res.ok) console.error('[notify] Telegram alert failed:', res.error);
+  const res = await sendTelegramMessage(chatId, text);
+  if (!res.ok) console.error(`[notify] Telegram ${label} (${chatId}) failed:`, res.error);
+}
+
+/** The appointments group (all bookings). */
+const appointmentsGroup = (tg: TelegramSettings, text: string) =>
+  send(tg.chatId || env.TELEGRAM_ADMIN_CHAT_ID, text, 'appointments group');
+
+/** A specialist's private chat, if they've connected it. */
+async function toSpecialist(tg: TelegramSettings, specialistId: string | null | undefined, text: string) {
+  if (!tg.notifySpecialists || !specialistId) return;
+  const [account] = await db
+    .select({ chatId: s.specialistAccounts.telegramChatId })
+    .from(s.specialistAccounts)
+    .where(eq(s.specialistAccounts.specialistId, specialistId));
+  await send(account?.chatId, text, 'specialist message');
 }
 
 /** Runs an alert, logging instead of throwing. */
@@ -77,16 +93,21 @@ export async function alertNewOrder(orderId: string) {
       );
     }
     if (tg.notifyOrders) {
-      await telegram(tg, tg.orderTemplate, {
-        order_number: order.orderNumber,
-        customer_name: order.customerName,
-        customer_phone: order.customerPhone,
-        products: items.map((i) => `${i.quantity} × ${i.productName}`).join('\n'),
-        total_amount: formatNaira(order.total),
-        payment_method: method,
-        delivery_state: order.shipState,
-        transaction_reference: order.transactionReference,
-      });
+      // Orders go to the orders group only, never the appointments group.
+      await send(
+        tg.ordersChatId,
+        fillTemplate(tg.orderTemplate, {
+          order_number: order.orderNumber,
+          customer_name: order.customerName,
+          customer_phone: order.customerPhone,
+          products: items.map((i) => `${i.quantity} × ${i.productName}`).join('\n'),
+          total_amount: formatNaira(order.total),
+          payment_method: method,
+          delivery_state: order.shipState,
+          transaction_reference: order.transactionReference,
+        }),
+        'orders group',
+      );
     }
 
     if (prefs.lowStock) {
@@ -131,7 +152,10 @@ async function appointmentValues(appointmentId: string) {
   };
 }
 
-/** A new booking request: notification and Telegram alert. */
+const summary = (f: NonNullable<Awaited<ReturnType<typeof appointmentValues>>>) =>
+  `${f.a.serviceName} · ${f.a.customerName} (${f.a.customerPhone})\n${f.when} · ${f.a.reference}`;
+
+/** A new booking request: notification, the appointments group, and the specialist it's for. */
 export async function alertNewAppointment(appointmentId: string) {
   await safely('new appointment', async () => {
     const found = await appointmentValues(appointmentId);
@@ -143,19 +167,31 @@ export async function alertNewAppointment(appointmentId: string) {
         `New appointment ${found.a.reference}`,
         `${found.a.customerName} · ${found.a.serviceName} · ${found.when}`,
         found.link,
+        found.a.specialistId,
       );
     }
-    if (tg.notifyAppointments) await telegram(tg, tg.appointmentTemplate, found.values);
+    if (tg.notifyAppointments) await appointmentsGroup(tg, fillTemplate(tg.appointmentTemplate, found.values));
+    await toSpecialist(
+      tg,
+      found.a.specialistId,
+      `💅 New booking for you\n${summary(found)}\n\nIt’s waiting to be confirmed.`,
+    );
   });
 }
 
-/** The customer cancelled or moved their appointment online. */
-export async function alertAppointmentChanged(appointmentId: string, change: 'cancelled' | 'rescheduled') {
+/**
+ * The customer cancelled or moved their appointment online. `previousSpecialistId` is who had it before a move
+ * (the booking may have gone to someone else who's free then).
+ */
+export async function alertAppointmentChanged(
+  appointmentId: string,
+  change: 'cancelled' | 'rescheduled',
+  previousSpecialistId?: string | null,
+) {
   await safely(`appointment ${change}`, async () => {
     const found = await appointmentValues(appointmentId);
     if (!found) return;
     const { prefs, telegram: tg } = await loadTeamSettings();
-    if (!prefs.newAppointment) return;
     const title =
       change === 'cancelled'
         ? `Appointment cancelled ${found.a.reference}`
@@ -164,9 +200,60 @@ export async function alertAppointmentChanged(appointmentId: string, change: 'ca
       change === 'cancelled'
         ? `${found.a.customerName} cancelled ${found.a.serviceName}.`
         : `${found.a.customerName} moved ${found.a.serviceName} to ${found.when}. Confirm the new time.`;
-    await notify('appointment', title, body, found.link);
-    if (tg.notifyAppointments) await telegram(tg, `📅 ${title}\n${body}`, {});
+    if (prefs.newAppointment) await notify('appointment', title, body, found.link, found.a.specialistId);
+    if (tg.notifyAppointments) await appointmentsGroup(tg, `📅 ${title}\n${body}`);
+    await tellSpecialists(
+      tg,
+      found,
+      change === 'cancelled' ? 'cancelled' : 'rescheduled',
+      previousSpecialistId,
+      'the customer',
+    );
   });
+}
+
+export type SalonChange = 'confirmed' | 'rejected' | 'cancelled' | 'rescheduled';
+
+/** The salon changed a booking in the admin: the specialist(s) it concerns hear about it privately. */
+export async function alertAppointmentUpdated(
+  appointmentId: string,
+  change: SalonChange,
+  previousSpecialistId?: string | null,
+) {
+  await safely(`appointment ${change} (salon)`, async () => {
+    const found = await appointmentValues(appointmentId);
+    if (!found) return;
+    const { telegram: tg } = await loadTeamSettings();
+    await tellSpecialists(tg, found, change, previousSpecialistId, 'the salon');
+  });
+}
+
+/** Private messages for a change: the specialist who has it now, and the one it was moved away from. */
+async function tellSpecialists(
+  tg: TelegramSettings,
+  found: NonNullable<Awaited<ReturnType<typeof appointmentValues>>>,
+  change: SalonChange,
+  previousSpecialistId: string | null | undefined,
+  by: string,
+) {
+  const now = found.a.specialistId;
+  const reason = found.a.reason ? `\nReason: ${found.a.reason}` : '';
+  if (previousSpecialistId && now !== previousSpecialistId) {
+    await toSpecialist(
+      tg,
+      previousSpecialistId,
+      `↪️ ${found.a.reference} (${found.a.serviceName} · ${found.a.customerName}) was moved to ${found.a.specialistName ?? 'another specialist'} by ${by}. It’s no longer in your diary.`,
+    );
+    await toSpecialist(tg, now, `💅 Booking moved to you\n${summary(found)}`);
+    return;
+  }
+  const text = {
+    confirmed: `✅ Confirmed\n${summary(found)}`,
+    rejected: `❌ Not accepted by ${by}\n${summary(found)}${reason}`,
+    cancelled: `❌ Cancelled by ${by}\n${summary(found)}${reason}`,
+    rescheduled: `📅 Moved by ${by}, now:\n${summary(found)}`,
+  }[change];
+  await toSpecialist(tg, now, text);
 }
 
 /** A new or edited product review. */

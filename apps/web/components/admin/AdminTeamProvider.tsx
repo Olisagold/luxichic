@@ -7,6 +7,8 @@ export interface AdminTeam {
   admins: AdminUser[];
   /** The latest entries in the activity log (activity page only). */
   activity: ActivityEntry[];
+  /** Specialist profiles a login can be linked to (Admin users). */
+  specialists: { id: string; name: string; title: string }[];
 }
 
 const AdminTeamContext = createContext<AdminTeam | null>(null);

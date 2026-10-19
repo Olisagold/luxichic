@@ -1,9 +1,9 @@
 import 'server-only';
-import { asc, desc, eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { ensureEmailTemplates } from '@/lib/email/send';
 import * as s from '@/db/schema';
-import type { AdminNotification, EmailTemplate, StoreSettings } from '@/types/admin';
+import type { EmailTemplate, StoreSettings } from '@/types/admin';
 
 /**
  * Store settings as the admin edits them, read from the `settings` rows (one JSON value per key), the delivery
@@ -18,23 +18,40 @@ export interface EmailSender {
 }
 
 export interface TelegramSettings {
-  /** The team chat that receives alerts; falls back to TELEGRAM_ADMIN_CHAT_ID. */
+  /** The appointments group (all bookings); falls back to TELEGRAM_ADMIN_CHAT_ID. */
   chatId: string;
+  /** Its name in Telegram, saved when it's connected with a link. */
+  chatTitle: string;
+  /** The orders group (new orders only). No fallback: orders never go to the appointments group. */
+  ordersChatId: string;
+  ordersChatTitle: string;
   notifyOrders: boolean;
   notifyAppointments: boolean;
+  /** Private messages to each specialist about their own bookings (they connect from Admin → Telegram). */
+  notifySpecialists: boolean;
   orderTemplate: string;
   appointmentTemplate: string;
 }
 
 export const DEFAULT_TELEGRAM: TelegramSettings = {
   chatId: '',
+  chatTitle: '',
+  ordersChatId: '',
+  ordersChatTitle: '',
   notifyOrders: true,
   notifyAppointments: true,
+  notifySpecialists: true,
   orderTemplate:
     '🛍 New order {{order_number}}\n{{customer_name}} · {{customer_phone}}\n{{products}}\nTotal: {{total_amount}} ({{payment_method}})\nDeliver to: {{delivery_state}}\nRef: {{transaction_reference}}',
   appointmentTemplate:
     '💅 New appointment {{appointment_reference}}\n{{customer_name}} · {{customer_phone}}\n{{service_name}} with {{specialist_name}}\n{{appointment_date}} at {{appointment_time}}',
 };
+
+/** Telegram settings with defaults for anything not saved yet. */
+export async function loadTelegramSettings(): Promise<TelegramSettings> {
+  const [row] = await db.select({ value: s.settings.value }).from(s.settings).where(eq(s.settings.key, 'telegram'));
+  return { ...DEFAULT_TELEGRAM, ...((row?.value ?? {}) as Partial<TelegramSettings>) };
+}
 
 const value = <T>(rows: { key: string; value: unknown }[], key: string): T | undefined =>
   rows.find((r) => r.key === key)?.value as T | undefined;
@@ -155,18 +172,5 @@ export async function loadEmailTemplates(): Promise<EmailTemplate[]> {
     body: t.body,
     variables: t.variables,
     enabled: t.enabled,
-  }));
-}
-
-export async function loadNotifications(limit = 200): Promise<AdminNotification[]> {
-  const rows = await db.select().from(s.notifications).orderBy(desc(s.notifications.createdAt)).limit(limit);
-  return rows.map((n) => ({
-    id: n.id,
-    kind: n.kind,
-    title: n.title,
-    body: n.body,
-    at: n.createdAt.toISOString(),
-    read: !!n.readAt,
-    link: n.link ?? undefined,
   }));
 }

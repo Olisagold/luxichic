@@ -2,12 +2,13 @@ import 'server-only';
 import { format, parseISO } from 'date-fns';
 import { sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db';
-import { getAdmin, hasPermission } from '@/lib/auth/session';
+import { bookingScope, getAdmin, hasPermission } from '@/lib/auth/session';
+import { notificationsFor, unreadCountFor } from '@/lib/notifications/for-admin';
 import { addDays } from '@/lib/salon/availability';
 import { lagosNow } from '@/lib/salon/schedule';
 import { formatNaira } from '@/lib/utils/currency';
 import { pctChange, rangeOptions, type RangeKey } from '@/lib/utils/adminAnalytics';
-import { loadNotifications } from '@/lib/settings/store';
+import type { AdminUser } from '@/types/admin';
 import type { AdminBadges } from '@/components/admin/AdminBadgesProvider';
 import type {
   AnalyticsData,
@@ -289,23 +290,24 @@ export async function analyticsFor(period: Period): Promise<AnalyticsData | null
   };
 }
 
-/** Sidebar badge counts and the topbar's latest notifications, read by the admin layout on each page load. */
-export async function loadBadges(): Promise<AdminBadges> {
+/** Sidebar badge counts and the topbar's latest notifications for this admin, read by the admin layout. */
+export async function loadBadges(admin: AdminUser): Promise<AdminBadges> {
+  const scope = bookingScope(admin);
   const [c] = await db.execute<Record<string, number>>(sql`
     select (select count(*) from orders where status = 'pending')::int as pending_orders,
-           (select count(*) from appointments where status = 'pending')::int as pending_appointments,
+           (select count(*) from appointments where status = 'pending'
+              and (${scope}::uuid is null or specialist_id = ${scope}::uuid))::int as pending_appointments,
            (select count(*) from products pr join inventory inv on inv.product_id = pr.id
              where pr.status <> 'archived' and inv.track_inventory and inv.stock <= inv.low_stock_threshold)::int as low_stock,
-           (select count(*) from notifications where read_at is null)::int as unread,
            (select count(*) from reviews where status = 'hidden')::int as hidden_reviews`);
   return {
     counts: {
       pendingOrders: n(c?.pending_orders),
       pendingAppointments: n(c?.pending_appointments),
       lowStock: n(c?.low_stock),
-      unread: n(c?.unread),
+      unread: await unreadCountFor(admin),
       hiddenReviews: n(c?.hidden_reviews),
     },
-    notifications: await loadNotifications(8),
+    notifications: await notificationsFor(admin, 8),
   };
 }

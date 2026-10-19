@@ -73,6 +73,7 @@ export type AdminRole =
   | 'Order Manager'
   | 'Product Manager'
   | 'Salon Manager'
+  | 'Specialist'
   | 'Content Manager'
   | 'Customer Support'
   | 'Custom';
@@ -88,6 +89,9 @@ export interface AdminUser {
   permissions: Permission[];
   createdAt: string;
   lastLoginAt?: string;
+  /** The specialist profile this login belongs to (a stylist's own admin account). */
+  specialistId?: string;
+  specialistName?: string;
 }
 
 export interface LoginEntry {

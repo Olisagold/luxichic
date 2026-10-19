@@ -22,6 +22,8 @@ import type { Result } from '@/types/user';
 
 const LINK = '/admin/admin-users';
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 type Draft = {
   fullName: string;
   email: string;
@@ -29,6 +31,8 @@ type Draft = {
   role: AdminUser['role'];
   status: AdminUser['status'];
   permissions: Permission[];
+  /** The specialist profile this login belongs to; they then see only that specialist's bookings. */
+  specialistId?: string | null;
 };
 
 async function target(id: string) {
@@ -59,7 +63,26 @@ async function checkDraft(me: AdminUser, d: Draft) {
   if (permissions.includes('admins.manage') && !me.isOwner) {
     throw new ActionError('Only the owner can let another admin manage admin users.');
   }
-  return { fullName, email, username, roleId: role?.id ?? null, status: d.status, permissions };
+  const specialistId = d?.specialistId ? String(d.specialistId) : null;
+  if (specialistId) {
+    if (!isUuid(specialistId)) throw new ActionError('Specialist not found.');
+    const [sp] = await db
+      .select({ id: s.specialists.id })
+      .from(s.specialists)
+      .where(eq(s.specialists.id, specialistId));
+    if (!sp) throw new ActionError('Specialist not found.');
+  }
+  return { fullName, email, username, roleId: role?.id ?? null, status: d.status, permissions, specialistId };
+}
+
+/** Links the login to one specialist profile (or none). A profile has one login; linking moves it here. */
+async function linkSpecialist(tx: Tx, adminId: string, specialistId: string | null) {
+  await tx.update(s.specialistAccounts).set({ adminId: null }).where(eq(s.specialistAccounts.adminId, adminId));
+  if (!specialistId) return;
+  await tx
+    .insert(s.specialistAccounts)
+    .values({ specialistId, adminId })
+    .onConflictDoUpdate({ target: s.specialistAccounts.specialistId, set: { adminId } });
 }
 
 const authError = (message: string | undefined, fallback: string) =>
@@ -102,6 +125,7 @@ export async function createAdmin(data: Draft & { password: string }): Promise<R
             .insert(s.adminPermissions)
             .values(d.permissions.map((permissionKey) => ({ adminId: id, permissionKey })));
         }
+        await linkSpecialist(tx, id, d.specialistId);
         await audit(tx, me, {
           section: 'Admin Users',
           action: 'Created sub-admin',
@@ -156,6 +180,7 @@ export async function updateAdmin(id: string, data: Draft): Promise<Result> {
           .insert(s.adminPermissions)
           .values(d.permissions.map((permissionKey) => ({ adminId: row.id, permissionKey })));
       }
+      await linkSpecialist(tx, row.id, d.specialistId);
       await audit(tx, me, {
         section: 'Admin Users',
         action: permsChanged

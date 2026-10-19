@@ -2,7 +2,7 @@
 
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { getAdmin, hasPermission } from '@/lib/auth/session';
+import { bookingScope, getAdmin, hasPermission } from '@/lib/auth/session';
 import { formatNaira } from '@/lib/utils/currency';
 
 export interface AdminSearchHit {
@@ -89,6 +89,8 @@ export async function adminSearch(query: string): Promise<AdminSearchHit[]> {
     }
   }
   if (can('appointments.view')) {
+    // A specialist's own login finds only their own bookings.
+    const scope = bookingScope(admin);
     const rows = await db.execute<{
       reference: string;
       service: string;
@@ -100,8 +102,9 @@ export async function adminSearch(query: string): Promise<AdminSearchHit[]> {
       select reference, service_name as service, customer_name as name, date::text, to_char(time, 'HH24:MI') as time,
              status::text
       from appointments
-      where reference ilike ${like} or customer_name ilike ${like} or customer_email ilike ${like}
-         or customer_phone ilike ${like} or service_name ilike ${like}
+      where (reference ilike ${like} or customer_name ilike ${like} or customer_email ilike ${like}
+             or customer_phone ilike ${like} or service_name ilike ${like})
+        and (${scope}::uuid is null or specialist_id = ${scope}::uuid)
       order by date desc, time desc limit 5`);
     for (const a of rows) {
       hits.push({

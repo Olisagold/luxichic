@@ -248,7 +248,7 @@ export async function rescheduleAppointment(
         });
       });
       after(async () => {
-        await alertAppointmentChanged(appt.id, 'rescheduled');
+        await alertAppointmentChanged(appt.id, 'rescheduled', appt.personnelId);
         // Back to a request: the same email as a new booking, with the new time.
         await emailAppointment(appt.id, 'booked');
       });

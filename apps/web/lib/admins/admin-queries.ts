@@ -9,12 +9,19 @@ import type { ActivityEntry, ActivitySection, AdminRole, AdminUser, Permission }
 /** Every admin with their role and permissions, owner first. */
 export async function listAdmins(): Promise<AdminUser[]> {
   const rows = await db
-    .select({ a: s.admins, roleName: s.roles.name })
+    .select({
+      a: s.admins,
+      roleName: s.roles.name,
+      specialistId: s.specialistAccounts.specialistId,
+      specialistName: s.specialists.name,
+    })
     .from(s.admins)
     .leftJoin(s.roles, eq(s.roles.id, s.admins.roleId))
+    .leftJoin(s.specialistAccounts, eq(s.specialistAccounts.adminId, s.admins.id))
+    .leftJoin(s.specialists, eq(s.specialists.id, s.specialistAccounts.specialistId))
     .orderBy(desc(s.admins.isOwner), asc(s.admins.createdAt));
   const perms = await db.select().from(s.adminPermissions);
-  return rows.map(({ a, roleName }) => ({
+  return rows.map(({ a, roleName, specialistId, specialistName }) => ({
     id: a.id,
     fullName: a.fullName,
     email: a.email,
@@ -25,7 +32,23 @@ export async function listAdmins(): Promise<AdminUser[]> {
     permissions: perms.filter((p) => p.adminId === a.id).map((p) => p.permissionKey as Permission),
     createdAt: a.createdAt.toISOString(),
     lastLoginAt: a.lastLoginAt?.toISOString(),
+    specialistId: specialistId ?? undefined,
+    specialistName: specialistName ?? undefined,
   }));
+}
+
+/** Specialists an admin login can be linked to (not archived). */
+async function linkableSpecialists() {
+  const rows = await db
+    .select({
+      id: s.specialists.id,
+      name: s.specialists.name,
+      title: s.specialists.title,
+      status: s.specialists.status,
+    })
+    .from(s.specialists)
+    .orderBy(asc(s.specialists.name));
+  return rows.filter((r) => r.status !== 'archived').map(({ id, name, title }) => ({ id, name, title }));
 }
 
 /** The latest activity-log entries, newest first. */
@@ -50,5 +73,9 @@ async function recentActivity(limit = 2000): Promise<ActivityEntry[]> {
 export async function teamFor(permission: Permission, options: { activity?: boolean } = {}): Promise<AdminTeam | null> {
   const admin = await getAdmin();
   if (!admin || !hasPermission(admin, permission)) return null;
-  return { admins: await listAdmins(), activity: options.activity ? await recentActivity() : [] };
+  return {
+    admins: await listAdmins(),
+    activity: options.activity ? await recentActivity() : [],
+    specialists: await linkableSpecialists(),
+  };
 }

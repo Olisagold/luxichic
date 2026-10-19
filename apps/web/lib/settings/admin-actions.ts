@@ -1,6 +1,6 @@
 'use server';
 
-import { eq, inArray, isNull, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { socialPlatforms } from '@/data/socialLinks';
 import { db } from '@/db';
@@ -8,9 +8,11 @@ import * as s from '@/db/schema';
 import { ActionError, adminAction, audit } from '@/lib/auth/admin-action';
 import { requirePermission } from '@/lib/auth/session';
 import { env } from '@/lib/env';
-import { loadSettingsRows, DEFAULT_TELEGRAM, type TelegramSettings } from '@/lib/settings/store';
+import { markReadFor } from '@/lib/notifications/for-admin';
+import { loadTelegramSettings, type TelegramSettings } from '@/lib/settings/store';
 import { STOREFRONT_TAG } from '@/lib/storefront/data';
-import { sendTelegramMessage } from '@/lib/telegram/client';
+import { botInfo, sendTelegramMessage } from '@/lib/telegram/client';
+import { newGroupToken, newSpecialistToken, type GroupKind } from '@/lib/telegram/connect';
 import { fillTemplate } from '@/lib/utils/text';
 import { isUuid, isValidEmail } from '@/lib/utils/validation';
 import type { AdminUser, SocialLink, StoreSettings } from '@/types/admin';
@@ -309,19 +311,17 @@ export async function saveEmailTemplate(t: {
 /* Notifications                                                       */
 /* ------------------------------------------------------------------ */
 
-/** Marks in-app notifications read (or unread) for the team. Any signed-in admin. */
+/** Marks this admin's notifications read (or unread). Any signed-in admin; others' bells aren't affected. */
 export async function markNotifications(ids: string[] | 'all', read = true): Promise<Result> {
+  let admin: AdminUser;
   try {
-    await requirePermission();
+    admin = await requirePermission();
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
-  const list = ids === 'all' ? null : (Array.isArray(ids) ? ids : []).filter(isUuid).slice(0, 500);
-  if (list && !list.length) return { ok: true };
-  await db
-    .update(s.notifications)
-    .set({ readAt: read ? new Date() : null })
-    .where(list ? inArray(s.notifications.id, list) : read ? isNull(s.notifications.readAt) : undefined);
+  const list = ids === 'all' ? 'all' : (Array.isArray(ids) ? ids : []).filter(isUuid).slice(0, 500);
+  if (list !== 'all' && !list.length) return { ok: true };
+  await markReadFor(admin, list, !!read);
   return { ok: true };
 }
 
@@ -350,25 +350,37 @@ export async function saveNotificationPrefs(prefs: StoreSettings['notifications'
 /* Telegram team alerts (sent from Phase 9)                            */
 /* ------------------------------------------------------------------ */
 
+const chatIdField = z
+  .string()
+  .trim()
+  .regex(/^(-?\d{1,20}|@[A-Za-z0-9_]{5,32})?$/, 'A chat ID is a number (groups start with -) or @channelname.');
+
 const telegramSchema = z.object({
-  chatId: z
-    .string()
-    .trim()
-    .regex(/^(-?\d{1,20}|@[A-Za-z0-9_]{5,32})?$/, 'A chat ID is a number (groups start with -) or @channelname.'),
+  chatId: chatIdField,
+  ordersChatId: chatIdField,
   notifyOrders: z.boolean(),
   notifyAppointments: z.boolean(),
+  notifySpecialists: z.boolean(),
   orderTemplate: z.string().trim().min(1, 'Write the new-order message.').max(3000),
   appointmentTemplate: z.string().trim().min(1, 'Write the new-appointment message.').max(3000),
 });
 
-/** The team chat, which alerts to send and their messages. The bot token is never stored. */
+/** The two groups, which alerts to send and their messages. The bot token is never stored. */
 export async function saveTelegram(value: TelegramSettings): Promise<Result> {
   return adminAction('settings.general', async (admin) => {
     const parsed = telegramSchema.safeParse(value);
     if (!parsed.success)
       throw new ActionError(parsed.error.issues[0]?.message ?? 'Please check the Telegram settings.');
+    const saved = await loadTelegramSettings();
+    const d = parsed.data;
+    // A group's name is only known for a chat connected with a link; typing a different ID forgets it.
+    const next: TelegramSettings = {
+      ...d,
+      chatTitle: d.chatId === saved.chatId ? saved.chatTitle : '',
+      ordersChatTitle: d.ordersChatId === saved.ordersChatId ? saved.ordersChatTitle : '',
+    };
     await db.transaction(async (tx) => {
-      await writeSetting(tx, 'telegram', parsed.data, admin);
+      await writeSetting(tx, 'telegram', next, admin);
       await audit(tx, admin, { section: 'Settings', action: 'Updated Telegram alerts' });
     });
     return { ok: true };
@@ -386,22 +398,112 @@ const SAMPLE = {
   transaction_reference: '58310472',
 };
 
-/** Sends a test new-order alert to the saved chat (or TELEGRAM_ADMIN_CHAT_ID). */
-export async function sendTelegramTest(): Promise<Result> {
+const SAMPLE_APPOINTMENT = {
+  appointment_reference: 'APT-482913',
+  customer_name: 'Test Customer',
+  customer_phone: '0803 000 0000',
+  service_name: 'Manicure',
+  specialist_name: 'Specialist A',
+  appointment_date: '18 Oct 2026',
+  appointment_time: '10:00 AM',
+};
+
+export type TelegramTarget = 'appointments' | 'orders' | { specialistId: string };
+
+/** Sends a test message to a group or a specialist's private chat. */
+export async function sendTelegramTest(target: TelegramTarget = 'appointments'): Promise<Result> {
   return adminAction('settings.general', async (admin) => {
-    const rows = await loadSettingsRows();
-    const saved = {
-      ...DEFAULT_TELEGRAM,
-      ...((rows.find((r) => r.key === 'telegram')?.value ?? {}) as Partial<TelegramSettings>),
-    };
-    const chatId = saved.chatId || env.TELEGRAM_ADMIN_CHAT_ID;
-    if (!chatId) throw new ActionError('Save the alert chat ID first.');
-    const res = await sendTelegramMessage(
-      chatId,
-      `✅ Test from LUXICHIC admin\n\n${fillTemplate(saved.orderTemplate, SAMPLE)}`,
-    );
+    const tg = await loadTelegramSettings();
+    let chatId: string | null | undefined;
+    let text: string;
+    let label: string;
+    if (target === 'orders') {
+      chatId = tg.ordersChatId;
+      text = `✅ Test from LUXICHIC admin: new orders will look like this.\n\n${fillTemplate(tg.orderTemplate, SAMPLE)}`;
+      label = 'orders group';
+    } else if (target === 'appointments') {
+      chatId = tg.chatId || env.TELEGRAM_ADMIN_CHAT_ID;
+      text = `✅ Test from LUXICHIC admin: new bookings will look like this.\n\n${fillTemplate(tg.appointmentTemplate, SAMPLE_APPOINTMENT)}`;
+      label = 'appointments group';
+    } else {
+      if (!isUuid(target?.specialistId)) throw new ActionError('Specialist not found.');
+      const [row] = await db
+        .select({ chatId: s.specialistAccounts.telegramChatId, name: s.specialists.name })
+        .from(s.specialists)
+        .leftJoin(s.specialistAccounts, eq(s.specialistAccounts.specialistId, s.specialists.id))
+        .where(eq(s.specialists.id, target.specialistId));
+      if (!row) throw new ActionError('Specialist not found.');
+      chatId = row.chatId;
+      text = `✅ Test from LUXICHIC admin, ${row.name}: your booking alerts will arrive here.`;
+      label = row.name;
+    }
+    if (!chatId) throw new ActionError(`Connect the ${label} first.`);
+    const res = await sendTelegramMessage(chatId, text);
     if (!res.ok) throw new ActionError(res.error);
-    await audit(db, admin, { section: 'Settings', action: 'Sent Telegram test message' });
+    await audit(db, admin, { section: 'Settings', action: 'Sent Telegram test message', target: label });
+    return { ok: true };
+  });
+}
+
+/** The bot's username, for t.me links. */
+async function botUsername() {
+  const info = await botInfo();
+  if (!info.ok) throw new ActionError(info.error);
+  return info.username;
+}
+
+/** A link that adds the bot to a group and makes it the appointments or orders group (valid 7 days). */
+export async function createTelegramGroupLink(kind: GroupKind): Promise<Result & { link?: string }> {
+  return adminAction('settings.general', async (admin) => {
+    if (kind !== 'appointments' && kind !== 'orders') throw new ActionError('Choose a group.');
+    const bot = await botUsername();
+    const token = await newGroupToken(kind);
+    await audit(db, admin, { section: 'Settings', action: `Created Telegram link for the ${kind} group` });
+    return { ok: true, link: `https://t.me/${bot}?startgroup=${token}` };
+  });
+}
+
+/** Forgets a group, so its alerts stop. */
+export async function disconnectTelegramGroup(kind: GroupKind): Promise<Result> {
+  return adminAction('settings.general', async (admin) => {
+    const tg = await loadTelegramSettings();
+    const next =
+      kind === 'orders' ? { ...tg, ordersChatId: '', ordersChatTitle: '' } : { ...tg, chatId: '', chatTitle: '' };
+    await db.transaction(async (tx) => {
+      await writeSetting(tx, 'telegram', next, admin);
+      await audit(tx, admin, { section: 'Settings', action: `Disconnected the Telegram ${kind} group` });
+    });
+    return { ok: true };
+  });
+}
+
+/** A personal link for a specialist to connect their Telegram (valid 7 days, single use). */
+export async function createSpecialistTelegramLink(specialistId: string): Promise<Result & { link?: string }> {
+  return adminAction('settings.general', async (admin) => {
+    if (!isUuid(specialistId)) throw new ActionError('Specialist not found.');
+    const [sp] = await db
+      .select({ name: s.specialists.name })
+      .from(s.specialists)
+      .where(eq(s.specialists.id, specialistId));
+    if (!sp) throw new ActionError('Specialist not found.');
+    const bot = await botUsername();
+    const token = await newSpecialistToken(specialistId);
+    await audit(db, admin, { section: 'Settings', action: 'Created Telegram link for a specialist', target: sp.name });
+    return { ok: true, link: `https://t.me/${bot}?start=${token}` };
+  });
+}
+
+/** Stops a specialist's private alerts (they can connect again with a new link). */
+export async function disconnectSpecialistTelegram(specialistId: string): Promise<Result> {
+  return adminAction('settings.general', async (admin) => {
+    if (!isUuid(specialistId)) throw new ActionError('Specialist not found.');
+    const [row] = await db
+      .update(s.specialistAccounts)
+      .set({ telegramChatId: null, telegramName: null, telegramConnectedAt: null, telegramToken: null })
+      .where(eq(s.specialistAccounts.specialistId, specialistId))
+      .returning({ id: s.specialistAccounts.specialistId });
+    if (!row) throw new ActionError('This specialist isn’t connected.');
+    await audit(db, admin, { section: 'Settings', action: 'Disconnected a specialist’s Telegram' });
     return { ok: true };
   });
 }

@@ -4,7 +4,7 @@ import { connection } from 'next/server';
 import { asc, desc, eq } from 'drizzle-orm';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { db } from '@/db';
-import { addresses, adminPermissions, admins, profiles, roles } from '@/db/schema';
+import { addresses, adminPermissions, admins, profiles, roles, specialistAccounts, specialists } from '@/db/schema';
 import { authReady } from '@/lib/auth/helpers';
 import { createClient } from '@/lib/supabase/server';
 import type { AdminRole, AdminUser, Permission } from '@/types/admin';
@@ -65,9 +65,16 @@ export const getAdmin = cache(async (): Promise<AdminUser | null> => {
   const authUser = await getAuthUser();
   if (!authUser) return null;
   const [row] = await db
-    .select({ admin: admins, roleName: roles.name })
+    .select({
+      admin: admins,
+      roleName: roles.name,
+      specialistId: specialistAccounts.specialistId,
+      specialistName: specialists.name,
+    })
     .from(admins)
     .leftJoin(roles, eq(roles.id, admins.roleId))
+    .leftJoin(specialistAccounts, eq(specialistAccounts.adminId, admins.id))
+    .leftJoin(specialists, eq(specialists.id, specialistAccounts.specialistId))
     .where(eq(admins.id, authUser.id));
   if (!row || row.admin.status !== 'active') return null;
   const perms = await db
@@ -86,8 +93,20 @@ export const getAdmin = cache(async (): Promise<AdminUser | null> => {
     permissions: perms.map((p) => p.key as Permission),
     createdAt: a.createdAt.toISOString(),
     lastLoginAt: a.lastLoginAt?.toISOString(),
+    specialistId: row.specialistId ?? undefined,
+    specialistName: row.specialistName ?? undefined,
   };
 });
+
+/**
+ * The specialist whose bookings this admin is limited to, or null for everything. An admin whose login is linked
+ * to a specialist profile sees and manages only that specialist's bookings, unless they're the owner or a Super
+ * Admin.
+ */
+export function bookingScope(admin: AdminUser): string | null {
+  if (!admin.specialistId || admin.isOwner || admin.role === 'Super Admin') return null;
+  return admin.specialistId;
+}
 
 export function hasPermission(admin: AdminUser, permission: Permission): boolean {
   return admin.isOwner || admin.permissions.includes(permission);

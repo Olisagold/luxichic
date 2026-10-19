@@ -1,12 +1,13 @@
 import 'server-only';
-import { desc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { getAdmin, hasPermission } from '@/lib/auth/session';
 import { env } from '@/lib/env';
-import { loadEmailTemplates, loadNotifications, loadStoreSettings } from '@/lib/settings/store';
+import { notificationsFor } from '@/lib/notifications/for-admin';
+import { loadEmailTemplates, loadStoreSettings } from '@/lib/settings/store';
 import { botInfo, telegramConfigured } from '@/lib/telegram/client';
-import type { AdminSettings } from '@/components/admin/AdminSettingsProvider';
+import type { AdminSettings, TelegramSpecialist } from '@/components/admin/AdminSettingsProvider';
 import type { AdminUser, LoginEntry, Permission } from '@/types/admin';
 
 /**
@@ -34,8 +35,13 @@ export async function settingsFor(
     email,
     resendConfigured: !!env.RESEND_API_KEY,
     templates: await loadEmailTemplates(),
-    notifications: await loadNotifications(),
-    telegram: { ...telegram, status, envChatId: !!env.TELEGRAM_ADMIN_CHAT_ID },
+    notifications: await notificationsFor(admin),
+    telegram: {
+      ...telegram,
+      status,
+      envChatId: !!env.TELEGRAM_ADMIN_CHAT_ID,
+      specialists: options.telegram ? await telegramSpecialists() : [],
+    },
     logins: options.logins ? await recentLogins(admin) : [],
   };
 }
@@ -60,4 +66,27 @@ async function recentLogins(admin: AdminUser): Promise<LoginEntry[]> {
     device: l.device ?? 'unknown device',
     location: l.location ?? 'Unknown location',
   }));
+}
+
+/** Specialists (not archived) with their Telegram connection and linked admin login. */
+async function telegramSpecialists(): Promise<TelegramSpecialist[]> {
+  const rows = await db
+    .select({ sp: s.specialists, acc: s.specialistAccounts, adminName: s.admins.fullName })
+    .from(s.specialists)
+    .leftJoin(s.specialistAccounts, eq(s.specialistAccounts.specialistId, s.specialists.id))
+    .leftJoin(s.admins, eq(s.admins.id, s.specialistAccounts.adminId))
+    .orderBy(asc(s.specialists.name));
+  return rows
+    .filter((r) => r.sp.status !== 'archived')
+    .map(({ sp, acc, adminName }) => ({
+      id: sp.id,
+      name: sp.name,
+      title: sp.title,
+      status: sp.status,
+      telegram:
+        acc?.telegramChatId && acc.telegramConnectedAt
+          ? { name: acc.telegramName ?? 'Telegram', connectedAt: acc.telegramConnectedAt.toISOString() }
+          : null,
+      adminName: adminName ?? null,
+    }));
 }

@@ -6,8 +6,9 @@ import { z } from 'zod';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { ActionError, adminAction, audit } from '@/lib/auth/admin-action';
-import { getAdmin, hasPermission } from '@/lib/auth/session';
+import { bookingScope, getAdmin, hasPermission } from '@/lib/auth/session';
 import { emailAppointment, type AppointmentEmail } from '@/lib/email/customer';
+import { alertAppointmentUpdated, type SalonChange } from '@/lib/notify/team';
 import { computeAvailability, freeSpecialists, toMinutes, type Slot } from '@/lib/salon/availability';
 import { ACTIVE_STATUSES, loadSchedule } from '@/lib/salon/schedule';
 import { STOREFRONT_TAG } from '@/lib/storefront/data';
@@ -38,6 +39,12 @@ const pgCode = (e: unknown): string | undefined => {
 /* ------------------------------------------------------------------ */
 /* Appointments                                                        */
 /* ------------------------------------------------------------------ */
+
+/** A specialist's own login may only act on their own bookings. */
+function checkScope(admin: AdminUser, appointment: { specialistId: string | null }) {
+  const scope = bookingScope(admin);
+  if (scope && appointment.specialistId !== scope) throw new ActionError('Appointment not found.');
+}
 
 async function lockAppointment(tx: Tx, reference: string) {
   if (typeof reference !== 'string' || reference.length > 20) throw new ActionError('Appointment not found.');
@@ -80,6 +87,7 @@ async function decide(
     if (why !== undefined && why.length < 3) throw new ActionError('Please give a reason.');
     const id = await db.transaction(async (tx) => {
       const a = await lockAppointment(tx, reference);
+      checkScope(admin, a);
       if (!from.includes(a.status)) throw new ActionError(`This appointment is ${a.status} and can’t be ${to} now.`);
       await tx
         .update(s.appointments)
@@ -90,7 +98,10 @@ async function decide(
       return a.id;
     });
     const email = EMAILED[to];
-    if (email) after(() => emailAppointment(id, email));
+    after(async () => {
+      if (email) await emailAppointment(id, email);
+      if (to !== 'completed') await alertAppointmentUpdated(id, to as SalonChange);
+    });
     return { ok: true };
   });
 }
@@ -120,11 +131,14 @@ export async function adminRescheduleSlots(
   const admin = await getAdmin();
   if (!admin || !hasPermission(admin, 'appointments.reschedule') || !DATE.test(String(date))) return [];
   const [a] = await db
-    .select({ id: s.appointments.id, serviceSlug: s.services.slug })
+    .select({ id: s.appointments.id, serviceSlug: s.services.slug, specialistId: s.appointments.specialistId })
     .from(s.appointments)
     .leftJoin(s.services, eq(s.services.id, s.appointments.serviceId))
     .where(sql`upper(${s.appointments.reference}) = upper(${String(reference).trim()})`);
   if (!a?.serviceSlug) return [];
+  const scope = bookingScope(admin);
+  if (scope && a.specialistId !== scope) return [];
+  if (scope) specialistId = scope;
   const schedule = await loadSchedule(a.serviceSlug, a.id);
   if (!schedule) return [];
   return computeAvailability(schedule.input, isUuid(specialistId) ? specialistId : null).slots[date] ?? [];
@@ -146,10 +160,16 @@ export async function rescheduleAppointment(
       throw new ActionError('Choose a date and time.');
     if (reason.length < 3) throw new ActionError('Please give a reason.');
     let id = '';
+    let previousSpecialistId: string | null = null;
     try {
       await db.transaction(async (tx) => {
         const a = await lockAppointment(tx, reference);
+        checkScope(admin, a);
         id = a.id;
+        previousSpecialistId = a.specialistId;
+        // A specialist moves their own bookings within their own diary.
+        const scope = bookingScope(admin);
+        if (scope) next = { ...next, specialistId: scope };
         if (!(ACTIVE_STATUSES as readonly string[]).includes(a.status)) {
           throw new ActionError(`This appointment is ${a.status} and can’t be moved.`);
         }
@@ -198,7 +218,10 @@ export async function rescheduleAppointment(
       if (pgCode(e) === DOUBLE_BOOKED) throw new ActionError('That specialist is already booked at that time.');
       throw e;
     }
-    after(() => emailAppointment(id, 'rescheduled'));
+    after(async () => {
+      await emailAppointment(id, 'rescheduled');
+      await alertAppointmentUpdated(id, 'rescheduled', previousSpecialistId);
+    });
     return { ok: true };
   });
 }

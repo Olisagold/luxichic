@@ -13,6 +13,8 @@ export interface AdminSalon {
   blocks: AvailabilityBlock[];
   /** The business WhatsApp number (Settings → Business), the default for a new service. */
   whatsapp: string;
+  /** Set for a specialist's own login: the only specialist whose bookings they see and manage. */
+  scope: string | null;
 }
 
 const AdminSalonContext = createContext<AdminSalon | null>(null);

@@ -25,6 +25,7 @@ const roles: AdminUser['role'][] = [
   'Order Manager',
   'Product Manager',
   'Salon Manager',
+  'Specialist',
   'Content Manager',
   'Customer Support',
   'Custom',
@@ -69,6 +70,7 @@ export function AdminUsers() {
               </p>
               <p className="truncate text-xs text-subtle">
                 {a.email} · {a.role} · {a.isOwner ? 'All permissions' : `${a.permissions.length} permissions`}
+                {a.specialistName ? ` · ${a.specialistName}’s bookings only` : ''}
               </p>
             </div>
             <div className="hidden text-right text-xs text-subtle md:block">
@@ -145,6 +147,7 @@ export function AdminUsers() {
 
 function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; onClose: () => void }) {
   const router = useRouter();
+  const { specialists, admins } = useAdminTeam();
   const [saving, setSaving] = useState(false);
   const isNew = editing === 'new';
   const base = editing && editing !== 'new' ? editing : null;
@@ -156,7 +159,11 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
     role: base?.role ?? ('Order Manager' as AdminUser['role']),
     status: base?.status ?? ('active' as AdminUser['status']),
     permissions: base?.permissions ?? rolePresets['Order Manager'],
+    specialistId: base?.specialistId ?? '',
   });
+  /** Which other login a specialist profile is already linked to. */
+  const linkedTo = (specialistId: string) =>
+    admins.find((a) => a.specialistId === specialistId && a.id !== base?.id)?.fullName;
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const setRole = (role: AdminUser['role']) =>
@@ -177,9 +184,12 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
     if (Object.keys(errs).length) return;
     setSaving(true);
     if (isNew) {
-      const res = await createAdmin({ ...form, fullName: form.fullName.trim(), email: form.email.trim() }).catch(
-        () => null,
-      );
+      const res = await createAdmin({
+        ...form,
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        specialistId: form.specialistId || null,
+      }).catch(() => null);
       setSaving(false);
       if (!res?.ok) return setErrors({ form: res?.error ?? 'Could not create admin.' });
       toast.success('Admin created', {
@@ -193,6 +203,7 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
         role: form.role,
         status: form.status,
         permissions: form.permissions,
+        specialistId: form.specialistId || null,
       }).catch(() => null);
       setSaving(false);
       if (!res?.ok) return setErrors({ form: res?.error ?? 'Could not save the admin.' });
@@ -252,6 +263,32 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
             onChange={(e) => setRole(e.target.value as AdminUser['role'])}
             options={roles.map((r) => ({ value: r, label: r }))}
             hint="Choosing a role fills in its permissions. Adjust below."
+          />
+          <AdminSelect
+            id="au-specialist"
+            label="Specialist profile"
+            value={form.specialistId}
+            onChange={(e) => {
+              const specialistId = e.target.value;
+              // A specialist's own login starts from the Specialist role.
+              setForm((f) =>
+                specialistId && !f.specialistId && f.role !== 'Specialist'
+                  ? { ...f, specialistId, role: 'Specialist', permissions: rolePresets.Specialist }
+                  : { ...f, specialistId },
+              );
+            }}
+            options={[
+              { value: '', label: 'Not a specialist' },
+              ...specialists.map((sp) => ({
+                value: sp.id,
+                label: `${sp.name} · ${sp.title}${linkedTo(sp.id) ? ` (now ${linkedTo(sp.id)})` : ''}`,
+              })),
+            ]}
+            hint={
+              form.specialistId
+                ? 'They see and manage only this specialist’s bookings, and get only their notifications.'
+                : 'For a stylist or technician: link their profile so they only see their own bookings.'
+            }
           />
           <AdminSelect
             id="au-status"

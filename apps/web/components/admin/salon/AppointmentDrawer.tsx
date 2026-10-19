@@ -240,6 +240,7 @@ function RescheduleDialog({
   onClose: () => void;
   onDone: (n: { date: string; time: string; personnelName?: string; reason: string }) => void;
 }) {
+  const { scope } = useAdminSalon();
   const specialists = useAdminSalon().specialists.filter(
     (sp) => sp.status === 'active' && sp.serviceSlugs.includes(a.serviceSlug),
   );
@@ -316,6 +317,7 @@ function RescheduleDialog({
           <AdminSelect
             id="rs-sp"
             label="Specialist"
+            disabled={!!scope}
             value={spId}
             onChange={(e) => {
               setSpId(e.target.value);

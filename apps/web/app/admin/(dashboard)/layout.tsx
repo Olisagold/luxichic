@@ -13,7 +13,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
   const { sessionTimeoutMinutes } = await loadSecurity();
   return (
     <AdminAuthProvider admin={admin} idleMinutes={sessionTimeoutMinutes}>
-      <AdminBadgesProvider value={await loadBadges()}>
+      <AdminBadgesProvider value={await loadBadges(admin)}>
         <AdminLayout>{children}</AdminLayout>
       </AdminBadgesProvider>
     </AdminAuthProvider>
