@@ -1,5 +1,6 @@
 import 'server-only';
 import { unstable_cache } from 'next/cache';
+import { CACHE_SCOPE } from '@/lib/cache-scope';
 import { env } from '@/lib/env';
 import { buildInitialDb } from '@/lib/mock-db/initial';
 import { deriveStorefront, type StorefrontData, type StorefrontSource } from '@/lib/storefront/derive';
@@ -23,7 +24,7 @@ export const getStorefrontData = unstable_cache(
     if (!env.DATABASE_URL) return deriveStorefront(prototypeSource());
     return deriveStorefront(await loadStorefrontSource());
   },
-  // Vercel keeps this cache across deployments, so each deployment gets its own key and starts fresh.
-  ['storefront-data-v2', process.env.VERCEL_DEPLOYMENT_ID ?? 'local'],
+  // Per deployment and database (lib/cache-scope.ts).
+  ['storefront-data-v2', CACHE_SCOPE],
   { tags: [STOREFRONT_TAG], revalidate: 3600 },
 );

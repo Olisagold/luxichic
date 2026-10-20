@@ -1,4 +1,5 @@
 import 'server-only';
+import { CACHE_SCOPE } from '@/lib/cache-scope';
 import { sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/db';
@@ -64,7 +65,7 @@ async function queryIds(terms: string[], scope: SearchScope, limit: number): Pro
   return similar.map((r) => r.id);
 }
 
-const cachedQueryIds = unstable_cache(queryIds, ['product-search-v1', process.env.VERCEL_DEPLOYMENT_ID ?? 'local'], {
+const cachedQueryIds = unstable_cache(queryIds, ['product-search-v1', CACHE_SCOPE], {
   tags: [STOREFRONT_TAG],
   revalidate: 3600,
 });

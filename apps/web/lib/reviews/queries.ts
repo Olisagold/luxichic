@@ -3,6 +3,7 @@ import { and, desc, eq, ne } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/db';
 import { products, reviews } from '@/db/schema';
+import { CACHE_SCOPE } from '@/lib/cache-scope';
 import { env } from '@/lib/env';
 import type { Review } from '@/types/user';
 
@@ -38,7 +39,7 @@ export const getProductReviews = unstable_cache(
       .orderBy(desc(reviews.createdAt));
     return rows.map(toReview);
   },
-  ['product-reviews-v1', process.env.VERCEL_DEPLOYMENT_ID ?? 'local'],
+  ['product-reviews-v1', CACHE_SCOPE],
   { tags: [REVIEWS_TAG], revalidate: 3600 },
 );
 
