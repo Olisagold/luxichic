@@ -524,7 +524,10 @@ Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bo
 
 ## Phase 10: Quality
 
-1. Unit tests (Vitest) for pricing, promo codes, delivery fees, availability and order-number generation.
+1. ✅ **Unit tests (Vitest)** (2026-10-20; `pnpm test`, run in CI): 51 tests in `apps/web/lib/**/*.test.ts` for
+   promo codes, option prices and cart lines, delivery fees, sale dates, salon availability (hours, notice, window,
+   Sundays, closed hours, no double-booking), order/transfer references, the Telegram order message, guest-order
+   linking proof and confirmation links, and who sees which notification. Checked that deliberately broken rules fail.
 2. End-to-end tests (Playwright) against a seeded local Supabase:
    - Browse to cart to checkout (bank transfer, pay on delivery)
    - Book an appointment

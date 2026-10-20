@@ -73,6 +73,11 @@ export interface StorefrontData {
   };
 }
 
+/** The fee per state customers can choose: free states are 0, states switched off are left out. */
+export function deliveryFeesFrom(rates: StoreSettings['delivery']['rates']): Record<string, number> {
+  return Object.fromEntries(rates.filter((r) => r.enabled).map((r) => [r.state, r.free ? 0 : r.fee]));
+}
+
 function activeDiscount(p: AdminProduct, today: string): boolean {
   if (p.discountStart && today < p.discountStart) return false;
   if (p.discountEnd && today > p.discountEnd) return false;
@@ -188,9 +193,7 @@ export function deriveStorefront(src: StorefrontSource, today = new Date().toISO
     },
     checkout: {
       bank: st.bank,
-      deliveryFees: Object.fromEntries(
-        st.delivery.rates.filter((r) => r.enabled).map((r) => [r.state, r.free ? 0 : r.fee]),
-      ),
+      deliveryFees: deliveryFeesFrom(st.delivery.rates),
     },
   };
 }

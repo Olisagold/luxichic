@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   web:
-    name: Lint, typecheck & build
+    name: Lint, typecheck, unit tests & build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -43,6 +43,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
 
       - name: Build
         run: pnpm build
