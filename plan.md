@@ -535,11 +535,21 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
    payment. Each checks the database too. Stable over 3 runs.
 3. ✅ **CI** runs format, lint, typecheck, unit tests and build, and a second job runs the end-to-end tests against
    a throwaway Supabase in Docker (report uploaded on failure).
-4. Accessibility and performance pass (Lighthouse, Vercel Speed Insights / Web Vitals).
-5. Investigate a local-only build message: after dev sessions, `next build` logs "TypeError … reading 'toISOString'"
-   in Drizzle's `mapFromDriverValue` while refreshing a stale `storefront-data-v2` cache entry (builds still pass;
-   clearing `.next/cache/fetch-cache` removes it; Vercel's per-deployment cache key avoids it). Make sure the hourly
-   storefront refresh on the live site can't hit the same error.
+4. ✅ **Accessibility and performance pass** (2026-10-20; Lighthouse, mobile, on the live site):
+   - The slowest thing on the home page was the logo: every page loaded the ~500 KB logo originals and cropped them
+     in CSS. Pre-cropped WebP logos (`public/images/logos`, ~10 KB each).
+   - Fonts self-hosted with `next/font` instead of a render-blocking Google Fonts `@import` (~1 s).
+   - Booking page: named "Book Now" link on phones, date picker as a group of buttons, readable "Closed" legend,
+     step headings in order.
+   - Before → after: home performance 59 → 75 (first paint 3.9 → 2.1 s, largest paint 8.7 → 4.7 s, 2.7 → 1.6 MB),
+     product page 76 → 98, booking 75 → 87 (accessibility 87 → 100), contact 75 → 87. Accessibility, best practices
+     and SEO 100 elsewhere (cart and admin login are hidden from search on purpose).
+   - Left for later: shop photos are stored at 300/600/1200px, so phones needing ~720px get the 1200px file; an
+     800px size in the upload pipeline would save ~200 KB on the home page.
+5. ✅ The local build message ("TypeError … reading 'toISOString'" while refreshing a stale `storefront-data-v2`
+   entry) could not be reproduced on 2026-10-20 (a dev session cached 87 entries, then a clean build). Builds always
+   passed, CI builds from a clean cache, and the live site uses a cache key per deployment and has refreshed hourly
+   without trouble. If it comes back, clear `.next/cache/fetch-cache`.
 
 ## Phase 11: Launch
 
