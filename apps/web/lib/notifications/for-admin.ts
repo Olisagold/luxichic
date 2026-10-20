@@ -19,14 +19,20 @@ const SEEN_WITH: Record<Kind, Permission[]> = {
   stock: ['orders.view', 'products.view', 'inventory.manage'],
   appointment: ['appointments.view'],
   review: ['reviews.view'],
-  customer: ['customers.view'],
+  // Contact-form messages: decided by role below (the Order Manager can view customers but shouldn't get these).
+  customer: [],
   integration: ['settings.general'],
 };
+
+/** Who gets contact-form messages, besides the owner. */
+const CONTACT_ROLES: AdminUser['role'][] = ['Super Admin', 'Customer Support'];
 
 /** The notifications this admin may see, as a SQL condition (null: none). */
 function visibleTo(admin: AdminUser): SQL | null {
   if (admin.isOwner) return sql`true`;
-  const kinds = (Object.keys(SEEN_WITH) as Kind[]).filter((k) => SEEN_WITH[k].some((p) => hasPermission(admin, p)));
+  const kinds = (Object.keys(SEEN_WITH) as Kind[]).filter((k) =>
+    k === 'customer' ? CONTACT_ROLES.includes(admin.role) : SEEN_WITH[k].some((p) => hasPermission(admin, p)),
+  );
   if (!kinds.length) return null;
   const scope = bookingScope(admin);
   if (!scope) return inArray(s.notifications.kind, kinds);
