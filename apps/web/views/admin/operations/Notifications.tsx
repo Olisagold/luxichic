@@ -17,6 +17,7 @@ import {
 import type { NotificationKind } from '@/types/admin';
 import { useRouter } from 'next/navigation';
 import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { markNotifications as markOnServer, saveNotificationPrefs } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
@@ -42,6 +43,7 @@ export function Notifications() {
   const admin = useAdminSettings();
   const list = admin.notifications;
   const prefs = admin.settings.notifications;
+  const manages = useAdminAuth().can('settings.general');
   const markNotifications = async (ids: string[] | 'all', read = true) => {
     const res = await markOnServer(ids, read).catch(() => null);
     if (!res?.ok) return toast.error(res?.error ?? 'Could not update notifications.');
@@ -63,7 +65,11 @@ export function Notifications() {
     <div>
       <PageHeader
         title="Notifications"
-        description="Alerts about orders, payments, bookings, stock and integrations."
+        description={
+          manages
+            ? 'Alerts about orders, payments, bookings, stock and integrations.'
+            : 'Alerts about the parts of the admin you work in.'
+        }
         actions={
           unread > 0 && (
             <AdminButton icon={<CheckCheckIcon className="h-4 w-4" />} onClick={() => markNotifications('all')}>
@@ -72,7 +78,7 @@ export function Notifications() {
           )
         }
       />
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className={cn('grid grid-cols-1 gap-5', manages && 'lg:grid-cols-[minmax(0,1fr)_320px]')}>
         <div className="rounded-xl border border-line bg-white">
           <div className="border-b border-line p-3 sm:p-4">
             <FilterTabs
@@ -139,40 +145,24 @@ export function Notifications() {
             </ul>
           )}
         </div>
-        <Panel title="Email me about" description="In-dashboard alerts always appear.">
-          <div className="space-y-3.5">
-            <Toggle
-              label="Admin emails"
-              description="Master switch for notification emails."
-              checked={prefs.email}
-              onChange={(v) => setPref('email', v)}
-            />
-            <Toggle
-              label="New orders"
-              checked={prefs.newOrder}
-              disabled={!prefs.email}
-              onChange={(v) => setPref('newOrder', v)}
-            />
-            <Toggle
-              label="New appointments"
-              checked={prefs.newAppointment}
-              disabled={!prefs.email}
-              onChange={(v) => setPref('newAppointment', v)}
-            />
-            <Toggle
-              label="Low stock"
-              checked={prefs.lowStock}
-              disabled={!prefs.email}
-              onChange={(v) => setPref('lowStock', v)}
-            />
-            <Toggle
-              label="New reviews"
-              checked={prefs.newReview}
-              disabled={!prefs.email}
-              onChange={(v) => setPref('newReview', v)}
-            />
-          </div>
-        </Panel>
+        {/* Store-wide: which events reach the team's bells. Only for admins who manage settings. */}
+        {manages && (
+          <Panel
+            title="Team bell"
+            description="Which events show in the team’s bells. Telegram has its own switches under Telegram."
+          >
+            <div className="space-y-3.5">
+              <Toggle label="New orders" checked={prefs.newOrder} onChange={(v) => setPref('newOrder', v)} />
+              <Toggle
+                label="New appointments and changes"
+                checked={prefs.newAppointment}
+                onChange={(v) => setPref('newAppointment', v)}
+              />
+              <Toggle label="Low stock" checked={prefs.lowStock} onChange={(v) => setPref('lowStock', v)} />
+              <Toggle label="New reviews" checked={prefs.newReview} onChange={(v) => setPref('newReview', v)} />
+            </div>
+          </Panel>
+        )}
       </div>
     </div>
   );

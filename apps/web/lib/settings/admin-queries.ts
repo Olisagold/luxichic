@@ -5,7 +5,7 @@ import * as s from '@/db/schema';
 import { getAdmin, hasPermission } from '@/lib/auth/session';
 import { env } from '@/lib/env';
 import { notificationsFor } from '@/lib/notifications/for-admin';
-import { loadEmailTemplates, loadStoreSettings } from '@/lib/settings/store';
+import { DEFAULT_TELEGRAM, loadEmailTemplates, loadStoreSettings } from '@/lib/settings/store';
 import { botInfo, telegramConfigured } from '@/lib/telegram/client';
 import type { AdminSettings, TelegramSpecialist } from '@/components/admin/AdminSettingsProvider';
 import type { AdminUser, LoginEntry, Permission } from '@/types/admin';
@@ -22,6 +22,9 @@ export async function settingsFor(
   const admin = await getAdmin();
   if (!admin || (permission && !hasPermission(admin, permission))) return null;
   const { settings, email, telegram } = await loadStoreSettings();
+  // Pages every admin can open (Notifications, Security) don't need the store's settings unless the admin manages
+  // them: a specialist's browser gets no email templates, sender or Telegram chats.
+  const limited = !permission && !hasPermission(admin, 'settings.general');
   let status: AdminSettings['telegram']['status'] = {
     connected: false,
     reason: 'Add TELEGRAM_BOT_TOKEN to the environment (Vercel) to connect the bot.',
@@ -31,13 +34,13 @@ export async function settingsFor(
     status = info.ok ? { connected: true, username: info.username } : { connected: false, reason: info.error };
   }
   return {
-    settings,
-    email,
+    settings: limited ? { ...settings, smtp: { ...settings.smtp, senderEmail: '', username: '' } } : settings,
+    email: limited ? { senderName: '', senderEmail: '', replyTo: '' } : email,
     resendConfigured: !!env.RESEND_API_KEY,
-    templates: await loadEmailTemplates(),
+    templates: limited ? [] : await loadEmailTemplates(),
     notifications: await notificationsFor(admin),
     telegram: {
-      ...telegram,
+      ...(limited ? DEFAULT_TELEGRAM : telegram),
       status,
       envChatId: !!env.TELEGRAM_ADMIN_CHAT_ID,
       specialists: options.telegram ? await telegramSpecialists() : [],
