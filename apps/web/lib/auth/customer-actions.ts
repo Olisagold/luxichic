@@ -7,8 +7,9 @@ import { db } from '@/db';
 import { addresses, profiles } from '@/db/schema';
 import { authErrorMessage, authReady, NOT_CONFIGURED, passwordMatches, siteOrigin } from '@/lib/auth/helpers';
 import { getCustomer } from '@/lib/auth/session';
-import { linkGuestRecords } from '@/lib/auth/guest-records';
-import { emailWelcomeOnce } from '@/lib/email/customer';
+import { countGuestRecords, hasVerifiedEmail, linkGuestRecords } from '@/lib/auth/guest-records';
+import { emailVerifyLink, emailWelcomeOnce } from '@/lib/email/customer';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { REMEMBER_COOKIE } from '@/lib/supabase/cookies';
 import { createClient } from '@/lib/supabase/server';
 import { isValidEmail, isValidPhone, passwordError } from '@/lib/utils/validation';
@@ -86,7 +87,11 @@ export async function signUp(data: {
   // With email confirmation on (launch), the welcome waits for the confirmed sign-in (app/auth/callback).
   if (res.session && res.user) {
     const id = res.user.id;
-    after(() => emailWelcomeOnce(id));
+    after(async () => {
+      await emailWelcomeOnce(id);
+      // Earlier guest orders with this email: ask them to confirm it, so the orders can join the account.
+      await sendConfirmation(id).catch((e) => console.error('[account] confirmation email failed:', e));
+    });
   }
   return { ok: true, needsConfirmation: !res.session };
 }
@@ -251,4 +256,53 @@ export async function setDefaultAddress(id: string): Promise<Result> {
       .where(and(eq(addresses.id, id), eq(addresses.userId, authUser.id)));
   });
   return { ok: true };
+}
+
+/** "3 orders and 1 appointment" */
+function describe(found: { orders: number; appointments: number }) {
+  const part = (n: number, word: string) => (n ? `${n} ${word}${n === 1 ? '' : 's'}` : '');
+  return [part(found.orders, 'order'), part(found.appointments, 'appointment')].filter(Boolean).join(' and ');
+}
+
+/**
+ * Emails the confirmation link when guest orders or appointments were made with the account's email and it isn't
+ * proven yet. At most once every 2 minutes. Returns what it found ('' when there was nothing to confirm).
+ */
+async function sendConfirmation(userId: string): Promise<string> {
+  const auth = createAdminClient().auth.admin;
+  const { data } = await auth.getUserById(userId);
+  const user = data.user;
+  if (!user?.email || hasVerifiedEmail(user)) return '';
+  const found = await countGuestRecords(user.email);
+  if (!found.orders && !found.appointments) return '';
+  const last = Number(user.app_metadata?.verify_sent_at ?? 0);
+  if (Date.now() - last < 120_000) throw new Error('wait');
+  const [profile] = await db.select({ fullName: profiles.fullName }).from(profiles).where(eq(profiles.id, userId));
+  const res = await emailVerifyLink(
+    { id: userId, email: user.email, fullName: profile?.fullName ?? '' },
+    describe(found),
+  );
+  if (!res.ok) throw new Error(res.error);
+  await auth.updateUserById(userId, { app_metadata: { ...user.app_metadata, verify_sent_at: Date.now() } });
+  return describe(found);
+}
+
+/** The "Send the confirmation email" button on the account page. */
+export async function requestEmailConfirmation(): Promise<Result> {
+  if (!authReady()) return NOT_CONFIGURED;
+  const me = await getCustomer();
+  if (!me) return { ok: false, error: 'Please sign in first.' };
+  try {
+    const found = await sendConfirmation(me.id);
+    if (!found) return { ok: false, error: 'There’s nothing to confirm: your orders are already in your account.' };
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error:
+        (e as Error).message === 'wait'
+          ? 'We’ve just sent it. Check your inbox (and spam), or try again in a couple of minutes.'
+          : 'The email couldn’t be sent. Please try again later.',
+    };
+  }
 }

@@ -8,13 +8,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import { OrderHistoryTable } from '@/components/account/OrderHistoryTable';
 import { AppointmentList } from '@/components/account/AppointmentList';
 import { PushCard } from '@/components/account/PushCard';
+import { LinkedRecordsNotice } from '@/components/account/LinkedRecordsNotice';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { toISODate } from '@/lib/utils/dates';
 import type { Order } from '@/types/order';
 import type { Appointment } from '@/types/salon';
 
-export function AccountOverview({ orders, appointments }: { orders: Order[]; appointments: Appointment[] }) {
+export function AccountOverview({
+  orders,
+  appointments,
+  pending,
+}: {
+  orders: Order[];
+  appointments: Appointment[];
+  /** Guest orders and bookings made with this email, waiting for the email to be confirmed. */
+  pending: { orders: number; appointments: number };
+}) {
   const { user } = useAuth();
   const params = useSearchParams();
   if (!user) return null;
@@ -46,6 +56,7 @@ export function AccountOverview({ orders, appointments }: { orders: Order[]; app
           </div>
         </div>
       )}
+      <LinkedRecordsNotice pending={pending} />
       <header>
         <h1 className="font-display text-5xl text-ink">Hello, {user.fullName.split(' ')[0]}</h1>
         <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-4 border-y border-line py-5">

@@ -31,6 +31,13 @@ export const EXTRA_TEMPLATES: (typeof s.emailTemplates.$inferInsert)[] = [
     variables: ['customer_name', 'order_number'],
   },
   {
+    key: 'verify_email',
+    name: 'Confirm email (earlier orders)',
+    subject: 'Confirm your email to see your LUXICHIC orders',
+    body: 'Hi {{customer_name}},\n\nWe found {{found}} made with this email before you created your account. Confirm it’s you and they’ll appear in your account, with your delivery address saved for next time.\n\nIf you didn’t create a LUXICHIC account, you can ignore this email.',
+    variables: ['customer_name', 'found'],
+  },
+  {
     key: 'contact_message',
     name: 'Contact form message (to the team)',
     subject: 'New message: {{subject}}',

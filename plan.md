@@ -515,6 +515,12 @@ Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bo
    - Needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` in Vercel.
    - Tested with real Chrome through Google's push service: a contact message reached the owner's device and not
      the Order Manager's.
+9. ✅ **Earlier guest orders join a new account** (2026-10-20; `lib/auth/guest-records.ts`): when someone signs up
+   with an email that has guest orders or appointments, they get a "Confirm your email" message (signed link,
+   3 days); confirming adds those orders and appointments to the account, saves their delivery addresses (first
+   as default, no duplicates) and fills an empty phone. Until then the account shows only how many were found.
+   Google sign-ins link straight away; later guest orders with a confirmed email join on the next visit.
+   Tested on dev (11 checks, including tampered/expired links and opening the link signed out).
 
 ## Phase 10: Quality
 

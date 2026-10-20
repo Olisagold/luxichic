@@ -5,6 +5,7 @@ import * as s from '@/db/schema';
 import { env } from '@/lib/env';
 import { pushToCustomer } from '@/lib/push/send';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyToken } from '@/lib/auth/guest-records';
 import type { EmailContent } from '@/lib/email/layout';
 import { sendTemplateEmail } from '@/lib/email/send';
 import { formatNaira } from '@/lib/utils/currency';
@@ -318,4 +319,20 @@ export async function emailAdminLogin(admin: { email: string; fullName: string }
       device,
     });
   });
+}
+
+/** "Confirm your email": proves the new account owns the address its earlier guest orders were made with. */
+export async function emailVerifyLink(user: { id: string; email: string; fullName: string }, found: string) {
+  return sendTemplateEmail(
+    'verify_email',
+    user.email,
+    { customer_name: firstName(user.fullName || user.email), found },
+    {
+      button: {
+        label: 'Confirm my email',
+        href: `${site()}/auth/verify-email?token=${encodeURIComponent(verifyToken(user.id, user.email))}`,
+      },
+      note: 'The link works for 3 days.',
+    },
+  );
 }

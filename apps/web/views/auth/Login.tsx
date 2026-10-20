@@ -56,7 +56,9 @@ export function Login() {
       return setErrors({ form: res.error ?? 'Sign in failed.' });
     }
     toast.success('Welcome back to LUXICHIC');
-    router.replace(redirect);
+    // Server links (e.g. the email confirmation link) need a full page load, not client navigation.
+    if (redirect.startsWith('/auth/')) window.location.assign(redirect);
+    else router.replace(redirect);
   };
 
   return (
