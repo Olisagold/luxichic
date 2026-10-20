@@ -45,8 +45,6 @@ export function appEnv(): Record<string, string> {
     VAPID_PRIVATE_KEY: '',
     VAPID_SUBJECT: '',
     CRON_SECRET: '',
-    NEXT_PUBLIC_SENTRY_DSN: '',
-    SENTRY_AUTH_TOKEN: '',
     NEXT_TELEMETRY_DISABLED: '1',
   };
 }

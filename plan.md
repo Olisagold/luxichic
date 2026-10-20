@@ -29,7 +29,7 @@ From the current prototype to a production launch on Next.js + Supabase.
 | Newsletter          | Homepage sign-up kept at launch; subscribers stored in our own database                                                |
 | Guest checkout      | Kept: guests can order, and orders link to an account created later with the same email                                |
 | Hosting             | Vercel                                                                                                                 |
-| Error monitoring    | Sentry                                                                                                                 |
+| Error monitoring    | Vercel logs (Sentry removed 2026-10-20; can be added back if needed)                                                   |
 | Analytics           | Vercel Analytics (plus the built-in admin analytics from our own data)                                                 |
 
 ## Payment flow (bank transfer)
@@ -74,7 +74,7 @@ Agreed rules. Phase 5 builds them; Phase 8 adds the admin side.
 
 ## Phase 0: Tooling and environments
 
-Status: done, except Sentry account setup. See [`docs/deployment/environments.md`](docs/deployment/environments.md).
+Status: done. See [`docs/deployment/environments.md`](docs/deployment/environments.md).
 
 1. ✅ ESLint (Next.js rules) and Prettier. CI runs format check, lint, typecheck and build.
 2. ✅ Environment variables validated with Zod (`apps/web/lib/env.ts`); invalid values fail dev/build immediately.
@@ -85,11 +85,8 @@ Status: done, except Sentry account setup. See [`docs/deployment/environments.md
    - Function region: Dublin (`dub1`, eu-west-1).
    - Preview uses the dev Supabase keys; Production uses the prod keys.
    - Server secrets are passed through Turbo's strict env mode (`turbo.json` → `passThroughEnv`).
-5. ⏳ Sentry.
-   - The code is set up.
-   - **You:** create the Sentry project and add `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT` and
-     `SENTRY_AUTH_TOKEN` to Vercel (Production).
-   - Until then, the "No auth token provided" build warnings are expected and harmless.
+5. ✅ Sentry removed (2026-10-20, decided with the owner): no account was ever connected and it only added build
+   warnings and browser JavaScript. Errors are logged to the browser console and Vercel's logs.
 6. ✅ Vercel Analytics in the root layout (enable it in the Vercel dashboard).
 7. ✅ The empty shared packages are removed; `packages/config` stays.
 
@@ -555,14 +552,14 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
 
 1. Production Supabase: apply migrations, RLS review, backups enabled, storage buckets and policies.
 2. Resend: verify the sending domain (SPF, DKIM, DMARC).
-3. Vercel: custom domain, production env vars, Sentry release tracking.
+3. Vercel: custom domain, production env vars.
 4. Create the real admin accounts and roles; load real products, services and content.
 5. Final legal and content review (policies, about, FAQs).
 6. Cleanup:
    - Delete `lib/mock-db`.
    - Remove remaining seed imports from UI code, and the `PrototypeNote` banners.
    - Remove `legacy/luxichic-react` (it stays in git history).
-7. Go live, then monitor Sentry and analytics for the first weeks.
+7. Go live, then watch Vercel's logs and analytics for the first weeks.
 
 ## After launch (not scheduled)
 

@@ -1,13 +1,13 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import './globals.css';
 
 /** Last-resort error screen when the root layout itself fails. */
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    // Shows in the browser console and Vercel's logs.
+    console.error(error);
   }, [error]);
 
   return (

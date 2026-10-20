@@ -11,9 +11,6 @@
         "TELEGRAM_BOT_TOKEN",
         "TELEGRAM_WEBHOOK_SECRET",
         "TELEGRAM_ADMIN_CHAT_ID",
-        "SENTRY_AUTH_TOKEN",
-        "SENTRY_ORG",
-        "SENTRY_PROJECT",
         "VERCEL_ENV",
         "VERCEL_DEPLOYMENT_ID",
         "CI"

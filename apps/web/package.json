@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@react-email/render": "2.1.0",
-    "@sentry/nextjs": "^11.5.0",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
     "@vercel/analytics": "^2.0.1",

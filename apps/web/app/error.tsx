@@ -1,11 +1,11 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    // Shows in the browser console and Vercel's logs.
+    console.error(error);
   }, [error]);
 
   return (
