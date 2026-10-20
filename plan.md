@@ -528,12 +528,13 @@ Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bo
    promo codes, option prices and cart lines, delivery fees, sale dates, salon availability (hours, notice, window,
    Sundays, closed hours, no double-booking), order/transfer references, the Telegram order message, guest-order
    linking proof and confirmation links, and who sees which notification. Checked that deliberately broken rules fail.
-2. End-to-end tests (Playwright) against a seeded local Supabase:
-   - Browse to cart to checkout (bank transfer, pay on delivery)
-   - Book an appointment
-   - Sign up / sign in
-   - Admin verifies a payment
-3. Run lint, typecheck, unit tests and E2E in CI; use the Vercel preview for manual QA.
+2. ✅ **End-to-end tests (Playwright)** (2026-10-20; `apps/web/e2e`, `pnpm --filter @luxichic/web test:e2e`): a
+   production build against the local Supabase (`pnpm db:start`, `supabase db reset`, `SEED_PASSWORD=E2e-Test-pw1
+   pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-transfer checkout, Pay on Delivery
+   (switched on in Admin → Payments), booking, sign up / sign in (with a wrong password refused), admin confirms a
+   payment. Each checks the database too. Stable over 3 runs.
+3. ✅ **CI** runs format, lint, typecheck, unit tests and build, and a second job runs the end-to-end tests against
+   a throwaway Supabase in Docker (report uploaded on failure).
 4. Accessibility and performance pass (Lighthouse, Vercel Speed Insights / Web Vitals).
 5. Investigate a local-only build message: after dev sessions, `next build` logs "TypeError … reading 'toISOString'"
    in Drizzle's `mapFromDriverValue` while refreshing a stale `storefront-data-v2` cache entry (builds still pass;

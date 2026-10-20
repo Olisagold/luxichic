@@ -11,6 +11,7 @@
     "db:studio": "drizzle-kit studio",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -39,6 +40,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@luxichic/config": "workspace:*",
+    "@playwright/test": "1.63.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
