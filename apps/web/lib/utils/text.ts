@@ -12,6 +12,15 @@ export function fillTemplate(template: string, values: Record<string, string>): 
   return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => values[key] ?? `{{${key}}}`);
 }
 
+/** Like `fillTemplate`, but drops lines whose variables were all empty (e.g. no discount on this order). */
+export function fillTemplateLines(template: string, values: Record<string, string>): string {
+  return template
+    .split('\n')
+    .filter((line) => !(/\{\{\s*\w+\s*\}\}/.test(line) && !fillTemplate(line, values).trim()))
+    .map((line) => fillTemplate(line, values))
+    .join('\n');
+}
+
 export function initials(name: string): string {
   return name
     .split(/\s+/)

@@ -3,12 +3,12 @@ import { eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { env } from '@/lib/env';
-import { DEFAULT_TELEGRAM, loadSettingsRows, type TelegramSettings } from '@/lib/settings/store';
+import { loadSettingsRows, withTelegramDefaults, type TelegramSettings } from '@/lib/settings/store';
 import { pushToAdmins } from '@/lib/push/send';
 import { sendTelegramMessage } from '@/lib/telegram/client';
 import { formatNaira } from '@/lib/utils/currency';
 import { formatDate, formatSlot } from '@/lib/utils/dates';
-import { fillTemplate } from '@/lib/utils/text';
+import { fillTemplate, fillTemplateLines } from '@/lib/utils/text';
 import type { StoreSettings } from '@/types/admin';
 
 /**
@@ -35,7 +35,7 @@ async function loadTeamSettings() {
   const value = <T>(key: string) => rows.find((r) => r.key === key)?.value as T | undefined;
   return {
     prefs: { ...PREFS_DEFAULT, ...value<Partial<StoreSettings['notifications']>>('notifications') },
-    telegram: { ...DEFAULT_TELEGRAM, ...value<Partial<TelegramSettings>>('telegram') },
+    telegram: withTelegramDefaults(value('telegram')),
   };
 }
 
@@ -80,6 +80,48 @@ async function safely(label: string, run: () => Promise<void>) {
 
 const METHOD: Record<string, string> = { bank_transfer: 'Bank transfer', pay_on_delivery: 'Pay on Delivery' };
 
+/** The values a new-order message can use: every item with its price, the money breakdown and the full address. */
+export function orderValues(
+  order: typeof s.orders.$inferSelect,
+  items: (typeof s.orderItems.$inferSelect)[],
+  method: string,
+): Record<string, string> {
+  const products = items
+    .map((i) => {
+      const options = Object.entries(i.variants ?? {})
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
+      const line = `${i.quantity} × ${i.productName}${options ? ` (${options})` : ''} — ${formatNaira(i.unitPrice * i.quantity)}`;
+      return i.quantity > 1 ? `${line} (${formatNaira(i.unitPrice)} each)` : line;
+    })
+    .join('\n');
+  const address = [
+    [order.shipHouseNumber, order.shipStreet].filter(Boolean).join(', '),
+    order.shipCity,
+    order.shipState,
+    order.shipCountry && order.shipCountry !== 'Nigeria' ? order.shipCountry : '',
+  ]
+    .filter(Boolean)
+    .join(', ');
+  return {
+    order_number: order.orderNumber,
+    customer_name: order.customerName,
+    customer_phone: order.customerPhone,
+    products,
+    subtotal: formatNaira(order.subtotal),
+    delivery_fee: order.deliveryFee ? formatNaira(order.deliveryFee) : 'Free',
+    discount: order.discountAmount
+      ? `Discount${order.discountCode ? ` (${order.discountCode})` : ''}: −${formatNaira(order.discountAmount)}`
+      : '',
+    total_amount: formatNaira(order.total),
+    payment_method: method,
+    delivery_state: order.shipState,
+    delivery_address: order.shipLandmark ? `${address} (near ${order.shipLandmark})` : address,
+    delivery_notes: order.shipInstructions ? `Note: ${order.shipInstructions}` : '',
+    transaction_reference: order.transactionReference,
+  };
+}
+
 /** A new order: notification, Telegram alert, and low-stock warnings for anything it took below the threshold. */
 export async function alertNewOrder(orderId: string) {
   await safely('new order', async () => {
@@ -102,16 +144,7 @@ export async function alertNewOrder(orderId: string) {
       // Orders go to the orders group only, never the appointments group.
       await send(
         tg.ordersChatId,
-        fillTemplate(tg.orderTemplate, {
-          order_number: order.orderNumber,
-          customer_name: order.customerName,
-          customer_phone: order.customerPhone,
-          products: items.map((i) => `${i.quantity} × ${i.productName}`).join('\n'),
-          total_amount: formatNaira(order.total),
-          payment_method: method,
-          delivery_state: order.shipState,
-          transaction_reference: order.transactionReference,
-        }),
+        fillTemplateLines(tg.orderTemplate, orderValues(order, items, method)),
         'orders group',
       );
     }

@@ -42,15 +42,29 @@ export const DEFAULT_TELEGRAM: TelegramSettings = {
   notifyAppointments: true,
   notifySpecialists: true,
   orderTemplate:
-    '🛍 New order {{order_number}}\n{{customer_name}} · {{customer_phone}}\n{{products}}\nTotal: {{total_amount}} ({{payment_method}})\nDeliver to: {{delivery_state}}\nRef: {{transaction_reference}}',
+    '🛍 New order {{order_number}}\n{{customer_name}} · {{customer_phone}}\n\n{{products}}\n\nSubtotal: {{subtotal}}\nDelivery: {{delivery_fee}}\n{{discount}}\nTotal: {{total_amount}} ({{payment_method}})\n\nDeliver to: {{delivery_address}}\n{{delivery_notes}}\nRef: {{transaction_reference}}',
   appointmentTemplate:
     '💅 New appointment {{appointment_reference}}\n{{customer_name}} · {{customer_phone}}\n{{service_name}} with {{specialist_name}}\n{{appointment_date}} at {{appointment_time}}',
 };
 
+/** The first new-order message, before it listed prices and the full address. */
+const ORIGINAL_ORDER_TEMPLATE =
+  '🛍 New order {{order_number}}\n{{customer_name}} · {{customer_phone}}\n{{products}}\nTotal: {{total_amount}} ({{payment_method}})\nDeliver to: {{delivery_state}}\nRef: {{transaction_reference}}';
+
+/**
+ * Saved Telegram settings with defaults for anything not saved yet. A message template still saved exactly as the
+ * original default moves to the current default; one the admin has changed is kept as it is.
+ */
+export function withTelegramDefaults(saved: unknown): TelegramSettings {
+  const t = { ...DEFAULT_TELEGRAM, ...((saved ?? {}) as Partial<TelegramSettings>) };
+  if (t.orderTemplate === ORIGINAL_ORDER_TEMPLATE) t.orderTemplate = DEFAULT_TELEGRAM.orderTemplate;
+  return t;
+}
+
 /** Telegram settings with defaults for anything not saved yet. */
 export async function loadTelegramSettings(): Promise<TelegramSettings> {
   const [row] = await db.select({ value: s.settings.value }).from(s.settings).where(eq(s.settings.key, 'telegram'));
-  return { ...DEFAULT_TELEGRAM, ...((row?.value ?? {}) as Partial<TelegramSettings>) };
+  return withTelegramDefaults(row?.value);
 }
 
 const value = <T>(rows: { key: string; value: unknown }[], key: string): T | undefined =>
@@ -148,7 +162,7 @@ export async function loadStoreSettings(): Promise<{
       senderEmail: email.senderEmail ?? '',
       replyTo: email.replyTo ?? '',
     },
-    telegram: { ...DEFAULT_TELEGRAM, ...(value<Partial<TelegramSettings>>(rows, 'telegram') ?? {}) },
+    telegram: withTelegramDefaults(value(rows, 'telegram')),
   };
 }
 

@@ -13,7 +13,7 @@ import { loadTelegramSettings, type TelegramSettings } from '@/lib/settings/stor
 import { STOREFRONT_TAG } from '@/lib/storefront/data';
 import { botInfo, sendTelegramMessage } from '@/lib/telegram/client';
 import { newGroupToken, newSpecialistToken, type GroupKind } from '@/lib/telegram/connect';
-import { fillTemplate } from '@/lib/utils/text';
+import { fillTemplate, fillTemplateLines } from '@/lib/utils/text';
 import { isUuid, isValidEmail } from '@/lib/utils/validation';
 import type { AdminUser, SocialLink, StoreSettings } from '@/types/admin';
 import type { Result } from '@/types/user';
@@ -391,10 +391,15 @@ const SAMPLE = {
   order_number: 'LXC-482913',
   customer_name: 'Test Customer',
   customer_phone: '0803 000 0000',
-  products: '1 × Body Wave Wig (18")',
+  products: '1 × Body Wave Wig (Length: 18") — ₦280,000\n2 × Edge Control — ₦4,000 (₦2,000 each)',
+  subtotal: '₦284,000',
+  delivery_fee: '₦3,500',
+  discount: '',
   total_amount: '₦287,500',
-  payment_method: 'Bank Transfer',
+  payment_method: 'Bank transfer',
   delivery_state: 'Lagos',
+  delivery_address: 'Flat 3, 12 Admiralty Way, Lekki, Lagos (near the filling station)',
+  delivery_notes: 'Note: Call before delivery',
   transaction_reference: '58310472',
 };
 
@@ -419,7 +424,7 @@ export async function sendTelegramTest(target: TelegramTarget = 'appointments'):
     let label: string;
     if (target === 'orders') {
       chatId = tg.ordersChatId;
-      text = `✅ Test from LUXICHIC admin: new orders will look like this.\n\n${fillTemplate(tg.orderTemplate, SAMPLE)}`;
+      text = `✅ Test from LUXICHIC admin: new orders will look like this.\n\n${fillTemplateLines(tg.orderTemplate, SAMPLE)}`;
       label = 'orders group';
     } else if (target === 'appointments') {
       chatId = tg.chatId || env.TELEGRAM_ADMIN_CHAT_ID;

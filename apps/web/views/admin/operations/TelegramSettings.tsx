@@ -30,8 +30,13 @@ const ORDER_VARS = [
   'customer_name',
   'customer_phone',
   'products',
+  'subtotal',
+  'delivery_fee',
+  'discount',
   'total_amount',
   'payment_method',
+  'delivery_address',
+  'delivery_notes',
   'delivery_state',
   'transaction_reference',
 ];
