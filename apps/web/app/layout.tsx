@@ -28,7 +28,12 @@ const display = Cormorant_Garamond({
   display: 'swap',
   variable: '--font-display',
 });
-const sans = Manrope({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'], display: 'swap', variable: '--font-sans' });
+const sans = Manrope({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-sans',
+});
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
