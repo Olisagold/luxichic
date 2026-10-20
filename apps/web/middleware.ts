@@ -19,7 +19,8 @@ export async function middleware(request: NextRequest) {
     if (pathname === '/account' || pathname.startsWith('/account/')) {
       return NextResponse.redirect(new URL(`/login?redirect=${wanted}`, request.url));
     }
-    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    // `/admin` and pages under it; not `/admin.webmanifest` (the admin app file, fetched without cookies).
+    if ((pathname === '/admin' || pathname.startsWith('/admin/')) && pathname !== '/admin/login') {
       return NextResponse.redirect(new URL(`/admin/login?next=${wanted}`, request.url));
     }
     return response;
