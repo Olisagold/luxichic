@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { AdminUser, Permission } from '@/types/admin';
 import type { Result } from '@/types/user';
@@ -20,6 +19,8 @@ interface AdminAuthValue {
   logout: () => Promise<void>;
   can: (p: Permission) => boolean;
   changePassword: (current: string, next: string) => Promise<Result>;
+  /** Where staff sign in: the secret admin address when one is set (lib/auth/admin-gate.ts). */
+  loginPath: string;
 }
 
 const AdminAuthContext = createContext<AdminAuthValue | null>(null);
@@ -29,18 +30,19 @@ const ACTIVE_KEY = 'lx_admin_active';
 export function AdminAuthProvider({
   admin,
   idleMinutes,
+  loginPath = '/admin/login',
   children,
 }: {
   admin: AdminUser | null;
+  /** Where staff sign in (from the server; the secret admin address when one is set). */
+  loginPath?: string;
   /** Settings → Security: sign out after this long without activity in any admin tab. */
   idleMinutes?: number;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-
   const logout = async () => {
     await adminSignOut();
-    router.refresh();
+    window.location.assign(loginPath);
   };
 
   const lastActive = useRef(0);
@@ -71,19 +73,19 @@ export function AdminAuthProvider({
       window.clearInterval(timer);
       await adminSignOut();
       toast.info('Signed out', { description: 'You were inactive for a while. Please sign in again.' });
-      router.refresh();
+      window.location.assign(loginPath);
     }, 30_000);
     return () => {
       events.forEach((e) => window.removeEventListener(e, touch));
       window.clearInterval(timer);
     };
-  }, [admin, idleMinutes, router]);
+  }, [admin, idleMinutes, loginPath]);
 
   const can = (p: Permission) => !!admin && (admin.isOwner || admin.permissions.includes(p));
 
   return (
     <AdminAuthContext.Provider
-      value={{ admin, ready: true, login: adminSignIn, logout, can, changePassword: adminChangePassword }}
+      value={{ admin, ready: true, login: adminSignIn, logout, can, changePassword: adminChangePassword, loginPath }}
     >
       {children}
     </AdminAuthContext.Provider>

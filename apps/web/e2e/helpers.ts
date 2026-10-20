@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import postgres from 'postgres';
-import { localSupabase } from './local-supabase';
+import { ADMIN_PATH, localSupabase } from './local-supabase';
 
 /** The local test database, for setting up and checking results. */
 export const db = postgres(localSupabase().dbUrl, { prepare: false, max: 2 });
@@ -38,11 +38,11 @@ export async function checkoutToPayment(page: Page, email: string) {
 
 /** Signs in as the seeded owner (demoadmin@luxichic.com). */
 export async function signInAsOwner(page: Page) {
-  await page.goto('/admin/login');
+  await page.goto(`/${ADMIN_PATH}`);
   await page.fill('#admin-email', 'demoadmin@luxichic.com');
   await page.fill('#admin-password', SEED_PASSWORD);
   await page.getByRole('button', { name: /^Sign in$/ }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith('/admin/login'));
+  await page.waitForURL((u) => u.pathname.startsWith('/admin/'));
 }
 
 /** Switches Pay on Delivery on or off in Admin → Payments (which refreshes the shop at once). */

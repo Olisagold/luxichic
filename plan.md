@@ -543,12 +543,20 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
      and SEO 100 elsewhere (cart and admin login are hidden from search on purpose).
    - Left for later: shop photos are stored at 300/600/1200px, so phones needing ~720px get the 1200px file; an
      800px size in the upload pipeline would save ~200 KB on the home page.
-5. ✅ The local build message ("TypeError … reading 'toISOString'" while refreshing a stale `storefront-data-v2`
-   entry) could not be reproduced on 2026-10-20 (a dev session cached 87 entries, then a clean build). Builds always
-   passed, CI builds from a clean cache, and the live site uses a cache key per deployment and has refreshed hourly
-   without trouble. If it comes back, clear `.next/cache/fetch-cache`.
+5. ✅ The local build message and the occasional "empty cart" in the end-to-end tests had one cause, found on
+   2026-10-20: the data caches were keyed by deployment only (`local` on a computer), so a build against the dev
+   database and one against the test database shared cached shop data, and the tests got dev's product ids. Caches
+   are now keyed by deployment and database (`lib/cache-scope.ts`). The live site was never affected (one database,
+   a key per deployment).
 
 ## Phase 11: Launch
+
+0. ✅ **Secret admin address** (2026-10-20; `lib/auth/admin-gate.ts`): with `ADMIN_PATH` set (Vercel only, never
+   in the code), staff sign in at `/<ADMIN_PATH>`; `/admin`, its sign-in page and the admin app file show "page not
+   found" to anyone not signed in as staff (customers too), and robots.txt no longer names `/admin`. The marker set
+   on secret-address requests is stripped from incoming requests. Signing out returns to the secret address; the
+   installed admin app opens there. Tested end to end (the e2e suite runs with a secret address). **To do:** set
+   `ADMIN_PATH` in Vercel, then staff bookmark the new address and reinstall the admin app.
 
 1. Production Supabase: apply migrations, RLS review, backups enabled, storage buckets and policies.
 2. Resend: verify the sending domain (SPF, DKIM, DMARC).

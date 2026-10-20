@@ -25,6 +25,10 @@ const serverSchema = z.object({
   // Vercel Cron sends it as a Bearer token to /api/cron/* (Phase 9)
   CRON_SECRET: optional(z.string().min(16, 'Use at least 16 characters')),
   // Web push for the installed apps (Phase 9 follow-up); NEXT_PUBLIC_VAPID_PUBLIC_KEY is its pair
+  // The admin's secret address (lib/auth/admin-gate.ts); only in the hosting environment, never in the code
+  ADMIN_PATH: optional(
+    z.string().regex(/^[a-z0-9][a-z0-9-]{7,39}$/, 'Use 8–40 lowercase letters, numbers or dashes, e.g. staff-k7x2m9'),
+  ),
   VAPID_PRIVATE_KEY: optional(z.string().min(20)),
   VAPID_SUBJECT: optional(z.string().regex(/^(mailto:|https:)/, 'Use mailto:you@example.com or an https URL')),
 });

@@ -25,6 +25,7 @@ export function localSupabase() {
 }
 
 export const PORT = 3100;
+export const ADMIN_PATH = 'e2e-staff-gate';
 export const BASE_URL = `http://localhost:${PORT}`;
 
 /** Environment for the app under test: local Supabase only, and nothing that sends messages. */
@@ -36,6 +37,8 @@ export function appEnv(): Record<string, string> {
     SUPABASE_SECRET_KEY: sb.secretKey,
     DATABASE_URL: sb.dbUrl,
     NEXT_PUBLIC_SITE_URL: BASE_URL,
+    // Tests run with a secret admin address, as the live site does.
+    ADMIN_PATH: ADMIN_PATH,
     // Off: an empty value wins over apps/web/.env.local, which Next.js never overrides.
     RESEND_API_KEY: '',
     TELEGRAM_BOT_TOKEN: '',

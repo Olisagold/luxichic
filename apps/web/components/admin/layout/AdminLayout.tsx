@@ -28,7 +28,7 @@ function AdminFallback() {
 
 /** Authenticated admin shell. Production: the server must also reject unauthenticated API calls. */
 export function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { admin, ready } = useAdminAuth();
+  const { admin, ready, loginPath } = useAdminAuth();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useLocalStorage('lx_admin_sidebar_collapsed', false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -53,7 +53,16 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   if (!ready) return <div className="min-h-screen bg-canvas" aria-busy="true" />;
   if (!admin)
-    return <Navigate to={`/admin/login?next=${encodeURIComponent(pathname + window.location.search)}`} replace />;
+    return (
+      <Navigate
+        to={
+          loginPath === '/admin/login'
+            ? `/admin/login?next=${encodeURIComponent(pathname + window.location.search)}`
+            : loginPath
+        }
+        replace
+      />
+    );
 
   return (
     <div className="flex min-h-screen w-full bg-canvas font-sans text-charcoal">

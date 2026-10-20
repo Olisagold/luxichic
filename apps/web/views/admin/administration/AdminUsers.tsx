@@ -7,6 +7,7 @@ import type { AdminUser, Permission } from '@/types/admin';
 import { useActor } from '@/hooks/useActor';
 import { useRouter } from 'next/navigation';
 import { useAdminTeam } from '@/components/admin/AdminTeamProvider';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { createAdmin, deleteAdmin, resetAdminPassword, updateAdmin } from '@/lib/admins/admin-actions';
 import { rolePresets } from '@/data/adminSeed';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
@@ -146,6 +147,7 @@ export function AdminUsers() {
 }
 
 function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; onClose: () => void }) {
+  const { loginPath } = useAdminAuth();
   const router = useRouter();
   const { specialists, admins } = useAdminTeam();
   const [saving, setSaving] = useState(false);
@@ -193,7 +195,7 @@ function AdminDialog({ editing, onClose }: { editing: AdminUser | 'new' | null; 
       setSaving(false);
       if (!res?.ok) return setErrors({ form: res?.error ?? 'Could not create admin.' });
       toast.success('Admin created', {
-        description: `${form.fullName} can now sign in at /admin/login with the temporary password.`,
+        description: `${form.fullName} can now sign in at ${window.location.origin}${loginPath} with the temporary password.`,
       });
     } else if (base) {
       const res = await updateAdmin(base.id, {
