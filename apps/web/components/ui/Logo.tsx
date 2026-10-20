@@ -25,7 +25,7 @@ export function Logo({ variant = 'main', className }: { variant?: LogoVariant; c
         alt={names[variant]}
         width={Math.round(192 * ratios[variant])}
         height={192}
-        className="h-full w-full mix-blend-lighten"
+        className="h-full w-full object-contain object-left mix-blend-lighten"
       />
     </span>
   );
