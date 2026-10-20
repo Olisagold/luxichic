@@ -24,11 +24,22 @@ const serverSchema = z.object({
   RESEND_API_KEY: optional(z.string().startsWith('re_')),
   // Vercel Cron sends it as a Bearer token to /api/cron/* (Phase 9)
   CRON_SECRET: optional(z.string().min(16, 'Use at least 16 characters')),
-  // Web push for the installed apps (Phase 9 follow-up); NEXT_PUBLIC_VAPID_PUBLIC_KEY is its pair
   // The admin's secret address (lib/auth/admin-gate.ts); only in the hosting environment, never in the code
-  ADMIN_PATH: optional(
-    z.string().regex(/^[a-z0-9][a-z0-9-]{7,39}$/, 'Use 8–40 lowercase letters, numbers or dashes, e.g. staff-k7x2m9'),
-  ),
+  // A pasted slash, URL, capital or space is tidied up; a value still unusable is ignored (with a log), never fatal,
+  // because the middleware reads it on every request.
+  ADMIN_PATH: z.preprocess((v) => {
+    if (typeof v !== 'string') return undefined;
+    const path = v
+      .trim()
+      .replace(/^https?:\/\/[^/]+/i, '')
+      .replace(/^\/+|\/+$/g, '')
+      .toLowerCase();
+    if (!path) return undefined;
+    if (/^[a-z0-9][a-z0-9-]{7,39}$/.test(path)) return path;
+    console.error('ADMIN_PATH ignored: use 8–40 lowercase letters, numbers or dashes, e.g. staff-k7x2m9');
+    return undefined;
+  }, z.string().optional()),
+  // Web push for the installed apps (Phase 9 follow-up); NEXT_PUBLIC_VAPID_PUBLIC_KEY is its pair
   VAPID_PRIVATE_KEY: optional(z.string().min(20)),
   VAPID_SUBJECT: optional(z.string().regex(/^(mailto:|https:)/, 'Use mailto:you@example.com or an https URL')),
 });

@@ -11,6 +11,10 @@
         "TELEGRAM_BOT_TOKEN",
         "TELEGRAM_WEBHOOK_SECRET",
         "TELEGRAM_ADMIN_CHAT_ID",
+        "CRON_SECRET",
+        "VAPID_PRIVATE_KEY",
+        "VAPID_SUBJECT",
+        "ADMIN_PATH",
         "VERCEL_ENV",
         "VERCEL_DEPLOYMENT_ID",
         "CI"
