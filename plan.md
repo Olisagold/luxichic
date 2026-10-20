@@ -499,6 +499,22 @@ Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bo
 6. ✅ Tested in a browser against dev (2026-10-14), with emails sent to Resend's test inboxes
    (`delivered+…@resend.dev`): 29 checks across alerts (8), emails and reminders (10), contact and newsletter (11),
    then cleaned up.
+7. ✅ **CEO's routing request** (2026-10-19/20):
+   - Specialist logins: an admin linked to a specialist profile (Admin users) sees and manages only their own
+     bookings; built-in Specialist role (view, confirm, reschedule).
+   - Telegram: bookings to the appointments group and privately to the specialist (new and every change); orders
+     only to the orders group. Groups and specialists connect with one-tap links from Admin → Telegram.
+   - Each admin's bell follows their permissions with per-admin read state; contact-form messages go to the owner,
+     Super Admins and Customer Support only; store-wide switches only for settings managers.
+8. ✅ **Phone notifications (web push)** (2026-10-20): installable apps "LUXICHIC" (shop) and "LUXICHIC Admin"
+   (`/admin`), service worker `public/sw.js`, `push_subscriptions` table, `lib/push/*`.
+   - Admins get exactly what their bell shows (Admin → Notifications → "Turn on notifications"; link in the bell).
+   - Signed-in customers get payment confirmed, shipped, delivered, cancelled and appointment confirmed, moved,
+     cancelled, rejected and the day-before reminder (Account page).
+   - iPhone/iPad: only from the app added to the Home Screen (iOS 16.4+); the button explains this.
+   - Needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` in Vercel.
+   - Tested with real Chrome through Google's push service: a contact message reached the owner's device and not
+     the Order Manager's.
 
 ## Phase 10: Quality
 

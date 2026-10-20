@@ -27,12 +27,25 @@ const SEEN_WITH: Record<Kind, Permission[]> = {
 /** Who gets contact-form messages, besides the owner. */
 const CONTACT_ROLES: AdminUser['role'][] = ['Super Admin', 'Customer Support'];
 
+/** The kinds of notification this admin's permissions (or role) cover. */
+function kindsFor(admin: AdminUser): Kind[] {
+  return (Object.keys(SEEN_WITH) as Kind[]).filter((k) =>
+    k === 'customer' ? CONTACT_ROLES.includes(admin.role) : SEEN_WITH[k].some((p) => hasPermission(admin, p)),
+  );
+}
+
+/** Whether one notification shows in this admin's bell (the same rule as `visibleTo`, for phone alerts). */
+export function canSee(admin: AdminUser, n: { kind: Kind; specialistId: string | null }): boolean {
+  if (admin.isOwner) return true;
+  if (!kindsFor(admin).includes(n.kind)) return false;
+  const scope = bookingScope(admin);
+  return !(scope && n.kind === 'appointment' && n.specialistId !== scope);
+}
+
 /** The notifications this admin may see, as a SQL condition (null: none). */
 function visibleTo(admin: AdminUser): SQL | null {
   if (admin.isOwner) return sql`true`;
-  const kinds = (Object.keys(SEEN_WITH) as Kind[]).filter((k) =>
-    k === 'customer' ? CONTACT_ROLES.includes(admin.role) : SEEN_WITH[k].some((p) => hasPermission(admin, p)),
-  );
+  const kinds = kindsFor(admin);
   if (!kinds.length) return null;
   const scope = bookingScope(admin);
   if (!scope) return inArray(s.notifications.kind, kinds);

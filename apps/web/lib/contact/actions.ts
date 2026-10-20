@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { sendTemplateEmail } from '@/lib/email/send';
+import { pushToAdmins } from '@/lib/push/send';
 import { isValidEmail, isValidPhone } from '@/lib/utils/validation';
 import type { Result } from '@/types/user';
 
@@ -49,15 +50,18 @@ export async function sendContactMessage(input: z.input<typeof schema>): Promise
     return { ok: false, error: 'You’ve sent a few messages already. We’ll reply soon, or chat with us on WhatsApp.' };
   }
 
-  await db.insert(s.notifications).values({
-    kind: 'customer',
+  const note = {
+    kind: 'customer' as const,
     title: `${d.subject} from ${d.name} <${d.email.toLowerCase()}>`,
     body: `${d.phone ? `${d.phone}\n` : ''}${d.message}`,
     link: `mailto:${d.email}?subject=${encodeURIComponent(`Re: ${d.subject}`)}`,
-  });
+    specialistId: null,
+  };
+  await db.insert(s.notifications).values(note);
 
   after(async () => {
     try {
+      await pushToAdmins(note);
       const [row] = await db.select({ value: s.settings.value }).from(s.settings).where(eq(s.settings.key, 'business'));
       const to = (row?.value as { email?: string } | undefined)?.email;
       if (!to || !isValidEmail(to)) {

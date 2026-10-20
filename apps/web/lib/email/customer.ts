@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import { env } from '@/lib/env';
+import { pushToCustomer } from '@/lib/push/send';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { EmailContent } from '@/lib/email/layout';
 import { sendTemplateEmail } from '@/lib/email/send';
@@ -167,8 +168,30 @@ export async function composeOrderUpdate(orderId: string, event: OrderEmail): Pr
   };
 }
 
+const ORDER_PUSH: Record<OrderEmail, string> = {
+  payment_confirmed: 'Payment received',
+  confirmed: 'Order confirmed',
+  shipped: 'Your order is on its way',
+  delivered: 'Order delivered',
+  cancelled: 'Order cancelled',
+};
+
+/** The customer's email for an order update, and a phone notification if they've turned them on. */
 export async function emailOrderUpdate(orderId: string, event: OrderEmail) {
   await safely(`order ${event}`, async () => send(await composeOrderUpdate(orderId, event)));
+  await safely(`order ${event} push`, async () => {
+    const [o] = await db
+      .select({ number: s.orders.orderNumber, userId: s.orders.userId })
+      .from(s.orders)
+      .where(eq(s.orders.id, orderId));
+    if (!o?.userId) return;
+    await pushToCustomer(o.userId, {
+      title: ORDER_PUSH[event],
+      body: `Order ${o.number}`,
+      url: `/account/orders/${o.number}`,
+      tag: `order-${o.number}`,
+    });
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -228,8 +251,29 @@ export async function composeAppointment(
   };
 }
 
+const APPOINTMENT_PUSH: Partial<Record<AppointmentEmail, string>> = {
+  confirmed: 'Appointment confirmed',
+  rescheduled: 'Appointment moved',
+  rejected: 'About your appointment request',
+  cancelled: 'Appointment cancelled',
+  reminder: 'Your appointment is tomorrow',
+};
+
+/** The customer's email about their appointment, and a phone notification (not for their own new request). */
 export async function emailAppointment(appointmentId: string, event: AppointmentEmail) {
   await safely(`appointment ${event}`, async () => send(await composeAppointment(appointmentId, event)));
+  const title = APPOINTMENT_PUSH[event];
+  if (!title) return;
+  await safely(`appointment ${event} push`, async () => {
+    const [a] = await db.select().from(s.appointments).where(eq(s.appointments.id, appointmentId));
+    if (!a?.userId) return;
+    await pushToCustomer(a.userId, {
+      title,
+      body: `${a.serviceName} · ${formatLongDate(a.date)} at ${formatSlot(a.time.slice(0, 5))}`,
+      url: `/salon/appointment/${a.reference}`,
+      tag: `appointment-${a.reference}`,
+    });
+  });
 }
 
 /* ------------------------------------------------------------------ */

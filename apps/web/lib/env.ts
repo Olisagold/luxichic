@@ -24,6 +24,9 @@ const serverSchema = z.object({
   RESEND_API_KEY: optional(z.string().startsWith('re_')),
   // Vercel Cron sends it as a Bearer token to /api/cron/* (Phase 9)
   CRON_SECRET: optional(z.string().min(16, 'Use at least 16 characters')),
+  // Web push for the installed apps (Phase 9 follow-up); NEXT_PUBLIC_VAPID_PUBLIC_KEY is its pair
+  VAPID_PRIVATE_KEY: optional(z.string().min(20)),
+  VAPID_SUBJECT: optional(z.string().regex(/^(mailto:|https:)/, 'Use mailto:you@example.com or an https URL')),
 });
 
 const clientSchema = z
@@ -32,6 +35,7 @@ const clientSchema = z
     NEXT_PUBLIC_SUPABASE_URL: optional(z.string().url()),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(1)),
     NEXT_PUBLIC_SENTRY_DSN: optional(z.string().url()),
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: optional(z.string().min(20)),
   })
   .refine((e) => !e.NEXT_PUBLIC_SUPABASE_URL === !e.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
     message: 'Set both NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, or neither',
@@ -44,6 +48,7 @@ const clientValues = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
 };
 
 function parse<T extends z.ZodTypeAny>(schema: T, values: unknown): z.infer<T> {

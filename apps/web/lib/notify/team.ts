@@ -4,6 +4,7 @@ import { db } from '@/db';
 import * as s from '@/db/schema';
 import { env } from '@/lib/env';
 import { DEFAULT_TELEGRAM, loadSettingsRows, type TelegramSettings } from '@/lib/settings/store';
+import { pushToAdmins } from '@/lib/push/send';
 import { sendTelegramMessage } from '@/lib/telegram/client';
 import { formatNaira } from '@/lib/utils/currency';
 import { formatDate, formatSlot } from '@/lib/utils/dates';
@@ -38,9 +39,14 @@ async function loadTeamSettings() {
   };
 }
 
-/** A bell notification; `specialistId` also shows an appointment one to that specialist's own login. */
+/**
+ * A bell notification, also sent to the phones of the admins who see it. `specialistId` also shows an
+ * appointment one to that specialist's own login.
+ */
 async function notify(kind: Kind, title: string, body: string, link: string, specialistId?: string | null) {
-  await db.insert(s.notifications).values({ kind, title, body, link, specialistId: specialistId ?? null });
+  const n = { kind, title, body, link, specialistId: specialistId ?? null };
+  await db.insert(s.notifications).values(n);
+  await pushToAdmins(n);
 }
 
 async function send(chatId: string | undefined | null, text: string, label: string) {

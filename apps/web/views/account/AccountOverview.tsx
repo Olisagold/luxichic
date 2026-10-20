@@ -7,6 +7,7 @@ import { PackageIcon, SparklesIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { OrderHistoryTable } from '@/components/account/OrderHistoryTable';
 import { AppointmentList } from '@/components/account/AppointmentList';
+import { PushCard } from '@/components/account/PushCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { toISODate } from '@/lib/utils/dates';
@@ -56,6 +57,8 @@ export function AccountOverview({ orders, appointments }: { orders: Order[]; app
           ))}
         </dl>
       </header>
+
+      <PushCard />
 
       <section aria-labelledby="recent-orders">
         <div className="mb-4 flex items-end justify-between">

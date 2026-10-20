@@ -195,13 +195,22 @@ export function AdminTopbar({ onOpenMobileNav, onToggleCollapse, onOpenSearch }:
                     <li className="px-4 py-8 text-center text-[13px] text-subtle">You’re all caught up.</li>
                   )}
                 </ul>
-                <Link
-                  href="/admin/notifications"
-                  onClick={close}
-                  className="block border-t border-line px-4 py-2.5 text-center text-xs font-semibold text-ink hover:bg-canvas"
-                >
-                  View all notifications
-                </Link>
+                <div className="flex border-t border-line text-xs font-semibold">
+                  <Link
+                    href="/admin/notifications"
+                    onClick={close}
+                    className="flex-1 px-4 py-2.5 text-center text-ink hover:bg-canvas"
+                  >
+                    View all
+                  </Link>
+                  <Link
+                    href="/admin/notifications#phone"
+                    onClick={close}
+                    className="flex-1 border-l border-line px-4 py-2.5 text-center text-pink-deep hover:bg-canvas"
+                  >
+                    Get these on your phone
+                  </Link>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

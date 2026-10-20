@@ -50,6 +50,13 @@
       "when": 1792427435437,
       "tag": "20261019163035_specialist_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792504085394,
+      "tag": "20261020134805_push_subscriptions",
+      "breakpoints": true
     }
   ]
 }

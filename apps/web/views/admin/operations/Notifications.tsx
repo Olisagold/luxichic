@@ -18,6 +18,7 @@ import type { NotificationKind } from '@/types/admin';
 import { useRouter } from 'next/navigation';
 import { useAdminSettings } from '@/components/admin/AdminSettingsProvider';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { PushPanel } from '@/components/admin/PushPanel';
 import { markNotifications as markOnServer, saveNotificationPrefs } from '@/lib/settings/admin-actions';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
@@ -78,6 +79,9 @@ export function Notifications() {
           )
         }
       />
+      <div id="phone" className="mb-5 scroll-mt-20">
+        <PushPanel />
+      </div>
       <div className={cn('grid grid-cols-1 gap-5', manages && 'lg:grid-cols-[minmax(0,1fr)_320px]')}>
         <div className="rounded-xl border border-line bg-white">
           <div className="border-b border-line p-3 sm:p-4">

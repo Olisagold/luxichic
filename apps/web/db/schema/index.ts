@@ -23,4 +23,5 @@ export * from './availability';
 export * from './appointments';
 export * from './content';
 export * from './notifications';
+export * from './push';
 export * from './audit-logs';
