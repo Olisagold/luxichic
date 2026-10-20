@@ -159,6 +159,7 @@ export function DivisionHeader() {
           {key === 'salon' ? (
             <Link
               href="/salon/book"
+              aria-label="Book an appointment"
               className="flex h-9 shrink-0 items-center gap-2 rounded-full bg-ink px-4 text-[12px] font-bold text-white transition-colors duration-150 hover:bg-charcoal"
             >
               <CalendarIcon className="h-3.5 w-3.5 text-pink" aria-hidden />

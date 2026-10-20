@@ -78,7 +78,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
       <Toaster
         position="bottom-center"
         toastOptions={{
-          style: { borderRadius: '16px', fontFamily: 'Manrope, sans-serif', border: '1px solid #E9E3DE' },
+          style: { borderRadius: '16px', fontFamily: 'var(--font-sans), sans-serif', border: '1px solid #E9E3DE' },
         }}
       />
     </div>

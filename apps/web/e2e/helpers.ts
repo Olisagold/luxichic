@@ -51,6 +51,7 @@ export async function setPayOnDelivery(page: Page, on: boolean) {
   const toggle = page.getByRole('switch', { name: 'Offer Pay on Delivery at checkout' });
   if ((await toggle.getAttribute('aria-checked')) !== String(on)) {
     await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-checked', String(on));
+    // The switch flips at once; the shop only changes once the save is confirmed.
+    await expect(page.getByText(on ? 'Pay on Delivery is on' : 'Pay on Delivery is off')).toBeVisible();
   }
 }

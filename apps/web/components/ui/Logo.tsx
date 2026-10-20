@@ -1,20 +1,14 @@
 import React from 'react';
-import { logos } from '@/data/images';
 import { cn } from '@/lib/utils/cn';
 
-type LogoVariant = keyof typeof logos;
+type LogoVariant = 'main' | 'hairs' | 'salon' | 'tools';
 
 /**
- * The supplied logos are square artwork on black. Each is cropped to its artwork
- * (never stretched or recoloured) so it sits cleanly on black surfaces.
- * Values are fractions of the source image: left, right, top, bottom.
+ * The supplied logos are square artwork on black, cropped to the artwork and saved as small WebP files in
+ * public/images/logos (192px tall: sharp at the largest size shown, about 10 KB each instead of the ~500 KB
+ * originals). Width / height of each crop, so the box keeps its shape before the image loads.
  */
-const crops: Record<LogoVariant, [number, number, number, number]> = {
-  main: [0.05, 0.86, 0.24, 0.66],
-  hairs: [0.05, 0.89, 0.24, 0.69],
-  salon: [0.095, 0.935, 0.255, 0.645],
-  tools: [0.05, 0.866, 0.253, 0.65],
-};
+const ratios: Record<LogoVariant, number> = { main: 370 / 192, hairs: 358 / 192, salon: 400 / 192, tools: 394 / 192 };
 
 const names: Record<LogoVariant, string> = {
   main: 'LUXICHIC',
@@ -24,16 +18,14 @@ const names: Record<LogoVariant, string> = {
 };
 
 export function Logo({ variant = 'main', className }: { variant?: LogoVariant; className?: string }) {
-  const [l, r, t, b] = crops[variant];
-  const w = r - l;
-  const h = b - t;
   return (
-    <span className={cn('relative block h-10 shrink-0 overflow-hidden', className)} style={{ aspectRatio: `${w / h}` }}>
+    <span className={cn('relative block h-10 shrink-0', className)} style={{ aspectRatio: `${ratios[variant]}` }}>
       <img
-        src={logos[variant]}
+        src={`/images/logos/${variant}.webp`}
         alt={names[variant]}
-        className="absolute mix-blend-lighten"
-        style={{ width: `${100 / w}%`, maxWidth: 'none', left: `${(-l / w) * 100}%`, top: `${(-t / h) * 100}%` }}
+        width={Math.round(192 * ratios[variant])}
+        height={192}
+        className="h-full w-full mix-blend-lighten"
       />
     </span>
   );

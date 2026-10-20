@@ -94,7 +94,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         toastOptions={{
           style: {
             borderRadius: '12px',
-            fontFamily: 'Manrope, sans-serif',
+            fontFamily: 'var(--font-sans), sans-serif',
             border: '1px solid #E9E3DE',
             fontSize: '13px',
           },

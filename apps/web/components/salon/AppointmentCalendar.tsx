@@ -59,7 +59,7 @@ export function AppointmentCalendar({ value, onChange, days: statuses }: Appoint
       </div>
       <div
         className="mt-4 grid grid-cols-7 gap-1 text-center"
-        role="grid"
+        role="group"
         aria-label="Choose a date"
         aria-busy={!statuses}
       >
@@ -105,7 +105,7 @@ export function AppointmentCalendar({ value, onChange, days: statuses }: Appoint
           <span className="h-1.5 w-1.5 rounded-full bg-pink" /> Available
         </span>
         <span className="line-through">Fully booked</span>
-        <span className="text-muted">Closed</span>
+        <span>Closed (greyed out)</span>
       </div>
     </div>
   );

@@ -530,7 +530,7 @@ Set up on 2026-10-14: Resend with the verified domain `mail.luxichic.online` (bo
    linking proof and confirmation links, and who sees which notification. Checked that deliberately broken rules fail.
 2. ✅ **End-to-end tests (Playwright)** (2026-10-20; `apps/web/e2e`, `pnpm --filter @luxichic/web test:e2e`): a
    production build against the local Supabase (`pnpm db:start`, `supabase db reset`, `SEED_PASSWORD=E2e-Test-pw1
-   pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-transfer checkout, Pay on Delivery
+pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-transfer checkout, Pay on Delivery
    (switched on in Admin → Payments), booking, sign up / sign in (with a wrong password refused), admin confirms a
    payment. Each checks the database too. Stable over 3 runs.
 3. ✅ **CI** runs format, lint, typecheck, unit tests and build, and a second job runs the end-to-end tests against

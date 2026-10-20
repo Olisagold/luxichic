@@ -17,16 +17,20 @@ interface AppointmentBookingFormProps {
   lockService?: boolean;
 }
 
-function StepLabel({ n, children }: { n: number; children: React.ReactNode }) {
+/** A numbered step; one level below the page's own headings (h2 on the booking page, h3 on a service page). */
+function StepLabel({ n, children, level = 2 }: { n: number; children: React.ReactNode; level?: 2 | 3 }) {
+  const Heading = level === 3 ? 'h3' : 'h2';
   return (
-    <h3 className="flex items-center gap-3 text-sm font-semibold text-ink">
+    <Heading className="flex items-center gap-3 text-sm font-semibold text-ink">
       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] text-white">{n}</span>
       {children}
-    </h3>
+    </Heading>
   );
 }
 
 export function AppointmentBookingForm({ initialService, lockService }: AppointmentBookingFormProps) {
+  // On a service page the form sits under its own "Book" heading, so the steps go one level lower.
+  const level = lockService ? 3 : 2;
   const b = useAppointmentBooking(initialService);
   const { services: salonServices } = useCatalog();
   let n = 0;
@@ -35,7 +39,9 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
     <form onSubmit={b.submit} noValidate className="space-y-8">
       {!lockService && (
         <div className="space-y-3">
-          <StepLabel n={++n}>Choose a service</StepLabel>
+          <StepLabel n={++n} level={level}>
+            Choose a service
+          </StepLabel>
           <SelectField
             id="bk-service"
             label="Service"
@@ -50,7 +56,9 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-3">
-          <StepLabel n={++n}>Pick a date</StepLabel>
+          <StepLabel n={++n} level={level}>
+            Pick a date
+          </StepLabel>
           <AppointmentCalendar value={b.date} onChange={b.selectDate} days={b.days} />
           {b.errors.date && (
             <p className="text-xs text-red-700" role="alert">
@@ -59,7 +67,9 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
           )}
         </div>
         <div className="space-y-3">
-          <StepLabel n={++n}>Select a time</StepLabel>
+          <StepLabel n={++n} level={level}>
+            Select a time
+          </StepLabel>
           {!b.date || !b.serviceSlug ? (
             <p className="rounded-2xl border border-dashed border-line p-6 text-sm text-subtle">
               {!b.serviceSlug
@@ -123,7 +133,9 @@ export function AppointmentBookingForm({ initialService, lockService }: Appointm
       </div>
 
       <div className="space-y-4">
-        <StepLabel n={++n}>Your details</StepLabel>
+        <StepLabel n={++n} level={level}>
+          Your details
+        </StepLabel>
         {!b.signedIn && (
           <p className="text-xs text-subtle">
             Booking as a guest.{' '}

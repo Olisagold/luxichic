@@ -27,8 +27,9 @@ const config: Config = {
         whatsapp: { DEFAULT: '#1F7A4D', hover: '#18643F' },
       },
       fontFamily: {
-        display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        sans: ['Manrope', 'system-ui', 'sans-serif'],
+        // Self-hosted by next/font (app/layout.tsx).
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
       transitionTimingFunction: {
         lux: 'cubic-bezier(0.23, 1, 0.32, 1)',
