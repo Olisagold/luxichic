@@ -39,10 +39,10 @@ Do these once per Supabase project (dashboard → **Authentication**).
 
 ### URL configuration
 
-|               | luxichic-dev                                                  | luxichic-prod                                               |
-| ------------- | ------------------------------------------------------------- | ----------------------------------------------------------- |
-| Site URL      | `http://localhost:3000`                                       | `https://luxichic.vercel.app` (the custom domain at launch) |
-| Redirect URLs | `http://localhost:3000/**` and the Vercel preview URL pattern | `https://luxichic.vercel.app/**`                            |
+|               | luxichic-dev                                                  | luxichic-prod                                                               |
+| ------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Site URL      | `http://localhost:3000`                                       | `https://luxichic.online`                                                   |
+| Redirect URLs | `http://localhost:3000/**` and the Vercel preview URL pattern | `https://luxichic.online/**` (and the old `https://luxichic.vercel.app/**`) |
 
 Email links and Google only return to addresses on this list.
 
@@ -76,7 +76,7 @@ Locally, Google is off. To test it, put `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | prod publishable key                    | dev publishable key        |
 | `SUPABASE_SECRET_KEY`                  | prod secret key                         | dev secret key             |
 | `DATABASE_URL`                         | prod transaction pooler URI (port 6543) | dev transaction pooler URI |
-| `NEXT_PUBLIC_SITE_URL`                 | `https://luxichic.vercel.app`           | (leave unset)              |
+| `NEXT_PUBLIC_SITE_URL`                 | `https://luxichic.online`               | (leave unset)              |
 
 Without them, the site still renders but sign-in says it isn't available, and `/account` and `/admin` can't be
 opened.

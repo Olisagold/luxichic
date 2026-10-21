@@ -566,7 +566,10 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
    - Backups: weekly, encrypted, kept 90 days (`.github/workflows/backup.yml`, `docs/deployment/backups.md`).
      **To do:** add the `PROD_DATABASE_URL` and `BACKUP_PASSPHRASE` secrets in GitHub, then run it once.
 2. Resend: verify the sending domain (SPF, DKIM, DMARC).
-3. Vercel: custom domain, production env vars.
+3. ✅ Domain (2026-10-21): `luxichic.online` is the live address (HTTPS by Vercel); `www.` and the old
+   `luxichic.vercel.app` redirect to it (page visits only: `/api/*` and form posts stay, `lib/seo/canonical-host.ts`).
+   `NEXT_PUBLIC_SITE_URL`, Supabase's Site URL and redirect URLs, Google's authorised domain and the Telegram
+   webhook all use it. Installed apps and phone notifications from the old address must be set up again.
 4. Create the real admin accounts and roles; load real products, services and content.
 5. Final legal and content review (policies, about, FAQs).
 6. ✅ Cleanup (2026-10-21):
