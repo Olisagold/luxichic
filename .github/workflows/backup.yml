@@ -1,0 +1,61 @@
+name: Database backup
+
+# A weekly encrypted copy of the production database, kept 90 days as a workflow artifact.
+# Setup and restore: docs/deployment/backups.md
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Mondays 02:00 UTC (03:00 in Lagos)
+  workflow_dispatch:
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Back up production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version comes from "packageManager" in package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Dump and encrypt
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Add the PROD_DATABASE_URL and BACKUP_PASSPHRASE repository secrets (docs/deployment/backups.md)."
+            exit 1
+          fi
+          # pg_dump needs the session pooler (5432); the app's URL uses the transaction pooler (6543).
+          url="${DATABASE_URL/:6543\//:5432/}"
+          echo "::add-mask::$url"
+          mkdir backup
+          pnpm exec supabase db dump --db-url "$url" --role-only -f backup/roles.sql
+          pnpm exec supabase db dump --db-url "$url" -f backup/schema.sql
+          pnpm exec supabase db dump --db-url "$url" --data-only --use-copy -f backup/data.sql
+          name="luxichic-prod-$(date -u +%Y-%m-%d)"
+          tar -czf - -C backup . |
+            openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -salt -pass env:BACKUP_PASSPHRASE -out "$name.tar.gz.enc"
+          rm -rf backup
+          echo "BACKUP_NAME=$name" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: ${{ env.BACKUP_NAME }}.tar.gz.enc
+          retention-days: 90
+          if-no-files-found: error

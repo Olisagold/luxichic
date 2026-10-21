@@ -558,7 +558,13 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
    installed admin app opens there. Tested end to end (the e2e suite runs with a secret address). **To do:** set
    `ADMIN_PATH` in Vercel, then staff bookmark the new address and reinstall the admin app.
 
-1. Production Supabase: apply migrations, RLS review, backups enabled, storage buckets and policies.
+1. ✅ Production Supabase (checked 2026-10-21, read-only): the same 9 migrations as the repo; row-level security on
+   every table, with the same 31 policies as a fresh local database (visitors read only published content,
+   customers only their own records, and may change only their addresses, cart, wishlist, name and phone); no
+   functions callable by visitors (Supabase's own `rls_auto_enable` trigger aside); the `media` bucket takes
+   images up to 25 MB and only the server writes to it.
+   - Backups: weekly, encrypted, kept 90 days (`.github/workflows/backup.yml`, `docs/deployment/backups.md`).
+     **To do:** add the `PROD_DATABASE_URL` and `BACKUP_PASSPHRASE` secrets in GitHub, then run it once.
 2. Resend: verify the sending domain (SPF, DKIM, DMARC).
 3. Vercel: custom domain, production env vars.
 4. Create the real admin accounts and roles; load real products, services and content.
