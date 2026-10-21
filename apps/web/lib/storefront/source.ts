@@ -1,5 +1,5 @@
 import 'server-only';
-import { asc, getTableColumns, inArray, type AnyColumn } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, gte, inArray, sql, type AnyColumn } from 'drizzle-orm';
 import { db } from '@/db';
 import * as s from '@/db/schema';
 import type { AdminProduct, AdminService, SiteContent, SocialLink, Specialist, StoreSettings } from '@/types/admin';
@@ -314,6 +314,29 @@ export async function loadAdminCatalog(ids?: string[]): Promise<Pick<StorefrontS
 }
 
 /** Reads the whole storefront source from the database (server code, bypasses RLS; filtering happens in derive). */
+/** The latest visible 4–5★ reviews with a real comment, for the homepage's "What our clients say". */
+export async function loadReviewQuotes(): Promise<StorefrontSource['reviewQuotes']> {
+  return db
+    .select({
+      authorName: s.reviews.authorName,
+      rating: s.reviews.rating,
+      body: s.reviews.body,
+      productName: s.products.name,
+    })
+    .from(s.reviews)
+    .innerJoin(s.products, eq(s.products.id, s.reviews.productId))
+    .where(
+      and(
+        eq(s.reviews.status, 'visible'),
+        gte(s.reviews.rating, 4),
+        sql`length(trim(${s.reviews.body})) >= 20`,
+        eq(s.products.status, 'published'),
+      ),
+    )
+    .orderBy(desc(s.reviews.createdAt))
+    .limit(8);
+}
+
 export async function loadStorefrontSource(): Promise<StorefrontSource> {
   const { categoryById, categories } = await loadCategories();
 
@@ -322,8 +345,10 @@ export async function loadStorefrontSource(): Promise<StorefrontSource> {
   const salon = await loadSalon();
   const content = await loadContent();
   const settings = await loadSettings();
+  const reviewQuotes = await loadReviewQuotes();
   return {
     products,
+    reviewQuotes,
     categories,
     services: salon.services,
     specialists: salon.specialists,

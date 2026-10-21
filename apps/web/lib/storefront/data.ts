@@ -12,7 +12,7 @@ export const STOREFRONT_TAG = 'storefront';
 /** The prototype's catalog, for a clone or CI build with no database configured. */
 function prototypeSource(): StorefrontSource {
   const store = buildInitialDb();
-  return { ...store, settings: store.settings };
+  return { ...store, settings: store.settings, reviewQuotes: [] };
 }
 
 /**

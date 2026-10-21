@@ -9,6 +9,7 @@ import type {
 } from '@/types/admin';
 import type { Category, Product } from '@/types/product';
 import type { SalonService } from '@/types/salon';
+import { initials } from '@/lib/utils/text';
 
 /** The catalog, content and public settings the storefront is built from (database or prototype data). */
 export interface StorefrontSource {
@@ -17,6 +18,8 @@ export interface StorefrontSource {
   services: AdminService[];
   specialists: Specialist[];
   content: SiteContent;
+  /** The latest real 4–5★ reviews with something to say, shown with the admin's testimonials on the homepage. */
+  reviewQuotes: { authorName: string; rating: number; body: string; productName: string }[];
   settings: Pick<
     StoreSettings,
     'business' | 'instagram' | 'instagramHandles' | 'tiktok' | 'socialLinks' | 'payOnDeliveryEnabled'
@@ -29,6 +32,15 @@ export interface StorefrontSource {
 }
 
 type Handle = { handle: string; url: string };
+
+/** Shortens text to at most `max` characters, at a word break where there's one near the end. */
+function clip(text: string, max: number): string {
+  const t = text.trim().replace(/\s+/g, ' ');
+  if (t.length <= max) return t;
+  const space = t.lastIndexOf(' ', max - 1);
+  const cut = space > max * 0.6 ? space : max - 1;
+  return t.slice(0, cut).replace(/[,.;:!?]+$/, '') + '…';
+}
 
 /** Everything a storefront page can show, already filtered to what customers may see. */
 export interface StorefrontData {
@@ -168,9 +180,19 @@ export function deriveStorefront(src: StorefrontSource, today = new Date().toISO
       featuredServiceSlugs: c.featuredServiceSlugs,
       salonSection: c.salonSection,
       why: c.why,
-      testimonials: c.testimonials
-        .filter((t) => t.status === 'active')
-        .map(({ name, initials, rating, item, text }) => ({ name, initials, rating, item, text })),
+      // The admin's own testimonials first, then real customer reviews; the section hides when there are none.
+      testimonials: [
+        ...c.testimonials
+          .filter((t) => t.status === 'active')
+          .map(({ name, initials, rating, item, text }) => ({ name, initials, rating, item, text })),
+        ...src.reviewQuotes.map((r) => ({
+          name: r.authorName,
+          initials: initials(r.authorName),
+          rating: r.rating,
+          item: r.productName,
+          text: clip(r.body, 240),
+        })),
+      ],
       about: c.about,
       contact: c.contact,
       faqs: c.faqs,

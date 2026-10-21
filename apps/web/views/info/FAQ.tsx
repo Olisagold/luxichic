@@ -48,7 +48,6 @@ export function FAQ() {
               <Accordion items={c.items} />
             </section>
           ))}
-          <p className="text-xs text-subtle">Answers marked [Placeholder] will be finalised by LUXICHIC.</p>
         </div>
       </div>
     </div>

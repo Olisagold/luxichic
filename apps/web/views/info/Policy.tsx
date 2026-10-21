@@ -37,9 +37,6 @@ export function Policy() {
         </nav>
         <article className="max-w-3xl">
           <h1 className="font-display text-5xl text-ink">{policy.title}</h1>
-          <p className="mt-4 rounded-2xl bg-champagne/40 p-4 text-sm text-charcoal">
-            This page contains placeholder content. LUXICHIC will replace it with its final policy before launch.
-          </p>
           {policy.sections.map((s, i) => (
             <section key={s.heading} className="mt-10">
               <h2 className="font-display text-2xl text-ink">

@@ -38,9 +38,6 @@ export function TestimonialCarousel() {
       <div className="mx-auto grid grid-cols-1 max-w-site gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
         <div>
           <h2 className="font-display text-4xl leading-[1.05] md:text-6xl">What our clients say</h2>
-          <p className="mt-4 inline-flex rounded-full border border-gold/60 px-3 py-1 text-[11px] font-semibold text-gold">
-            Placeholder testimonials · to be replaced with genuine reviews
-          </p>
           <div className="mt-10 flex gap-3">
             <button onClick={() => go(-1)} className={arrow} aria-label="Previous testimonial">
               <ArrowLeftIcon className="h-4 w-4" />
