@@ -6,7 +6,7 @@
  *   corepack pnpm content:load -- --dry-run                                  # local Supabase
  *   corepack pnpm content:load -- --env-file apps/web/.env.prod.local        # production, after approval
  *
- * The live site picks it up within the hour (its storefront cache), or at once after a redeploy.
+ * The live site shows it after the next deploy (each build reads fresh data), or within the hour.
  */
 import { eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
