@@ -50,6 +50,11 @@ Email links and Google only return to addresses on this list.
 
 - **Sign In / Providers → Email:** "Confirm email" **off** until Resend SMTP is set up (Phase 11). With it on,
   the built-in mailer only reaches the Supabase team's own address, about 2 emails an hour.
+- **Emails → Templates:** paste `supabase/templates/confirmation.html` ("Confirm signup"), `recovery.html`
+  ("Reset password") and `email_change.html` ("Change email address"), with the subjects in
+  `supabase/config.toml`. Regenerate them after changing the business phone or WhatsApp:
+  `corepack pnpm auth:email-templates -- --env-file apps/web/.env.prod.local`. Their links use `{{ .SiteURL }}`,
+  so the Site URL must be the live address.
 - **Password requirements:** minimum length **8**, "letters and digits". This matches the site's own check.
 
 ### Google
