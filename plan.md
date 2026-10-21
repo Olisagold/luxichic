@@ -589,6 +589,11 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
      comes after launch) and the made-up "fully booked" availability helpers.
    - `legacy/luxichic-react` removed (it stays in git history); README brought up to date.
 7. Go live, then watch Vercel's logs and analytics for the first weeks.
+   - ✅ Test data cleared from production (2026-10-21, backed up first): 6 orders, 8 appointments, both customer
+     accounts and their address, cart and notifications, the dashboard notifications, and the order, appointment
+     and customer entries in the activity log. Stock taken by test orders was put back, and the prototype's sales
+     counts were reset to 0. Kept: all 50 products (LXH-01 to LXH-08 with their opening stock), specialists,
+     staff logins, settings and content.
 8. ✅ Google sign-in names the site (2026-10-21): with `NEXT_PUBLIC_GOOGLE_CLIENT_ID` set (Production), the
    sign-in and register pages show Google's own button, whose window says "continue to luxichic.online", and the
    sign-in finishes on the page (`signInWithIdToken` with a nonce, then `finishGoogleSignIn`). Without it, or
