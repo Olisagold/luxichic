@@ -2,9 +2,18 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { ADMIN_GATE_HEADER, adminGate } from '@/lib/auth/admin-gate';
 import { env, isSupabaseConfigured } from '@/lib/env';
+import { canonicalRedirect } from '@/lib/seo/canonical-host';
 import { REMEMBER_COOKIE, sessionCookieOptions } from '@/lib/supabase/cookies';
 
 export async function middleware(request: NextRequest) {
+  const canonical = canonicalRedirect(
+    request.nextUrl,
+    request.method,
+    env.NEXT_PUBLIC_SITE_URL,
+    process.env.VERCEL_ENV,
+  );
+  if (canonical) return NextResponse.redirect(canonical, 308);
+
   const signedIn = request.cookies.getAll().some((c) => c.name.startsWith('sb-'));
   // The admin's secret address: rewritten to /admin with a marker only this code can set; /admin itself looks
   // like a missing page to anyone not signed in (lib/auth/admin-gate.ts).
