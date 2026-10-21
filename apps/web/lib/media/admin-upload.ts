@@ -13,8 +13,9 @@ import type { Result } from '@/types/user';
 
 /**
  * Admin image uploads, in two steps so large photos never pass through a Vercel function (it rejects requests
- * over 4.5 MB): the browser uploads the original straight to Storage with a signed URL, then the server makes
- * the WebP sizes (lib/media/variants.ts), records it in the media library and returns the 1200px URL.
+ * over 4.5 MB): the browser shrinks the photo and uploads it straight to Storage with a signed URL
+ * (lib/media/upload-client.ts), then the server makes the WebP sizes (lib/media/variants.ts), moves the upload
+ * into place as the original, records it in the media library and returns the 1200px URL.
  */
 
 type Folder = (typeof mediaFolder.enumValues)[number];
@@ -77,14 +78,21 @@ export async function finishImageUpload(
     if (error || !blob) return { ok: false, error: 'Upload not found. Please try again.' };
     const original = Buffer.from(await blob.arrayBuffer());
     const image = await processImage(original);
-    for (const f of image.files) {
+    const [originalFile, ...sizes] = image.files;
+    const put = async (f: (typeof image.files)[number]) => {
       const { error: upErr } = await storage.upload(f.path, f.body, {
         contentType: f.contentType,
         cacheControl: '31536000',
         upsert: true,
       });
       if (upErr) throw upErr;
-    }
+    };
+    await Promise.all([
+      ...sizes.map(put),
+      // The uploaded file becomes the original where it is, instead of being sent again. A move fails when the
+      // same image was uploaded before (same key), so then it's written over as before.
+      storage.move(path, originalFile.path).then(({ error: moveErr }) => (moveErr ? put(originalFile) : undefined)),
+    ]);
     const url = mediaUrl(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), image.key);
     await db.insert(media).values({
       url,

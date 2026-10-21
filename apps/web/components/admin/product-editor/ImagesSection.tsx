@@ -9,13 +9,14 @@ import { useAdminCatalog } from '@/components/admin/AdminCatalogProvider';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Modal } from '@/components/ui/Modal';
-import { uploadAdminImage } from '@/lib/media/upload-client';
+import { uploadAdminImage, uploadAdminImages } from '@/lib/media/upload-client';
 
 /** Drag to reorder; the first image is the primary image shown on cards. */
 export function ImagesSection({ editor }: { editor: ProductEditorState }) {
   const { draft, update, errors } = editor;
   const media = useAdminCatalog().media ?? [];
-  const upload = (file: File) => uploadAdminImage(file, 'product', draft.division === 'hairs' ? 'hairs' : 'hair_tools');
+  const folder = draft.division === 'hairs' ? 'hairs' : 'hair_tools';
+  const upload = (file: File) => uploadAdminImage(file, 'product', folder);
   const fileRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
@@ -26,16 +27,18 @@ export function ImagesSection({ editor }: { editor: ProductEditorState }) {
   const add = async (files: FileList | null) => {
     if (!files?.length) return;
     setBusy(true);
-    try {
-      // One at a time, so each finished image shows up straight away.
-      let images = draft.images;
-      for (const file of Array.from(files).slice(0, 8)) {
-        images = [...images, await upload(file)];
+    // Several at once; each shows up as soon as it and the ones picked before it are done.
+    let images = draft.images;
+    await uploadAdminImages(
+      Array.from(files).slice(0, 8),
+      'product',
+      folder,
+      (url) => {
+        images = [...images, url];
         update({ images });
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Could not read that image.');
-    }
+      },
+      (message, file) => toast.error(`${file.name}: ${message}`),
+    );
     setBusy(false);
   };
 

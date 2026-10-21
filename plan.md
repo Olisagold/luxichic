@@ -585,15 +585,14 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
      comes after launch) and the made-up "fully booked" availability helpers.
    - `legacy/luxichic-react` removed (it stays in git history); README brought up to date.
 7. Go live, then watch Vercel's logs and analytics for the first weeks.
+8. ✅ Faster admin image uploads (2026-10-21, the CEO agreed to shrinking): the browser shrinks photos to 2560px
+   on the long side before upload (JPEG, or WebP for PNG/WebP to keep transparency; GIFs and unreadable files
+   go as they are), so the stored "original" is that copy. The server makes the four WebP sizes at once (effort 4) and uploads them in parallel, and moves the upload into place as the original instead of sending it
+   again. Several images upload three at a time, kept in the order picked. Tested end to end
+   (`e2e/admin-upload.spec.ts`: a 10 MB 4000×3000 photo, picked twice).
 
 ## After launch (not scheduled)
 
-- **Faster admin image uploads** (measured 2026-10-12; waiting for the CEO's review). Resizing is fast (~0.15s);
-  the time is network calls. Options, best first: (1) shrink photos in the browser to ~2560px before upload, which
-  means the stored "original" is that copy, not the camera file (needs the CEO's OK); (2) upload the 4 sizes in
-  parallel; (3) move the original into place instead of uploading it twice; (4) resize in parallel with a lighter
-  WebP setting; (5) upload several images at once in the editor. All in `lib/media/admin-upload.ts`,
-  `upload-client.ts` and the editor's images section.
 - **Google sign-in shows the Supabase address** ("continue to dfiqnpqhyeittcmgjdrk.supabase.co"). Decided
   2026-10-14: fix after launch with (1) Google brand verification (app name LUXICHIC and logo on the consent
   screen) and/or (3) Google's own sign-in button on our pages (`signInWithIdToken`), whichever works best then.

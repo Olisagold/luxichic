@@ -7,7 +7,7 @@ import type { MediaItem } from '@/types/admin';
 import { useRouter } from 'next/navigation';
 import { useAdminContent } from '@/components/admin/AdminContentProvider';
 import { deleteMedia, mediaUploaded } from '@/lib/content/admin-actions';
-import { uploadAdminImage } from '@/lib/media/upload-client';
+import { uploadAdminImages } from '@/lib/media/upload-client';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { SearchInput } from '@/components/admin/ui/SearchInput';
@@ -54,14 +54,13 @@ export function MediaLibrary() {
     if (!files?.length) return;
     setBusy(true);
     let ok = 0;
-    for (const f of Array.from(files).slice(0, 10)) {
-      try {
-        await uploadAdminImage(f, 'content', FOLDER_KEY[folder === 'all' ? 'Products' : folder]);
-        ok += 1;
-      } catch (e) {
-        toast.error(`${f.name}: ${e instanceof Error ? e.message : 'could not be uploaded'}`);
-      }
-    }
+    await uploadAdminImages(
+      Array.from(files).slice(0, 10),
+      'content',
+      FOLDER_KEY[folder === 'all' ? 'Products' : folder],
+      () => (ok += 1),
+      (message, file) => toast.error(`${file.name}: ${message}`),
+    );
     setBusy(false);
     if (ok) {
       await mediaUploaded(ok).catch(() => null);

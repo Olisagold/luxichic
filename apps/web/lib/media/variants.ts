@@ -1,6 +1,6 @@
 /**
  * Turns one uploaded image into the files stored in the `media` bucket: the untouched original plus a WebP per
- * width in MEDIA_WIDTHS. Node only (sharp); used by `pnpm db:media` now and by the admin's uploads in Phase 8.
+ * width in MEDIA_WIDTHS. Node only (sharp); used by `pnpm db:media` and the admin's uploads (lib/media/admin-upload.ts).
  */
 import { createHash } from 'node:crypto';
 import sharp from 'sharp';
@@ -40,14 +40,22 @@ export async function processImage(original: Buffer): Promise<ProcessedImage> {
   const width = rotated ? meta.height : meta.width;
   const height = rotated ? meta.width : meta.height;
 
-  const files: MediaFile[] = [{ path: `${key}/original.${type.ext}`, body: original, contentType: type.contentType }];
-  for (const w of MEDIA_WIDTHS) {
-    const body = await sharp(original)
-      .rotate() // apply the EXIF orientation, then drop the metadata
-      .resize({ width: w, withoutEnlargement: true })
-      .webp({ quality: 80, alphaQuality: 90, effort: 5 })
-      .toBuffer();
-    files.push({ path: `${key}/${w}.webp`, body, contentType: 'image/webp' });
-  }
+  // All widths at once from one decoded image; effort 4 is about twice as fast as 5 for nearly the same size.
+  const source = sharp(original).rotate(); // apply the EXIF orientation, then drop the metadata
+  const sizes = await Promise.all(
+    MEDIA_WIDTHS.map(async (w) => ({
+      path: `${key}/${w}.webp`,
+      body: await source
+        .clone()
+        .resize({ width: w, withoutEnlargement: true })
+        .webp({ quality: 80, alphaQuality: 90, effort: 4 })
+        .toBuffer(),
+      contentType: 'image/webp',
+    })),
+  );
+  const files: MediaFile[] = [
+    { path: `${key}/original.${type.ext}`, body: original, contentType: type.contentType },
+    ...sizes,
+  ];
   return { key, width, height, files };
 }
