@@ -574,12 +574,11 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
    `NEXT_PUBLIC_SITE_URL`, Supabase's Site URL and redirect URLs, Google's authorised domain and the Telegram
    webhook all use it. Installed apps and phone notifications from the old address must be set up again.
 4. Create the real admin accounts and roles; load real products, services and content.
-5. Final legal and content review (policies, about, FAQs). Drafts written 2026-10-21 in
-   `scripts/content/launch-content.ts` (Nigerian law: NDPA 2023, FCCPA 2018; the shop's real flows), with the
-   decisions the CEO must confirm listed at its top. **To do:** CEO approves or edits, then
-   `corepack pnpm content:load -- --env-file apps/web/.env.prod.local`. Still needed from the CEO: durations and
-   starting prices for the 11 salon services (all "to be confirmed"). The placeholder testimonials were archived;
-   the homepage shows real 4–5★ reviews instead.
+5. ✅ Legal and content (2026-10-21): the CEO approved the drafts in `scripts/content/launch-content.ts` (four
+   policies under the NDPA 2023 and FCCPA 2018, the About page, three FAQ answers, the delivery estimate), loaded
+   into production with `pnpm content:load`. The placeholder testimonials were archived; the homepage shows real
+   4–5★ reviews instead. **Still needed from the CEO:** starting prices and durations for the 11 salon services
+   (entered under Salon → Services).
 6. ✅ Cleanup (2026-10-21):
    - `lib/mock-db` deleted. Its starting data is now `data/prototype-store.ts`, used only by the seed scripts
      and the no-database build (CI); the unused prototype orders, reviews and settings contexts are gone, and
