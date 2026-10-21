@@ -42,11 +42,40 @@ export function Policy() {
               <h2 className="font-display text-2xl text-ink">
                 {i + 1}. {s.heading}
               </h2>
-              <p className="mt-3 text-[15px] leading-relaxed text-charcoal">{s.body}</p>
+              <PolicyText text={s.body} />
             </section>
           ))}
         </article>
       </div>
+    </div>
+  );
+}
+
+/** A policy section's text: blank lines start paragraphs, and lines starting with "- " are bullet points. */
+function PolicyText({ text }: { text: string }) {
+  return (
+    <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-charcoal">
+      {text
+        .split(/\n\s*\n/)
+        .map((block) => block.trim())
+        .filter(Boolean)
+        .map((block, i) => {
+          const lines = block.split('\n').map((l) => l.trim());
+          const intro = lines.filter((l) => !l.startsWith('- '));
+          const bullets = lines.filter((l) => l.startsWith('- ')).map((l) => l.slice(2));
+          return (
+            <React.Fragment key={i}>
+              {intro.length > 0 && <p>{intro.join(' ')}</p>}
+              {bullets.length > 0 && (
+                <ul className="list-disc space-y-1.5 pl-5 marker:text-pink-deep">
+                  {bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              )}
+            </React.Fragment>
+          );
+        })}
     </div>
   );
 }
