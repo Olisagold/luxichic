@@ -173,9 +173,9 @@ Status: done locally. Applying to the hosted projects is the remaining step. See
    ⏳ The Google consent screen gets a final check at launch, with the custom domain (Phase 11).
 3. ✅ Database triggers: a `profiles` row for every new login; confirmed email changes copied over; adding an
    admin removes their customer profile. pgTAP tests (29 checks in total) pass.
-4. **Deferred to Phase 11** (no domain yet, decided 2026-10-08): Supabase Auth emails through Resend SMTP, with
-   LUXICHIC-branded templates. Until then "Confirm email" stays off on the hosted projects so sign-up works, and
-   the built-in mailer only reaches the Supabase team's own address (about 2 emails an hour).
+4. ✅ (Phase 11, 2026-10-21) Supabase Auth emails go through Resend SMTP with LUXICHIC-branded templates
+   (`supabase/templates`). "Confirm email" stays **off** by decision, so sign-up has no extra step; guest
+   records are linked through our own confirmation link instead (item 5 of Phase 5).
 5. ✅ Session refresh in `middleware.ts`, skipped for visitors with no session. Signed-out visitors to `/account`
    and `/admin` go to the right sign-in page, keeping the page they asked for.
 6. ✅ `/account/*` checked on the server in the layout.
@@ -291,9 +291,10 @@ Done 2026-10-12. Follows the **Payment flow** section above. Guest checkout stay
    cookie of order ids); anyone else tracks it with order number + email. The prototype's "simulate
    confirmation" email preview is gone (real emails come in Phase 9).
 5. ✅ Guest orders join an account at sign-in, but only once its email is verified: a Google sign-in, or a
-   confirmation email that was sent and clicked (`lib/orders/link.ts`). While "Confirm email" is off (until
-   Phase 11), email + password sign-ups are auto-confirmed without any email, so their guest orders are not
-   linked; otherwise anyone could read another person's orders by signing up with their email.
+   confirmation email that was sent and clicked (`lib/orders/link.ts`). "Confirm email" is off (by decision), so
+   email + password sign-ups are auto-confirmed and their guest orders wait for our own confirmation link
+   (`lib/auth/guest-records.ts`); otherwise anyone could read another person's orders by signing up with their
+   email.
 6. ✅ Account overview, orders list and order detail read the customer's own orders on the server.
 7. ✅ Promo codes are checked on the server (`discounts`: active, dates, usage limit, minimum spend, store
    scope). `pnpm db:set-promo` creates or updates codes until the admin Discounts page saves (Phase 8).
@@ -565,7 +566,9 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
    images up to 25 MB and only the server writes to it.
    - Backups: weekly, encrypted, kept 90 days (`.github/workflows/backup.yml`, `docs/deployment/backups.md`).
      **To do:** add the `PROD_DATABASE_URL` and `BACKUP_PASSPHRASE` secrets in GitHub, then run it once.
-2. Resend: verify the sending domain (SPF, DKIM, DMARC).
+2. ✅ Email (2026-10-21): Resend verified on `mail.luxichic.online` (SPF, DKIM); DMARC `p=none` at the root
+   (tighten to `quarantine` after a few weeks of clean sending). Supabase's own emails (reset password, change
+   email) use Resend SMTP and the branded templates; 60 an hour. Resend's free plan: 100 emails a day.
 3. ✅ Domain (2026-10-21): `luxichic.online` is the live address (HTTPS by Vercel); `www.` and the old
    `luxichic.vercel.app` redirect to it (page visits only: `/api/*` and form posts stay, `lib/seo/canonical-host.ts`).
    `NEXT_PUBLIC_SITE_URL`, Supabase's Site URL and redirect URLs, Google's authorised domain and the Telegram

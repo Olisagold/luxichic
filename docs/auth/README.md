@@ -48,8 +48,12 @@ Email links and Google only return to addresses on this list.
 
 ### Email and passwords
 
-- **Sign In / Providers → Email:** "Confirm email" **off** until Resend SMTP is set up (Phase 11). With it on,
-  the built-in mailer only reaches the Supabase team's own address, about 2 emails an hour.
+- **Sign In / Providers → Email:** "Confirm email" **off**, on purpose (decided 2026-10-21): sign-up is instant.
+  Only an email with earlier guest orders or appointments gets our own confirmation link, which joins them to
+  the account (`lib/auth/guest-records.ts`).
+- **Emails → SMTP Settings** (prod): Resend, `smtp.resend.com:465`, user `resend`, a sending-only API key for
+  `mail.luxichic.online`; sender `account@mail.luxichic.online`, name LUXICHIC. **Rate Limits:** 60 emails an
+  hour.
 - **Emails → Templates:** paste `supabase/templates/confirmation.html` ("Confirm signup"), `recovery.html`
   ("Reset password") and `email_change.html` ("Change email address"), with the subjects in
   `supabase/config.toml`. Regenerate them after changing the business phone or WhatsApp:
