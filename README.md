@@ -19,27 +19,19 @@ Monorepo for the Luxichic platform: storefront (hair, tools), salon booking, cus
 - `packages/config`: shared TypeScript config
 - `docs/`: architecture, database, business rules, integrations, API, deployment
 - `scripts/`: setup, database and deployment scripts
-- `legacy/luxichic-react`: previous Vite + React frontend
 
 ## Getting started
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:3000
+cp .env.example apps/web/.env.local   # fill in the Supabase keys (see the comments in the file)
+pnpm db:start                         # local Supabase in Docker
+pnpm db:seed                          # demo catalog, customers, orders and staff logins
+pnpm dev                              # http://localhost:3000
 ```
 
-The app currently runs entirely on the prototype store (`lib/mock-db` + `localStorage`),
-so no database is needed to try it. Demo admin logins are in `apps/web/data/adminSeed.ts`;
-sign in at `/admin/login`.
-
-To work on the Supabase backend:
-
-```bash
-cp .env.example apps/web/.env.local   # fill in Supabase keys
-supabase start                        # local Postgres + Supabase stack
-```
+Staff sign in at `/admin/login`, or at the secret address when `ADMIN_PATH` is set.
 
 ## Status
 
-All storefront and admin routes have been ported from `legacy/luxichic-react` (Vite + React Router).
-Data still comes from the prototype store; the next step is moving each feature onto Supabase.
+Live on Supabase, Vercel, Resend and Telegram. Progress and the launch checklist are in [`plan.md`](plan.md).

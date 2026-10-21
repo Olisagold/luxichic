@@ -1,5 +1,5 @@
 /**
- * Loads the prototype's demo data (apps/web/data + lib/mock-db) into a Supabase database,
+ * Loads the prototype's demo data (apps/web/data) into a Supabase database,
  * so dev and preview environments look like the current site.
  *
  *   corepack pnpm db:seed                 # local Supabase (pnpm db:start first)
@@ -21,7 +21,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as s from '../../apps/web/db/schema';
-import { buildInitialDb } from '../../apps/web/lib/mock-db/initial';
+import { buildInitialDb } from '../../apps/web/data/prototype-store';
 import { seedAppointments, seedOrders, seedReviews, seedUsers } from '../../apps/web/data/seed';
 import { generatedAppointments, generatedOrders, generatedReviews, seedCustomers } from '../../apps/web/data/adminSeed';
 import type { PaymentStatus } from '../../apps/web/types/order';

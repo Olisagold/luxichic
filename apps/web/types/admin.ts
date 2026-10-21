@@ -57,6 +57,7 @@ export type Permission =
   | 'content.media'
   | 'settings.payment'
   | 'settings.delivery'
+  /** No screen yet (WhatsApp alerts come after launch); kept so saved roles still load. */
   | 'settings.whatsapp'
   | 'settings.email'
   | 'settings.general'

@@ -7,7 +7,7 @@ import { sql } from 'drizzle-orm';
 import type { PgDatabase } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import * as s from '../../apps/web/db/schema';
-import { permissionGroups, rolePresets } from '../../apps/web/data/adminSeed';
+import { permissionGroups, rolePresets } from '../../apps/web/lib/permissions/roles';
 
 /** The database or a transaction on it. */
 type Db = PgDatabase<PostgresJsQueryResultHKT, typeof s>;

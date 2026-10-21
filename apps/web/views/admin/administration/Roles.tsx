@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAdminTeam } from '@/components/admin/AdminTeamProvider';
-import { permissionGroups, rolePresets } from '@/data/adminSeed';
+import { permissionGroups, rolePresets } from '@/lib/permissions/roles';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { Panel } from '@/components/admin/ui/Panel';
 import { AdminButton } from '@/components/admin/ui/AdminButton';

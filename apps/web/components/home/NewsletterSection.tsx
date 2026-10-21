@@ -87,7 +87,6 @@ export function NewsletterSection() {
                   {error}
                 </p>
               )}
-              <p className="mt-3 text-xs text-subtle">Prototype: no email is sent until the backend is connected.</p>
             </motion.form>
           )}
         </AnimatePresence>

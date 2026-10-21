@@ -64,9 +64,6 @@ export function Contact() {
               <p className="mt-2 text-sm text-subtle">
                 Thank you, {form.name.split(' ')[0]}. Our team will get back to you soon.
               </p>
-              <p className="mt-4 text-xs text-subtle">
-                Prototype: messages are not delivered until the backend is connected.
-              </p>
               <Button
                 variant="outline"
                 className="mt-6"

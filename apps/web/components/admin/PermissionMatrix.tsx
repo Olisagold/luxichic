@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { Permission } from '@/types/admin';
-import { permissionGroups } from '@/data/adminSeed';
+import { permissionGroups } from '@/lib/permissions/roles';
 import { cn } from '@/lib/utils/cn';
 
 /** Grouped checkboxes for choosing an admin's permissions. */

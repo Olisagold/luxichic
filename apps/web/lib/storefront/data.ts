@@ -2,7 +2,7 @@ import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { CACHE_SCOPE } from '@/lib/cache-scope';
 import { env } from '@/lib/env';
-import { buildInitialDb } from '@/lib/mock-db/initial';
+import { buildInitialDb } from '@/data/prototype-store';
 import { deriveStorefront, type StorefrontData, type StorefrontSource } from '@/lib/storefront/derive';
 import { loadStorefrontSource } from '@/lib/storefront/source';
 

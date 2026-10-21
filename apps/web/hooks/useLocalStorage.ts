@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 /**
- * Persisted state for the prototype. Replace with API calls when the backend is ready.
+ * Per-browser state (cart before sign-in, wishlist, recent searches, sidebar).
  * Starts from `initial` on the server and first client render (so hydration matches),
  * then loads the stored value after mount and persists changes from then on.
  */

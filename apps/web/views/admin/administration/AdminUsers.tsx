@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useAdminTeam } from '@/components/admin/AdminTeamProvider';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { createAdmin, deleteAdmin, resetAdminPassword, updateAdmin } from '@/lib/admins/admin-actions';
-import { rolePresets } from '@/data/adminSeed';
+import { rolePresets } from '@/lib/permissions/roles';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminInput, AdminSelect } from '@/components/admin/ui/AdminField';

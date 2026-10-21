@@ -22,7 +22,6 @@ import { useCart } from '@/contexts/CartContext';
 import { defaultSelection, divisionLabel, priceForSelection, reviewsLabel } from '@/lib/utils/products';
 import { useCatalog } from '@/components/storefront/StorefrontProvider';
 import { discountPercent } from '@/lib/utils/currency';
-import { businessConfig } from '@/data/config';
 import { NotFound } from '@/views/info/NotFound';
 
 /** `reviews` are the product's visible reviews, loaded on the server. */
@@ -103,9 +102,6 @@ export function ProductDetail({ division, reviews }: { division: Division; revie
               <PriceTag price={priced.price} original={priced.original} size="lg" />
               {off && <span className="rounded-full bg-pink px-2.5 py-1 text-xs font-bold text-ink">Save {off}%</span>}
             </div>
-            {businessConfig.pricesAreSamples && (
-              <p className="mt-1 text-xs text-subtle">Sample price — final pricing to be confirmed.</p>
-            )}
 
             <p className="mt-6 text-[15px] leading-relaxed text-charcoal">{product.shortDescription}</p>
 

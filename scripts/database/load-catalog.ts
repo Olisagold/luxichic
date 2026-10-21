@@ -13,7 +13,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as s from '../../apps/web/db/schema';
-import { buildInitialDb } from '../../apps/web/lib/mock-db/initial';
+import { buildInitialDb } from '../../apps/web/data/prototype-store';
 import { loadCatalog } from './catalog';
 import { resolveTarget } from './connect';
 import { syncReferenceData } from './reference-data';

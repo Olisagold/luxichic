@@ -563,10 +563,15 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
 3. Vercel: custom domain, production env vars.
 4. Create the real admin accounts and roles; load real products, services and content.
 5. Final legal and content review (policies, about, FAQs).
-6. Cleanup:
-   - Delete `lib/mock-db`.
-   - Remove remaining seed imports from UI code, and the `PrototypeNote` banners.
-   - Remove `legacy/luxichic-react` (it stays in git history).
+6. ✅ Cleanup (2026-10-21):
+   - `lib/mock-db` deleted. Its starting data is now `data/prototype-store.ts`, used only by the seed scripts
+     and the no-database build (CI); the unused prototype orders, reviews and settings contexts are gone, and
+     their old local-storage keys are cleared from visitors' browsers.
+   - No UI code imports seed data: roles and permissions moved to `lib/permissions/roles.ts`.
+   - Removed customer-facing prototype notes ("Sample price", "messages are not delivered", "no email is
+     sent"), the `PrototypeNote` component, the fake WhatsApp admin page (alerts go through Telegram; WhatsApp
+     comes after launch) and the made-up "fully booked" availability helpers.
+   - `legacy/luxichic-react` removed (it stays in git history); README brought up to date.
 7. Go live, then watch Vercel's logs and analytics for the first weeks.
 
 ## After launch (not scheduled)

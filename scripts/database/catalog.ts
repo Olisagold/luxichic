@@ -1,5 +1,5 @@
 /**
- * The storefront catalog and content from the prototype (apps/web/data + lib/mock-db): what the shop displays.
+ * The storefront catalog and content from the prototype (apps/web/data): what the shop displays.
  * Used by the dev seed and by `pnpm db:load-catalog`, which gives production the same starting catalog.
  *
  * Deliberately NOT here (demo-only, see seed.ts): customers, orders, appointments, reviews, promo codes, the
@@ -8,7 +8,7 @@
 import type { PgDatabase } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import * as s from '../../apps/web/db/schema';
-import type { buildInitialDb } from '../../apps/web/lib/mock-db/initial';
+import type { buildInitialDb } from '../../apps/web/data/prototype-store';
 import { productValues, writeProductDetails } from '../../apps/web/lib/catalog/product-rows';
 
 /** The database or a transaction on it. */

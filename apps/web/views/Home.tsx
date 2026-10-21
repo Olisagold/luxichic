@@ -38,7 +38,7 @@ export function Home() {
             Bestselling <span className="italic text-pink-deep">Hair</span>
           </>
         }
-        text="The units our customers reorder again and again. Sample prices shown until final pricing is confirmed."
+        text="The units our customers reorder again and again."
         products={bestsellers}
         action={{ label: 'View all hair products', to: '/hairs/shop/all' }}
       />

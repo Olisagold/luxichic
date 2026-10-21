@@ -1,6 +1,6 @@
 /**
- * The prototype store's starting data, built from apps/web/data. No React or browser code, so server code
- * (the storefront's no-database fallback, the seed scripts) can import it.
+ * The prototype's catalog, content and demo records, built from apps/web/data. Only the seed scripts and the
+ * storefront's no-database fallback (a CI build) use it; nothing in the browser does.
  */
 import type { Product } from '@/types/product';
 import type { AdminProduct, AdminService, StoreDb, StoreSettings, SiteContent } from '@/types/admin';
