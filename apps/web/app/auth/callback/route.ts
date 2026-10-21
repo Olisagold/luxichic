@@ -1,10 +1,6 @@
-import { after, NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType, User } from '@supabase/supabase-js';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { profiles } from '@/db/schema';
-import { linkGuestRecords } from '@/lib/auth/guest-records';
-import { emailWelcomeOnce } from '@/lib/email/customer';
+import { afterCustomerSignIn } from '@/lib/auth/after-sign-in';
 import { createClient } from '@/lib/supabase/server';
 
 /** Only same-site paths, never `//evil.com`. */
@@ -45,23 +41,10 @@ export async function GET(request: NextRequest) {
   }
 
   if (user && !next.startsWith('/admin')) {
-    const [profile] = await db
-      .select({ status: profiles.status, createdAt: profiles.createdAt })
-      .from(profiles)
-      .where(eq(profiles.id, user.id));
-    if (profile?.status === 'blocked') {
+    const { suspended } = await afterCustomerSignIn(user);
+    if (suspended) {
       await supabase.auth.signOut();
       return fail('suspended');
-    }
-    if (profile) {
-      await db.update(profiles).set({ lastActiveAt: new Date() }).where(eq(profiles.id, user.id));
-      // Google sign-in and confirmed sign-ups prove the email, so earlier guest orders and appointments join the account.
-      await linkGuestRecords(user);
-      // A new account (Google's first sign-in, or a confirmed sign-up) gets the welcome email once.
-      const id = user.id;
-      if (!user.app_metadata?.welcomed && Date.now() - profile.createdAt.getTime() < 86_400_000) {
-        after(() => emailWelcomeOnce(id));
-      }
     }
   }
 

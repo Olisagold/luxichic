@@ -5,6 +5,7 @@ import { after } from 'next/server';
 import { and, eq, ne } from 'drizzle-orm';
 import { db } from '@/db';
 import { addresses, profiles } from '@/db/schema';
+import { afterCustomerSignIn } from '@/lib/auth/after-sign-in';
 import { authErrorMessage, authReady, NOT_CONFIGURED, passwordMatches, siteOrigin } from '@/lib/auth/helpers';
 import { getCustomer } from '@/lib/auth/session';
 import { countGuestRecords, hasVerifiedEmail, linkGuestRecords } from '@/lib/auth/guest-records';
@@ -48,6 +49,22 @@ export async function signIn(email: string, password: string, remember: boolean)
   }
   await db.update(profiles).set({ lastActiveAt: new Date() }).where(eq(profiles.id, profile.id));
   await linkGuestRecords(data.user);
+  return { ok: true };
+}
+
+/** Finishes a sign-in with Google's own button, whose session the browser has just set (GoogleSignInButton). */
+export async function finishGoogleSignIn(): Promise<Result> {
+  if (!authReady()) return NOT_CONFIGURED;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Google sign-in didn’t finish. Please try again.' };
+  const { suspended } = await afterCustomerSignIn(user);
+  if (suspended) {
+    await supabase.auth.signOut();
+    return { ok: false, error: SUSPENDED };
+  }
   return { ok: true };
 }
 

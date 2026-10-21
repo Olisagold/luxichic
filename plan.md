@@ -585,7 +585,12 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
      comes after launch) and the made-up "fully booked" availability helpers.
    - `legacy/luxichic-react` removed (it stays in git history); README brought up to date.
 7. Go live, then watch Vercel's logs and analytics for the first weeks.
-8. ✅ Faster admin image uploads (2026-10-21, the CEO agreed to shrinking): the browser shrinks photos to 2560px
+8. ✅ Google sign-in names the site (2026-10-21): with `NEXT_PUBLIC_GOOGLE_CLIENT_ID` set (Production), the
+   sign-in and register pages show Google's own button, whose window says "continue to luxichic.online", and the
+   sign-in finishes on the page (`signInWithIdToken` with a nonce, then `finishGoogleSignIn`). Without it, or
+   if Google's script is blocked or draws nothing (an address not allowed for the client), the redirect flow.
+   Both end in `lib/auth/after-sign-in.ts` (suspended check, guest records, welcome email).
+9. ✅ Faster admin image uploads (2026-10-21, the CEO agreed to shrinking): the browser shrinks photos to 2560px
    on the long side before upload (JPEG, or WebP for PNG/WebP to keep transparency; GIFs and unreadable files
    go as they are), so the stored "original" is that copy. The server makes the four WebP sizes at once (effort 4) and uploads them in parallel, and moves the upload into place as the original instead of sending it
    again. Several images upload three at a time, kept in the order picked. Tested end to end
@@ -593,10 +598,6 @@ pnpm db:seed`), with email, Telegram and push switched off. Journeys: bank-trans
 
 ## After launch (not scheduled)
 
-- **Google sign-in shows the Supabase address** ("continue to dfiqnpqhyeittcmgjdrk.supabase.co"). Decided
-  2026-10-14: fix after launch with (1) Google brand verification (app name LUXICHIC and logo on the consent
-  screen) and/or (3) Google's own sign-in button on our pages (`signInWithIdToken`), whichever works best then.
-  **No paid Supabase plan or custom-domain add-on**, now or later.
 - Online payments (Paystack or Flutterwave), if manual verification becomes a bottleneck.
 - WhatsApp Cloud API for customer messages.
 - Marketing analytics (GA4) with a consent banner.

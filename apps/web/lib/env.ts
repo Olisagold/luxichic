@@ -50,6 +50,12 @@ const clientSchema = z
     NEXT_PUBLIC_SUPABASE_URL: optional(z.string().url()),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(1)),
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: optional(z.string().min(20)),
+    // Google's own sign-in button (components/auth/GoogleSignInButton.tsx), production only. A value that isn't
+    // a web client ID is ignored (the redirect button is used), never fatal.
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.preprocess((v) => {
+      const id = typeof v === 'string' ? v.trim() : '';
+      return /^[\w-]+\.apps\.googleusercontent\.com$/.test(id) ? id : undefined;
+    }, z.string().optional()),
   })
   .refine((e) => !e.NEXT_PUBLIC_SUPABASE_URL === !e.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
     message: 'Set both NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, or neither',
@@ -62,6 +68,7 @@ const clientValues = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
 };
 
 function parse<T extends z.ZodTypeAny>(schema: T, values: unknown): z.infer<T> {
