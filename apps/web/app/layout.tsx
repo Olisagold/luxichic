@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, Manrope } from 'next/font/google';
+import localFont from 'next/font/local';
 import { Analytics } from '@vercel/analytics/next';
 import { siteUrl } from '@/lib/seo/site';
 import { Providers } from './providers';
@@ -20,19 +20,22 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#0A0A0A' };
 
-// Served from our own domain and preloaded (no request to Google, nothing blocking the first paint).
-const display = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  style: ['normal', 'italic'],
+// Stored in the project (app/fonts: Google Fonts' Latin variable files, SIL Open Font License), so a build never
+// downloads them (a Google Fonts hiccup used to fail the build). Served from our own domain and preloaded.
+const display = localFont({
+  src: [
+    { path: './fonts/cormorant-garamond.woff2', weight: '400 600', style: 'normal' },
+    { path: './fonts/cormorant-garamond-italic.woff2', weight: '400 600', style: 'italic' },
+  ],
   display: 'swap',
   variable: '--font-display',
+  adjustFontFallback: 'Times New Roman',
 });
-const sans = Manrope({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+const sans = localFont({
+  src: [{ path: './fonts/manrope.woff2', weight: '400 800', style: 'normal' }],
   display: 'swap',
   variable: '--font-sans',
+  adjustFontFallback: 'Arial',
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
