@@ -8,11 +8,11 @@ const supplied = {
   nails: '/images/IMG_0583.jpg',
   braids: '/images/IMG_6630.jpg',
   bodyWaveWig: '/images/IMG_5595.jpg',
-  curlyWig: '/images/IMG_0601.png',
-  nailLamp: '/images/2C7FFE57-8665-4ED2-B208-1A60A1A63FA6.png',
-  hoodDryer: '/images/173750BC-6A14-4480-AFA7-BB6F34972FDE.png',
-  ledLamp: '/images/E52EFBB8-DF3D-41F3-AB3A-98EB7CC56BB3.png',
-  hotComb: '/images/F5DADA41-BA4D-458B-BB66-F595D6CC8BAB.png',
+  curlyWig: '/images/IMG_0601.jpg',
+  nailLamp: '/images/2C7FFE57-8665-4ED2-B208-1A60A1A63FA6.jpg',
+  hoodDryer: '/images/173750BC-6A14-4480-AFA7-BB6F34972FDE.jpg',
+  ledLamp: '/images/E52EFBB8-DF3D-41F3-AB3A-98EB7CC56BB3.jpg',
+  hotComb: '/images/F5DADA41-BA4D-458B-BB66-F595D6CC8BAB.jpg',
 };
 
 const supplementary = {
