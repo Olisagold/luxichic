@@ -25,7 +25,6 @@ export interface StorefrontSource {
     'business' | 'instagram' | 'instagramHandles' | 'tiktok' | 'socialLinks' | 'payOnDeliveryEnabled'
   > & {
     delivery: { estimate: string; rates: DeliveryRate[] };
-    whatsapp: { businessNumber: string; adminNumber: string };
     /** Bank account for transfers; null until one is set. */
     bank: StoreSettings['bank'] | null;
   };
@@ -206,7 +205,7 @@ export function deriveStorefront(src: StorefrontSource, today = new Date().toISO
         address: st.business.address,
         hours: st.business.hours,
       },
-      whatsapp: { general: st.business.whatsapp, orders: st.whatsapp.adminNumber },
+      whatsapp: { general: st.business.whatsapp, orders: st.business.whatsapp },
       instagram,
       tiktok: st.tiktok,
       socialLinks: (st.socialLinks ?? []).filter((l) => l.enabled),

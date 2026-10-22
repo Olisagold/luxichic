@@ -257,7 +257,6 @@ async function loadSettings(): Promise<StorefrontSource['settings']> {
   const instagram = value<{ urls: StoreSettings['instagram']; handles: StoreSettings['instagramHandles'] }>(
     'instagram',
   ) ?? { urls: { hairs: '', salon: '', tools: '' }, handles: { hairs: '', salon: '', tools: '' } };
-  const whatsapp = value<StoreSettings['whatsapp']>('whatsapp');
   const socialLinks: SocialLink[] = links.map((l) => ({
     id: l.id,
     platform: l.platform,
@@ -278,10 +277,6 @@ async function loadSettings(): Promise<StorefrontSource['settings']> {
       rates: rates.map((r) => ({ state: r.state, fee: r.fee, free: r.isFree, enabled: r.enabled })),
     },
     bank: value<StoreSettings['bank']>('bank') ?? null,
-    whatsapp: {
-      businessNumber: whatsapp?.businessNumber ?? business.whatsapp,
-      adminNumber: whatsapp?.adminNumber ?? business.whatsapp,
-    },
   };
 }
 
