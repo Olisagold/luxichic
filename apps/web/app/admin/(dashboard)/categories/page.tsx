@@ -4,7 +4,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { catalogFor } from '@/lib/catalog/admin-queries';
 import { Categories } from '@/views/admin/catalog/Categories';
 
-export const metadata: Metadata = { title: 'Categories — Admin' };
+export const metadata: Metadata = { title: 'Categories | Admin' };
 
 export default async function AdminCategoriesPage() {
   return (

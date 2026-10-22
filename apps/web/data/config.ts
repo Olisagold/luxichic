@@ -22,8 +22,8 @@ export const businessConfig = {
   payOnDeliveryEnabled: true,
 
   bank: {
-    bankName: '[Bank Name — to be provided]',
-    accountName: '[Account Name — to be provided]',
+    bankName: '[Bank Name, to be provided]',
+    accountName: '[Account Name, to be provided]',
     accountNumber: '0000000000',
     instructions: '',
   },
@@ -44,7 +44,7 @@ export const businessConfig = {
   contact: {
     email: 'hello@luxichic.example',
     phone: '+234 000 000 0000',
-    address: '[Store address — to be provided], Nigeria',
+    address: '[Store address, to be provided], Nigeria',
     hours: 'Mon – Sun, 9:00am – 7:00pm',
   },
 

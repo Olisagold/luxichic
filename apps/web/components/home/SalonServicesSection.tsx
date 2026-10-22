@@ -33,7 +33,7 @@ export function SalonServicesSection() {
               The Salon <span className="italic text-pink-deep">&amp; Spa</span>
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-subtle">
-              Nails, lashes, skin, braids and grooming by specialists who take their time. Book online in a minute — and
+              Nails, lashes, skin, braids and grooming by specialists who take their time. Book online in a minute and
               only pay after your service.
             </p>
           </div>

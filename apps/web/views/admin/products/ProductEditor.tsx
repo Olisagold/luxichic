@@ -178,7 +178,7 @@ function Editor({ id }: { id?: string }) {
                     {Object.keys(errors).length} field{Object.keys(errors).length > 1 ? 's' : ''} need attention
                   </span>
                 ) : isNew ? (
-                  'New product — not saved yet'
+                  'New product, not saved yet'
                 ) : (
                   'Unsaved changes'
                 )}

@@ -4,7 +4,7 @@ import { settingsFor } from '@/lib/settings/admin-queries';
 import { RequirePermission } from '@/components/admin/RequirePermission';
 import { PaymentSettings } from '@/views/admin/operations/PaymentSettings';
 
-export const metadata: Metadata = { title: 'Payments — Admin' };
+export const metadata: Metadata = { title: 'Payments | Admin' };
 
 export default async function AdminPaymentSettingsPage() {
   const data = await settingsFor('settings.payment');

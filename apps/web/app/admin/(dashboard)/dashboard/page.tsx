@@ -6,7 +6,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { dashboardFor, resolvePeriod } from '@/lib/analytics/admin-queries';
 import { Dashboard } from '@/views/admin/Dashboard';
 
-export const metadata: Metadata = { title: 'Dashboard — Admin' };
+export const metadata: Metadata = { title: 'Dashboard | Admin' };
 
 export default async function AdminDashboardPage({
   searchParams,

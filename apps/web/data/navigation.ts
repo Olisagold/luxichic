@@ -147,7 +147,7 @@ export const megaMenus: MegaMenu[] = [
     feature: {
       image: images.nails,
       title: 'Pay after your service',
-      text: 'Book online in a minute — no deposits.',
+      text: 'Book online in a minute. No deposits.',
       cta: 'Book an Appointment',
       to: '/salon/book',
     },

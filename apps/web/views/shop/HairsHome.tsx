@@ -60,7 +60,7 @@ export function HairsHome() {
             The LUXICHIC <span className="italic text-pink-deep">Hairs</span> boutique
           </>
         }
-        text="Premium wigs, bundles, frontals and closures — in the textures, lengths and lace you love. Shop as a guest or with your account."
+        text="Premium wigs, bundles, frontals and closures in the textures, lengths and lace you love. Shop as a guest or with your account."
         image={images.curlyWig}
         imageAlt="Honey brown curly wig on display at LUXICHIC Hairs"
         promo={{
@@ -136,7 +136,7 @@ export function HairsHome() {
             <h2 className="font-display text-4xl leading-[1.05] text-ink md:text-6xl">Hair services</h2>
             <p className="mt-4 max-w-md text-[15px] leading-relaxed text-subtle">
               Let our wig specialists install, revamp and maintain your unit at the LUXICHIC Beauty Salon &amp; Spa.
-              Book online — pay only after your service.
+              Book online. Pay only after your service.
             </p>
             <Button to="/salon/book" variant="pink" className="mt-8">
               Book a Hair Service

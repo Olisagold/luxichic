@@ -38,8 +38,8 @@ export const siteContent = {
     title: 'One beauty house.',
     accent: 'Three specialities.',
     intro:
-      'At LUXICHIC, we bring together everything you need to express your beauty — premium hair, professional beauty treatments and quality haircare essentials, all under one name.',
-    description: '[Editable placeholder — add LUXICHIC’s own story, mission and location here.]',
+      'At LUXICHIC, we bring together everything you need to express your beauty: premium hair, professional beauty treatments and quality haircare essentials, all under one name.',
+    description: '[Editable placeholder: add LUXICHIC’s own story, mission and location here.]',
     mission: '',
     vision: '',
     image: images.heroModel,
@@ -71,7 +71,7 @@ export const whyChoose = [
   { title: 'Personalised Customer Care', text: 'Real people on WhatsApp ready to help you choose, book and track.' },
   {
     title: 'Everything Beauty in One Place',
-    text: 'From your wig to your nails to your styling tools — all at LUXICHIC.',
+    text: 'From your wig to your nails to your styling tools, all at LUXICHIC.',
   },
 ];
 
@@ -148,7 +148,7 @@ export const faqs = [
     items: [
       {
         q: 'What payment methods are available?',
-        a: 'Bank Transfer, and Pay on Delivery where it is enabled. [Placeholder — final payment options to be confirmed by LUXICHIC.]',
+        a: 'Bank Transfer, and Pay on Delivery where it is enabled. [Placeholder: final payment options to be confirmed by LUXICHIC.]',
       },
       {
         q: 'How do I make a bank transfer?',
@@ -182,7 +182,7 @@ export const faqs = [
       },
       {
         q: 'Can I choose a different hair length?',
-        a: 'Yes. Most units are available in several lengths — select your preferred length on the product page and the price updates automatically.',
+        a: 'Yes. Most units are available in several lengths. Select your preferred length on the product page and the price updates automatically.',
       },
       {
         q: 'How do I care for my wig?',
@@ -265,7 +265,7 @@ export const policies: Record<string, { title: string; sections: { heading: stri
     sections: [
       {
         heading: 'Eligibility',
-        body: '[Placeholder] Conditions for returns — for example, hair units must be unworn with lace uncut.',
+        body: '[Placeholder] Conditions for returns, for example, hair units must be unworn with lace uncut.',
       },
       { heading: 'How to request a return', body: '[Placeholder] Steps and timelines for requesting a return.' },
       { heading: 'Refunds', body: '[Placeholder] How and when refunds are processed.' },
@@ -278,5 +278,5 @@ export const brandValues = [
   { title: 'Quality', text: '[Editable] We choose products and techniques we trust.' },
   { title: 'Care', text: '[Editable] Every client is welcomed, listened to and looked after.' },
   { title: 'Confidence', text: '[Editable] Beauty that helps you feel like your best self.' },
-  { title: 'Convenience', text: '[Editable] Hair, beauty and tools — all in one place.' },
+  { title: 'Convenience', text: '[Editable] Hair, beauty and tools, all in one place.' },
 ];

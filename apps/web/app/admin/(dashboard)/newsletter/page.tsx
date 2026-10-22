@@ -6,7 +6,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { getAdmin, hasPermission } from '@/lib/auth/session';
 import { Newsletter } from '@/views/admin/customers/Newsletter';
 
-export const metadata: Metadata = { title: 'Newsletter — Admin' };
+export const metadata: Metadata = { title: 'Newsletter | Admin' };
 
 export default async function AdminNewsletterPage() {
   const admin = await getAdmin();

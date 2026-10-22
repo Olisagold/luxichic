@@ -4,7 +4,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { salonFor } from '@/lib/salon/admin-queries';
 import { ServiceEditor } from '@/views/admin/salon/ServiceEditor';
 
-export const metadata: Metadata = { title: 'Edit service — Admin' };
+export const metadata: Metadata = { title: 'Edit service | Admin' };
 
 export default async function AdminServiceEditorPage() {
   return (

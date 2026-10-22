@@ -45,7 +45,7 @@ export function ToolsShowcase() {
             <Logo variant="tools" className="-ml-1 h-12" />
             <h2 className="mt-4 font-display text-4xl leading-tight">Tools the professionals trust.</h2>
             <p className="mt-3 text-sm leading-relaxed text-white/70">
-              Hair tools, salon essentials, haircare and affordable braiding extensions — for stylists, wig makers and
+              Hair tools, salon essentials, haircare and affordable braiding extensions for stylists, wig makers and
               you.
             </p>
             <ul className="mt-6 grid grid-cols-2 gap-2">

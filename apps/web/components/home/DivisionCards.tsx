@@ -52,7 +52,7 @@ export function DivisionCards() {
               Three houses. <span className="italic text-pink">One LUXICHIC.</span>
             </>
           }
-          text="Each division has its own boutique, its own specialists and its own Instagram — all sharing one cart, one account and one standard of care."
+          text="Each division has its own boutique, its own specialists and its own Instagram, all sharing one cart, one account and one standard of care."
         />
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-6">

@@ -44,8 +44,8 @@ describe('Telegram new-order message', () => {
   const text = fillTemplateLines(DEFAULT_TELEGRAM.orderTemplate, orderValues(order, items, 'Bank transfer'));
 
   it('lists each item with its options and price, and the unit price for several', () => {
-    expect(text).toContain('1 × 360 Lace Deep Wave Wig (Length: 22") — ₦275,000');
-    expect(text).toContain('2 × Edge Control — ₦4,000 (₦2,000 each)');
+    expect(text).toContain('1 × 360 Lace Deep Wave Wig (Length: 22"): ₦275,000');
+    expect(text).toContain('2 × Edge Control: ₦4,000 (₦2,000 each)');
   });
 
   it('shows the subtotal, delivery fee and discount before the total', () => {

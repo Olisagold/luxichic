@@ -14,7 +14,7 @@ const divisions = [
   {
     logo: 'hairs' as const,
     title: 'LUXICHIC Hairs',
-    text: 'Premium wigs, human hair, frontals, closures and bundles — plus wig installation, revamping and maintenance.',
+    text: 'Premium wigs, human hair, frontals, closures and bundles, plus wig installation, revamping and maintenance.',
     to: '/hairs',
     image: images.bodyWaveWig,
   },

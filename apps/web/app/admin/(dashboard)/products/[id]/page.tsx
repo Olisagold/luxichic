@@ -4,7 +4,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { catalogFor } from '@/lib/catalog/admin-queries';
 import { ProductEditor } from '@/views/admin/products/ProductEditor';
 
-export const metadata: Metadata = { title: 'Edit product — Admin' };
+export const metadata: Metadata = { title: 'Edit product | Admin' };
 
 export default async function AdminProductEditorPage() {
   return (

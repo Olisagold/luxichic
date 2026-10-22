@@ -4,7 +4,7 @@ import { getAdmin, hasPermission } from '@/lib/auth/session';
 import { getOrderForAdmin } from '@/lib/orders/admin-queries';
 import { OrderDetail } from '@/views/admin/orders/OrderDetail';
 
-export const metadata: Metadata = { title: 'Order — Admin' };
+export const metadata: Metadata = { title: 'Order | Admin' };
 
 export default async function AdminOrderDetailPage({ params }: { params: Promise<{ orderNumber: string }> }) {
   const { orderNumber } = await params;

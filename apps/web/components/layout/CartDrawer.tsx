@@ -26,7 +26,7 @@ export function CartDrawer() {
             <ShoppingBagIcon className="h-7 w-7" aria-hidden />
           </span>
           <p className="mt-5 font-display text-3xl">Your cart is empty</p>
-          <p className="mt-2 text-sm text-subtle">Discover premium hair and professional tools — all in one cart.</p>
+          <p className="mt-2 text-sm text-subtle">Discover premium hair and professional tools, all in one cart.</p>
           <div className="mt-6 flex w-full flex-col gap-3">
             <Button to="/hairs" onClick={closeCart} fullWidth>
               Shop LUXICHIC Hairs

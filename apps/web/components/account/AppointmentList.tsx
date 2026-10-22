@@ -19,7 +19,7 @@ export function AppointmentList({ appointments, compact }: { appointments: Appoi
       <EmptyState
         icon={<CalendarIcon className="h-7 w-7" />}
         title="No appointments yet"
-        text="Book nails, lashes, braids, facials and more — pay only after your service."
+        text="Book nails, lashes, braids, facials and more. Pay only after your service."
         actions={<Button to="/salon/book">Book an appointment</Button>}
       />
     );

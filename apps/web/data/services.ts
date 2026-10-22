@@ -4,8 +4,8 @@ import { images } from '@/data/images';
 /** Placeholder personnel — replace with LUXICHIC's real team. */
 function team(prefix: string, role: string): Personnel[] {
   return [
-    { id: `${prefix}-1`, name: `[${role} 1 — to be confirmed]`, role },
-    { id: `${prefix}-2`, name: `[${role} 2 — to be confirmed]`, role },
+    { id: `${prefix}-1`, name: `[${role} 1, to be confirmed]`, role },
+    { id: `${prefix}-2`, name: `[${role} 2, to be confirmed]`, role },
   ];
 }
 
@@ -20,7 +20,7 @@ export const salonServices: SalonService[] = [
     category: 'Nails',
     shortDescription: 'Shaping, cuticle care and a flawless polish finish.',
     description:
-      'Treat your hands to a relaxing manicure — nail shaping, cuticle care, a soothing hand massage and your choice of classic or gel polish.',
+      'Treat your hands to a relaxing manicure: nail shaping, cuticle care, a soothing hand massage and your choice of classic or gel polish.',
     includes: ['Nail shaping and filing', 'Cuticle care', 'Hand massage', 'Classic or gel polish'],
     startingPrice: null,
     duration: 'Approx. 45 min (to be confirmed)',
@@ -89,7 +89,7 @@ export const salonServices: SalonService[] = [
     category: 'Hair',
     shortDescription: 'Knotless braids, cornrows, twists and boho styles.',
     description:
-      'Neat, lasting protective styles — knotless braids, boho braids, cornrows and twists, installed with care for your edges and scalp.',
+      'Neat, lasting protective styles: knotless braids, boho braids, cornrows and twists, installed with care for your edges and scalp.',
     includes: ['Style consultation', 'Hair preparation', 'Braiding installation', 'Finishing and styling'],
     startingPrice: null,
     duration: 'Varies by style (to be confirmed)',
@@ -103,7 +103,7 @@ export const salonServices: SalonService[] = [
     category: 'Hair',
     shortDescription: 'Deep conditioning and repair for healthy, strong hair.',
     description:
-      'Restore moisture and strength with treatments selected for your hair type — from protein repair to deep hydration and scalp care.',
+      'Restore moisture and strength with treatments selected for your hair type, from protein repair to deep hydration and scalp care.',
     includes: ['Hair and scalp assessment', 'Cleanse', 'Targeted treatment', 'Steam and finish'],
     startingPrice: null,
     duration: 'Approx. 60 min (to be confirmed)',
@@ -116,7 +116,7 @@ export const salonServices: SalonService[] = [
     name: 'Barbing',
     category: 'Grooming',
     shortDescription: 'Clean cuts, fades, line-ups and beard grooming.',
-    description: 'Sharp, precise cuts in a relaxed setting — fades, tapers, line-ups and beard shaping.',
+    description: 'Sharp, precise cuts in a relaxed setting: fades, tapers, line-ups and beard shaping.',
     includes: ['Consultation', 'Haircut or fade', 'Line-up', 'Beard grooming (optional)'],
     startingPrice: null,
     duration: 'Approx. 30–45 min (to be confirmed)',

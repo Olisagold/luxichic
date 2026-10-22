@@ -68,7 +68,7 @@ export function DeliverySettings() {
                 setRates((rs) =>
                   rs.map((r) => (shown.some((s) => s.state === r.state) ? { ...r, fee: n, free: false } : r)),
                 );
-                toast.success(`Fee set for ${shown.length} states — save to apply`);
+                toast.success(`Fee set for ${shown.length} states. Save to apply`);
                 setBulk('');
               }}
               className="flex gap-2"

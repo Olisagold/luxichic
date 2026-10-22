@@ -84,8 +84,8 @@ export function OrderConfirmation({ order }: { order: Order | null }) {
               className="mt-5"
             />
             <p className="mt-3 text-xs leading-relaxed text-subtle">
-              Attach your transfer receipt in the WhatsApp chat. Sending the receipt does not mark your order as paid —
-              it will be confirmed once LUXICHIC verifies your payment.
+              Attach your transfer receipt in the WhatsApp chat. Sending the receipt does not mark your order as paid.
+              It will be confirmed once LUXICHIC verifies your payment.
             </p>
           </section>
         )}

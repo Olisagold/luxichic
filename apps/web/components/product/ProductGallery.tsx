@@ -60,7 +60,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
           >
             <SiteImage
               src={images[index]}
-              alt={`${name} — image ${index + 1} of ${images.length}`}
+              alt={`${name}, image ${index + 1} of ${images.length}`}
               sizes="(min-width: 1024px) 50vw, 100vw"
               priority={index === 0}
               className="aspect-[4/5] w-full object-cover"
@@ -85,7 +85,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
           <SiteImage
             sizes="(min-width: 1024px) 1024px, 100vw"
             src={images[index]}
-            alt={`${name} — image ${index + 1}`}
+            alt={`${name}, image ${index + 1}`}
             className="max-h-[75vh] w-auto rounded-xl object-contain"
           />
           {images.length > 1 && (

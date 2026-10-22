@@ -4,7 +4,7 @@ import { getAdmin, hasPermission } from '@/lib/auth/session';
 import { reviewsForAdmin } from '@/lib/reviews/queries';
 import { Reviews } from '@/views/admin/catalog/Reviews';
 
-export const metadata: Metadata = { title: 'Reviews — Admin' };
+export const metadata: Metadata = { title: 'Reviews | Admin' };
 
 export default async function AdminReviewsPage() {
   const admin = await getAdmin();

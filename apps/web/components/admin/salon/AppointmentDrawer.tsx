@@ -91,7 +91,7 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
             </section>
 
             <p className="rounded-lg border border-line px-3 py-2 text-xs text-subtle">
-              Payment is collected after the service — no deposit is taken online.
+              Payment is collected after the service. No deposit is taken online.
             </p>
 
             {open && (

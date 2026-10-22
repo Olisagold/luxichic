@@ -4,7 +4,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { salonFor } from '@/lib/salon/admin-queries';
 import { Availability } from '@/views/admin/salon/Availability';
 
-export const metadata: Metadata = { title: 'Availability — Admin' };
+export const metadata: Metadata = { title: 'Availability | Admin' };
 
 export default async function AdminAvailabilityPage() {
   return (

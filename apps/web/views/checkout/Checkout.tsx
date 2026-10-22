@@ -78,7 +78,7 @@ export function Checkout() {
                 <div className="space-y-5">
                   {!c.user && (
                     <div className="flex flex-col gap-3 rounded-2xl bg-ivory p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-charcoal">Checking out as a guest — no account needed.</p>
+                      <p className="text-charcoal">Checking out as a guest. No account needed.</p>
                       <Link
                         href="/login?redirect=/checkout"
                         className="font-semibold text-pink-deep underline-offset-4 hover:underline"

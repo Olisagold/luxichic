@@ -55,7 +55,7 @@ export function Cart() {
           className="mt-10"
           icon={<ShoppingBagIcon className="h-7 w-7" />}
           title="Your cart is empty"
-          text="Add wigs from LUXICHIC Hairs and tools from Hair Tools & Essentials — you can check out both in one order."
+          text="Add wigs from LUXICHIC Hairs and tools from Hair Tools & Essentials. You can check out both in one order."
           actions={
             <>
               <Button to="/hairs">Shop LUXICHIC Hairs</Button>
@@ -133,7 +133,7 @@ export function Cart() {
             <Button to="/checkout" size="lg" fullWidth className="mt-6">
               Proceed to Checkout
             </Button>
-            <p className="mt-3 text-center text-xs text-subtle">Guest checkout available — no account needed.</p>
+            <p className="mt-3 text-center text-xs text-subtle">Guest checkout available. No account needed.</p>
           </aside>
         </div>
       )}

@@ -4,7 +4,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { customersFor } from '@/lib/customers/admin-queries';
 import { CustomerActivity } from '@/views/admin/customers/CustomerActivity';
 
-export const metadata: Metadata = { title: 'Customer activity — Admin' };
+export const metadata: Metadata = { title: 'Customer activity | Admin' };
 
 export default async function AdminCustomerActivityPage() {
   return (

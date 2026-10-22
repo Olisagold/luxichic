@@ -44,7 +44,7 @@ function hairSpecs(texture: string, type: string, lace: string, construction: st
     { label: 'Construction', value: construction },
     { label: 'Lace Type', value: lace },
     { label: 'Cap', value: 'Adjustable straps with combs' },
-    { label: 'Can Be Dyed', value: 'Yes — professional colouring recommended' },
+    { label: 'Can Be Dyed', value: 'Yes, professional colouring recommended' },
   ];
 }
 
@@ -113,7 +113,7 @@ export const hairProducts: Product[] = [
     name: '360 Lace Deep Wave Wig',
     shortDescription: 'Defined deep waves with lace all the way around.',
     description:
-      'Wear it down, in a high ponytail or a sleek bun — 360 lace gives you a natural hairline at every angle. Deep, defined waves stay full and bouncy wash after wash.',
+      'Wear it down, in a high ponytail or a sleek bun. 360 lace gives you a natural hairline at every angle. Deep, defined waves stay full and bouncy wash after wash.',
     price: 275000,
     originalPrice: 299000,
     images: [images.deepWave, images.bodyWaveWig, images.bundles],
@@ -227,7 +227,7 @@ export const hairProducts: Product[] = [
     name: 'Water Wave Half Cap Wig',
     shortDescription: 'Wet-look ripples that blend with your leave-out.',
     description:
-      'A half wig with a playful water wave pattern. Clip it in, blend your edges and go — ideal for quick, protective styling.',
+      'A half wig with a playful water wave pattern. Clip it in, blend your edges and go. Ideal for quick, protective styling.',
     price: 98000,
     images: [images.deepWave, images.curlyWig],
     rating: 4.4,
@@ -259,7 +259,7 @@ export const hairProducts: Product[] = [
     name: 'Bouncy Curls Full Cap Wig',
     shortDescription: 'Glueless wand curls in a rich honey brown.',
     description:
-      'Glamorous wand curls on a glueless full cap. Adjustable straps and combs keep it secure without adhesive — perfect for everyday wear.',
+      'Glamorous wand curls on a glueless full cap. Adjustable straps and combs keep it secure without adhesive, perfect for everyday wear.',
     price: 120000,
     originalPrice: 138000,
     images: [images.curlyWig, images.bodyWaveWig],
@@ -329,7 +329,7 @@ export const hairProducts: Product[] = [
     id: 'h10',
     slug: 'hd-lace-13x4-frontal-straight',
     division: 'hairs',
-    name: 'HD Lace 13x4 Frontal — Straight',
+    name: 'HD Lace 13x4 Frontal (Straight)',
     shortDescription: 'Ultra-thin HD lace for a melt-into-skin finish.',
     description:
       'A pre-plucked 13x4 HD lace frontal with bleached knots. Pair with bundles for a flawless custom unit.',
@@ -355,7 +355,7 @@ export const hairProducts: Product[] = [
     id: 'h11',
     slug: '5x5-hd-closure-body-wave',
     division: 'hairs',
-    name: '5x5 HD Closure — Body Wave',
+    name: '5x5 HD Closure (Body Wave)',
     shortDescription: 'Protective closure with a natural parting.',
     description: 'A 5x5 HD lace closure in body wave texture, designed to match our body wave bundles perfectly.',
     price: 48000,

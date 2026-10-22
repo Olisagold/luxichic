@@ -240,7 +240,7 @@ export function HeroSection() {
               <Link
                 href={current.to}
                 className="group block rounded-[22px] bg-white p-2 shadow-[0_24px_60px_-20px_rgba(10,10,10,0.35),0_0_0_1px_rgba(240,40,140,0.15),0_0_40px_-10px_rgba(240,40,140,0.5)]"
-                aria-label={`${current.label} — ${current.division}`}
+                aria-label={`${current.label}, ${current.division}`}
               >
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[16px] bg-champagne">
                   <AnimatePresence initial={false}>

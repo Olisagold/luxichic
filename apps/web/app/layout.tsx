@@ -8,7 +8,7 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'LUXICHIC — Hairs, Salon & Tools',
+    default: 'LUXICHIC | Hairs, Salon & Tools',
     template: '%s | LUXICHIC',
   },
   description: 'Premium wigs and human hair, professional hair tools and a luxury beauty salon & spa.',

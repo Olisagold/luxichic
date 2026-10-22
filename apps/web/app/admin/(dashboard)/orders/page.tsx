@@ -4,7 +4,7 @@ import { getAdmin, hasPermission } from '@/lib/auth/session';
 import { listOrdersForAdmin } from '@/lib/orders/admin-queries';
 import { Orders } from '@/views/admin/orders/Orders';
 
-export const metadata: Metadata = { title: 'Orders — Admin' };
+export const metadata: Metadata = { title: 'Orders | Admin' };
 
 export default async function AdminOrdersPage() {
   const admin = await getAdmin();

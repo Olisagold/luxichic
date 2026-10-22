@@ -91,7 +91,7 @@ export function orderValues(
       const options = Object.entries(i.variants ?? {})
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ');
-      const line = `${i.quantity} × ${i.productName}${options ? ` (${options})` : ''} — ${formatNaira(i.unitPrice * i.quantity)}`;
+      const line = `${i.quantity} × ${i.productName}${options ? ` (${options})` : ''}: ${formatNaira(i.unitPrice * i.quantity)}`;
       return i.quantity > 1 ? `${line} (${formatNaira(i.unitPrice)} each)` : line;
     })
     .join('\n');

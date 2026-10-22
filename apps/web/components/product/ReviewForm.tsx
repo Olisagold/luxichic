@@ -123,7 +123,7 @@ export function ReviewForm({ initial, submitLabel = 'Post Review', onSubmit, onC
       />
       <div>
         <p className="mb-2 text-xs font-semibold text-charcoal">
-          Photos <span className="font-normal text-subtle">— optional, up to 3</span>
+          Photos <span className="font-normal text-subtle">(optional, up to 3)</span>
         </p>
         <div className="flex flex-wrap gap-3">
           {draft.images.map((src, i) => (

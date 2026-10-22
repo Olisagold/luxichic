@@ -491,7 +491,7 @@ export function Products() {
         open={!!bulk}
         onClose={() => setBulk(null)}
         onConfirm={runBulk}
-        title={bulk ? `${bulkLabels[bulk]} — ${selected.length} product${selected.length > 1 ? 's' : ''}?` : ''}
+        title={bulk ? `${bulkLabels[bulk]}: ${selected.length} product${selected.length > 1 ? 's' : ''}?` : ''}
         tone={bulk === 'delete' ? 'danger' : 'default'}
         confirmLabel="Apply"
         message={

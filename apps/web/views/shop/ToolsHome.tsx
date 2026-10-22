@@ -51,7 +51,7 @@ export function ToolsHome() {
             Hair tools, salon essentials <span className="italic text-pink-deep">&amp; braiding extensions</span>
           </>
         }
-        text="Professional tools for stylists, wig makers and salon owners — and everyday essentials for anyone who loves their hair."
+        text="Professional tools for stylists, wig makers and salon owners, and everyday essentials for anyone who loves their hair."
         image={images.hoodDryer}
         imageAlt="Black wall-mounted salon hood dryer in a luxury salon"
         promo={{

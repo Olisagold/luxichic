@@ -15,7 +15,7 @@ const how = [
   {
     icon: CalendarCheckIcon,
     title: 'Request your slot',
-    text: 'Choose a service, date and time online — as a guest or with your account.',
+    text: 'Choose a service, date and time online, as a guest or with your account.',
   },
   {
     icon: MessageCircleIcon,

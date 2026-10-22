@@ -120,7 +120,7 @@ export function ProductDetail({ division, reviews }: { division: Division; revie
               {priced.stock <= 0
                 ? 'Out of stock in this option'
                 : lowStock
-                  ? `Low stock — only ${priced.stock} left in this option`
+                  ? `Low stock: only ${priced.stock} left in this option`
                   : 'In stock and ready to ship'}
             </p>
 
@@ -152,7 +152,7 @@ export function ProductDetail({ division, reviews }: { division: Division; revie
             <ul className="mt-8 space-y-3 border-t border-line pt-6 text-sm text-charcoal">
               <li className="flex gap-3">
                 <TruckIcon className="h-5 w-5 shrink-0 text-gold" aria-hidden />
-                Nationwide delivery — fee calculated at checkout by state.
+                Nationwide delivery. Fee calculated at checkout by state.
               </li>
               <li className="flex gap-3">
                 <ShieldCheckIcon className="h-5 w-5 shrink-0 text-gold" aria-hidden />

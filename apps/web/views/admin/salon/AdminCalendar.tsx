@@ -354,7 +354,7 @@ function DaySlots({
               {block && (
                 <p className="rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-800">
                   Blocked{block.serviceSlug ? ` · ${block.serviceSlug.replace(/-/g, ' ')}` : ''}
-                  {block.reason ? ` — ${block.reason}` : ''}
+                  {block.reason ? `: ${block.reason}` : ''}
                 </p>
               )}
               {!booked.length && !block && <p className="py-1 text-xs text-muted">Open</p>}

@@ -417,7 +417,7 @@ export function OrderDetail({
         title="Delete this order permanently?"
         tone="danger"
         confirmLabel="Delete order"
-        message="Prefer cancelling — deletion removes the order from the customer’s history and can’t be undone."
+        message="Prefer cancelling. Deletion removes the order from the customer’s history and can’t be undone."
       />
 
       <EmailPreviewDialog preview={email} onClose={() => setEmail(null)} />

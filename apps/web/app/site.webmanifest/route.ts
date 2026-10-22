@@ -8,7 +8,7 @@ export function GET() {
   return Response.json(
     {
       id: '/',
-      name: 'LUXICHIC — Hairs, Salon & Tools',
+      name: 'LUXICHIC | Hairs, Salon & Tools',
       short_name: 'LUXICHIC',
       description: 'Premium wigs and human hair, professional hair tools and a luxury beauty salon & spa.',
       start_url: '/',

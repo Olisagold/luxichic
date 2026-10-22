@@ -348,7 +348,7 @@ function Editor({ initial, isNew }: { initial: AdminService; isNew: boolean }) {
         saving={saving}
         onSave={save}
         onReset={() => setS(JSON.parse(baseline))}
-        label={isNew ? 'New service — not saved yet' : 'Unsaved changes'}
+        label={isNew ? 'New service, not saved yet' : 'Unsaved changes'}
       />
     </div>
   );

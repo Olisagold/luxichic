@@ -4,7 +4,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { salonFor } from '@/lib/salon/admin-queries';
 import { Specialists } from '@/views/admin/salon/Specialists';
 
-export const metadata: Metadata = { title: 'Specialists — Admin' };
+export const metadata: Metadata = { title: 'Specialists | Admin' };
 
 export default async function AdminSpecialistsPage() {
   return (

@@ -391,7 +391,7 @@ const SAMPLE = {
   order_number: 'LXC-482913',
   customer_name: 'Test Customer',
   customer_phone: '0803 000 0000',
-  products: '1 × Body Wave Wig (Length: 18") — ₦280,000\n2 × Edge Control — ₦4,000 (₦2,000 each)',
+  products: '1 × Body Wave Wig (Length: 18"): ₦280,000\n2 × Edge Control: ₦4,000 (₦2,000 each)',
   subtotal: '₦284,000',
   delivery_fee: '₦3,500',
   discount: '',

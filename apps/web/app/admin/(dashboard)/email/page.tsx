@@ -4,7 +4,7 @@ import { settingsFor } from '@/lib/settings/admin-queries';
 import { RequirePermission } from '@/components/admin/RequirePermission';
 import { EmailSettings } from '@/views/admin/operations/EmailSettings';
 
-export const metadata: Metadata = { title: 'Email — Admin' };
+export const metadata: Metadata = { title: 'Email | Admin' };
 
 export default async function AdminEmailSettingsPage() {
   const data = await settingsFor('settings.email');

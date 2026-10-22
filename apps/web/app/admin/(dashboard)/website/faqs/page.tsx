@@ -4,7 +4,7 @@ import { RequirePermission } from '@/components/admin/RequirePermission';
 import { contentFor } from '@/lib/content/admin-queries';
 import { FaqContent } from '@/views/admin/website/FaqContent';
 
-export const metadata: Metadata = { title: 'FAQs — Admin' };
+export const metadata: Metadata = { title: 'FAQs | Admin' };
 
 export default async function AdminFaqContentPage() {
   const data = await contentFor('content.pages');

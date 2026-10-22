@@ -130,7 +130,7 @@ export function PaymentSettings() {
             <strong>
               {bank.bankName} · {bank.accountName} · {bank.accountNumber}
             </strong>
-            . Double-check the account number — mistakes send customers’ money to the wrong account.
+            . Double-check the account number. Mistakes send customers’ money to the wrong account.
           </>
         }
         acknowledgement="I have checked these bank details are correct."

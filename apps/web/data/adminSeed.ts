@@ -475,7 +475,7 @@ export const seedEmailTemplates: EmailTemplate[] = [
     'welcome',
     'Welcome email',
     'Welcome to LUXICHIC, {{customer_name}}',
-    'Hi {{customer_name}},\n\nWelcome to LUXICHIC. Your account is ready — track orders, save addresses and manage appointments in one place.\n\nWith love,\nLUXICHIC',
+    'Hi {{customer_name}},\n\nWelcome to LUXICHIC. Your account is ready. Track orders, save addresses and manage appointments in one place.\n\nWith love,\nLUXICHIC',
     ['customer_name'],
   ),
   tpl(
@@ -496,7 +496,7 @@ export const seedEmailTemplates: EmailTemplate[] = [
     'order_confirmed',
     'Order confirmed',
     'Your order {{order_number}} is confirmed',
-    'Hi {{customer_name}},\n\nGreat news — your order {{order_number}} has been confirmed and is being prepared.\n\n{{account_link}}',
+    'Hi {{customer_name}},\n\nGreat news! Your order {{order_number}} has been confirmed and is being prepared.\n\n{{account_link}}',
     ['customer_name', 'order_number', 'transaction_reference', 'account_link'],
   ),
   tpl(

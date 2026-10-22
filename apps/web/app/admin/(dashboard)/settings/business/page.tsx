@@ -4,7 +4,7 @@ import { settingsFor } from '@/lib/settings/admin-queries';
 import { AdminSettingsProvider } from '@/components/admin/AdminSettingsProvider';
 import { BusinessSettings } from '@/views/admin/settings/BusinessSettings';
 
-export const metadata: Metadata = { title: 'Business settings — Admin' };
+export const metadata: Metadata = { title: 'Business settings | Admin' };
 
 export default async function AdminBusinessSettingsPage() {
   const data = await settingsFor('settings.general');

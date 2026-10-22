@@ -64,7 +64,7 @@ export function Footer() {
           <div>
             <Logo variant="main" className="-ml-1 h-16" />
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/70">
-              LUXICHIC brings together premium hair, professional beauty services and quality haircare essentials —
+              LUXICHIC brings together premium hair, professional beauty services and quality haircare essentials:
               everything you need to look and feel your best, in one place.
             </p>
             <ul className="mt-8 space-y-3 text-sm text-white/80">

@@ -26,7 +26,7 @@ export function WishlistGrid() {
       <EmptyState
         icon={<HeartIcon className="h-7 w-7" />}
         title="Your wishlist is empty"
-        text="Tap the heart on any product to save it here — from either store."
+        text="Tap the heart on any product to save it here, from either store."
         actions={
           <>
             <Button to="/hairs">Shop LUXICHIC Hairs</Button>

@@ -19,7 +19,7 @@ export function SalonServices() {
       />
       <h1 className="mt-6 font-display text-5xl text-ink md:text-6xl">Salon &amp; Spa Services</h1>
       <p className="mt-3 max-w-2xl text-[15px] text-subtle">
-        Book online in a minute. No payment is taken when you book — you pay after your service.
+        Book online in a minute. No payment is taken when you book. You pay after your service.
       </p>
       <div
         role="tablist"
